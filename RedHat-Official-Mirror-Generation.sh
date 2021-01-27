@@ -1,6 +1,8 @@
 #!/bin/bash
 #Author:SuperManito
-function OfficialMirror() {
+
+## 生成基于RedHat系Linux发行版的repo官方更新源：
+function RedHatOfficialMirror() {
     SYSTEM_NAME=$(cat /etc/redhat-release | cut -c1-6)
     CENTOS_VERSION=$(cat /etc/redhat-release | cut -c22)
     ls /etc | grep yum.repos.d.bak -qw
@@ -11,7 +13,7 @@ function OfficialMirror() {
         cp -rf /etc/yum.repos.d/* /etc/yum.repos.d.bak
         echo -e '\033[32m已备份原有 repo源 文件至 /etc/yum.repos.d.bak ...... \033[0m'
     fi
-    sleep 2s
+    sleep 3s
     if [ $CENTOS_VERSION = "8" ]; then
         touch /etc/yum.repos.d/CentOS-Linux-AppStream.repo
         touch /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
@@ -729,4 +731,4 @@ skip_if_unavailable=False
 EOF
     fi
 }
-OfficialMirror
+RedHatOfficialMirror
