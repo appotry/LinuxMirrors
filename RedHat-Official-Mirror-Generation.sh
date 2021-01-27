@@ -5,7 +5,7 @@ function OfficialMirror() {
     CENTOS_VERSION=$(cat /etc/redhat-release | cut -c22)
     ls /etc | grep yum.repos.d.bak -qw
     if [ $? -eq 0 ]; then
-    echo -e '\033[32m检测到已备份的 repo源 文件，跳过备份操作...... \033[0m'
+        echo -e '\033[32m检测到已备份的 repo源 文件，跳过备份操作...... \033[0m'
     else
         mkdir -p /etc/yum.repos.d.bak
         cp -rf /etc/yum.repos.d/* /etc/yum.repos.d.bak
