@@ -7,13 +7,7 @@
 | Fedora | 28 ~ 33 |
 | CentOS | 7.0 ~ 8.3 |
 # 一键命令
-__基于Debian系列 `Ubuntu | Debian | Kali`__
-
-    bash <(curl -sL https://raw.githubusercontent.com/SuperManito/Linux-Source/main/Source-Debians.sh)
-__基于RedHat系列 `CentOS | Fedora`__
-
-    bash <(curl -sL https://raw.githubusercontent.com/SuperManito/Linux-Source/main/Source-RedHats.sh)
-    bash <(curl -sL https://github.com/SuperManito/LinuxMirrors/raw/main/RedHat-Official-Source-Generation.sh)
+    bash <(curl -sL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/ReplaceMirror.sh)
 - 附1. 如果提示`Command 'curl' not found`则说明当前未安装`curl`软件包，安装命令如下：
 
       apt install -y curl 或 yum install -y curl
