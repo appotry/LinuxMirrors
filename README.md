@@ -13,7 +13,7 @@ __基于Debian系列 `Ubuntu | Debian | Kali`__
 __基于RedHat系列 `CentOS | Fedora`__
 
     bash <(curl -sL https://raw.githubusercontent.com/SuperManito/Linux-Source/main/Source-RedHats.sh)
-    bash <(curl -sL https://raw.githubusercontent.com/SuperManito/Linux-Source/main/RedHat-Official-Source-Generation.sh.sh)
+    bash <(curl -sL https://raw.githubusercontent.com/SuperManito/Linux-Source/main/RedHat-Official-Source-Generation.sh)
 - 附1. 如果提示`Command 'curl' not found`则说明当前未安装`curl`软件包，安装命令如下：
 
       apt install -y curl 或 yum install -y curl
