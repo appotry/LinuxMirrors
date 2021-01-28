@@ -7,7 +7,12 @@
 | Fedora | 28 ~ 33 |
 | CentOS | 7.0 ~ 8.3 |
 # 一键命令
-    bash <(curl -sL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/ReplaceMirror.sh)
+- __Github:__
+
+      bash <(curl -sL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/ReplaceMirror.sh)
+- __Gitee:__
+
+      bash <(curl -sL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ReplaceMirror.sh)
 - 附1. 如果提示`Command 'curl' not found`则说明当前未安装`curl`软件包，安装命令如下：
 
       apt install -y curl 或 yum install -y curl
