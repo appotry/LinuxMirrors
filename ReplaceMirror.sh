@@ -1,7 +1,7 @@
 #!/bin/bash
-#Author:SuperManito
+## Author:SuperManito
 
-#当前系统判定：
+## 当前系统判定：
 function SystemJudgment() {
   ls /etc | grep redhat-release -qw
   if [ $? -eq 0 ]; then
