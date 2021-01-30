@@ -1,5 +1,5 @@
 #!/bin/bash
-#Author:SuperManito
+## Author:SuperManito
 
 ## 生成基于RedHat系Linux发行版的repo官方更新源：
 function RedHatOfficialMirror() {
