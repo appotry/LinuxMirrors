@@ -176,7 +176,7 @@ function DebianMirrors() {
 
 ## 基于RedHat系Linux发行版的repo更新源：
 function RedHatMirrors() {
-  bash <(curl -sL https://github.com/SuperManito/LinuxMirrors/raw/main/RedHat-Official-Mirror-Generation.sh)
+  bash <(curl -sL https://gitee.com/SuperManito/LinuxMirrors/raw/main/RedHat-Official-Mirror-Generation.sh)
   if [ $SYSTEM_NAME = "CentOS" ]; then
     sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/*
     sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' /etc/yum.repos.d/*
