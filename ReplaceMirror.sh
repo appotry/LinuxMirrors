@@ -1,5 +1,5 @@
-## !/bin/bash
-## Author:SuperManito
+#!/bin/bash
+#Author:SuperManito
 
 ## 当前系统判定：
 function SystemJudgment() {
