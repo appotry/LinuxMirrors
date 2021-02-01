@@ -1,33 +1,45 @@
 #!/bin/bash
-## Author:SuperManito
+#Author:SuperManito
 
 ## 生成基于RedHat系Linux发行版的repo官方更新源：
 function RedHatOfficialMirror() {
-    SYSTEM_NAME=$(cat /etc/redhat-release | cut -c1-6)
-    CENTOS_VERSION=$(cat /etc/redhat-release | cut -c22)
-    ls /etc | grep yum.repos.d.bak -qw
-    if [ $? -eq 0 ]; then
-        echo -e '\033[32m检测到已备份的 repo源 文件，跳过备份操作...... \033[0m'
-    else
-        mkdir -p /etc/yum.repos.d.bak
-        cp -rf /etc/yum.repos.d/* /etc/yum.repos.d.bak
-        echo -e '\033[32m已备份原有 repo源 文件至 /etc/yum.repos.d.bak ...... \033[0m'
-    fi
+  SYSTEM_NAME=$(cat /etc/redhat-release | cut -c1-6)
+  CENTOS_VERSION=$(cat /etc/redhat-release | cut -c22)
+  ls /etc | grep yum.repos.d.bak -qw
+  if [ $? -eq 0 ]; then
+    echo -e '\033[32m检测到已备份的 repo源 文件，跳过备份操作...... \033[0m'
+  else
+    mkdir -p /etc/yum.repos.d.bak
+    cp -rf /etc/yum.repos.d/* /etc/yum.repos.d.bak
+    echo -e '\033[32m已备份原有 repo源 文件至 /etc/yum.repos.d.bak ...... \033[0m'
+  fi
     sleep 3s
-    if [ $CENTOS_VERSION = "8" ]; then
-        touch /etc/yum.repos.d/CentOS-Linux-AppStream.repo
-        touch /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
-        touch /etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo
-        touch /etc/yum.repos.d/CentOS-Linux-Debuginfo.repo
-        touch /etc/yum.repos.d/CentOS-Linux-Devel.repo
-        touch /etc/yum.repos.d/CentOS-Linux-Extras.repo
-        touch /etc/yum.repos.d/CentOS-Linux-FastTrack.repo
-        touch /etc/yum.repos.d/CentOS-Linux-HighAvailability.repo
-        touch /etc/yum.repos.d/CentOS-Linux-Media.repo
-        touch /etc/yum.repos.d/CentOS-Linux-Plus.repo
-        touch /etc/yum.repos.d/CentOS-Linux-PowerTools.repo
-        touch /etc/yum.repos.d/CentOS-Linux-Sources.repo
-        cat >/etc/yum.repos.d/CentOS-Linux-AppStream.repo <<\EOF
+  if [ $CENTOS_VERSION = "8" ]; then
+    rm -rf /etc/yum.repos.d/CentOS-Linux-AppStream.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-Debuginfo.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-Devel.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-Extras.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-FastTrack.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-HighAvailability.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-Media.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-Plus.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-PowerTools.repo
+    rm -rf /etc/yum.repos.d/CentOS-Linux-Sources.repo
+    touch /etc/yum.repos.d/CentOS-Linux-AppStream.repo
+    touch /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
+    touch /etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo
+    touch /etc/yum.repos.d/CentOS-Linux-Debuginfo.repo
+    touch /etc/yum.repos.d/CentOS-Linux-Devel.repo
+    touch /etc/yum.repos.d/CentOS-Linux-Extras.repo
+    touch /etc/yum.repos.d/CentOS-Linux-FastTrack.repo
+    touch /etc/yum.repos.d/CentOS-Linux-HighAvailability.repo
+    touch /etc/yum.repos.d/CentOS-Linux-Media.repo
+    touch /etc/yum.repos.d/CentOS-Linux-Plus.repo
+    touch /etc/yum.repos.d/CentOS-Linux-PowerTools.repo
+    touch /etc/yum.repos.d/CentOS-Linux-Sources.repo
+    cat >/etc/yum.repos.d/CentOS-Linux-AppStream.repo <<\EOF
 # CentOS-Linux-AppStream.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -46,7 +58,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-BaseOS.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-BaseOS.repo <<\EOF
 # CentOS-Linux-BaseOS.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -65,7 +77,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo <<\EOF
 # CentOS-Linux-ContinuousRelease.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -91,7 +103,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-Debuginfo.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-Debuginfo.repo <<\EOF
 # CentOS-Linux-Debuginfo.repo
 #
 # All debug packages are merged into a single repo, split by basearch, and are
@@ -104,7 +116,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-Devel.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-Devel.repo <<\EOF
 # CentOS-Linux-Devel.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -123,7 +135,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-Extras.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-Extras.repo <<\EOF
 # CentOS-Linux-Extras.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -142,7 +154,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-FastTrack.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-FastTrack.repo <<\EOF
 # CentOS-Linux-FastTrack.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -161,7 +173,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-HighAvailability.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-HighAvailability.repo <<\EOF
 # CentOS-Linux-HighAvailability.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -180,7 +192,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-Media.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-Media.repo <<\EOF
 # CentOS-Linux-Media.repo
 #
 # You can use this repo to install items directly off the installation media.
@@ -204,7 +216,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-Plus.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-Plus.repo <<\EOF
 # CentOS-Linux-Plus.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -223,7 +235,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-PowerTools.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-PowerTools.repo <<\EOF
 # CentOS-Linux-PowerTools.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -242,7 +254,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        cat >/etc/yum.repos.d/CentOS-Linux-Sources.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Linux-Sources.repo <<\EOF
 # CentOS-Linux-Sources.repo
 
 
@@ -274,22 +286,22 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    elif [ $CENTOS_VERSION = "7" ]; then
-        rm -rf /etc/yum.repos.d/CentOS-BaseOS.repo
-        rm -rf /etc/yum.repos.d/CentOS-CR.repo
-        rm -rf /etc/yum.repos.d/CentOS-Debuginfo.repo
-        rm -rf /etc/yum.repos.d/CentOS-fasttrack.repo
-        rm -rf /etc/yum.repos.d/CentOS-Media.repo
-        rm -rf /etc/yum.repos.d/CentOS-Sources.repo
-        rm -rf /etc/yum.repos.d/CentOS-Vault.repo
-        touch /etc/yum.repos.d/CentOS-BaseOS.repo
-        touch /etc/yum.repos.d/CentOS-CR.repo
-        touch /etc/yum.repos.d/CentOS-Debuginfo.repo
-        touch /etc/yum.repos.d/CentOS-fasttrack.repo
-        touch /etc/yum.repos.d/CentOS-Media.repo
-        touch /etc/yum.repos.d/CentOS-Sources.repo
-        touch /etc/yum.repos.d/CentOS-Vault.repo
-        cat >/etc/yum.repos.d/CentOS-BaseOS.repo <<\EOF
+  elif [ $CENTOS_VERSION = "7" ]; then
+    rm -rf /etc/yum.repos.d/CentOS-BaseOS.repo
+    rm -rf /etc/yum.repos.d/CentOS-CR.repo
+    rm -rf /etc/yum.repos.d/CentOS-Debuginfo.repo
+    rm -rf /etc/yum.repos.d/CentOS-fasttrack.repo
+    rm -rf /etc/yum.repos.d/CentOS-Media.repo
+    rm -rf /etc/yum.repos.d/CentOS-Sources.repo
+    rm -rf /etc/yum.repos.d/CentOS-Vault.repo
+    touch /etc/yum.repos.d/CentOS-BaseOS.repo
+    touch /etc/yum.repos.d/CentOS-CR.repo
+    touch /etc/yum.repos.d/CentOS-Debuginfo.repo
+    touch /etc/yum.repos.d/CentOS-fasttrack.repo
+    touch /etc/yum.repos.d/CentOS-Media.repo
+    touch /etc/yum.repos.d/CentOS-Sources.repo
+    touch /etc/yum.repos.d/CentOS-Vault.repo
+    cat >/etc/yum.repos.d/CentOS-BaseOS.repo <<\EOF
 # CentOS-Base.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -334,7 +346,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-        cat >/etc/yum.repos.d/CentOS-CR.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-CR.repo <<\EOF
 # CentOS-CR.repo
 #
 # The Continuous Release ( CR )  repository contains rpms that are due in the next
@@ -364,7 +376,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 enabled=0
 EOF
-        cat >/etc/yum.repos.d/CentOS-Debuginfo.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Debuginfo.repo <<\EOF
 # CentOS-Debug.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -387,7 +399,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-Debug-7
 enabled=0
 #
 EOF
-        cat >/etc/yum.repos.d/CentOS-fasttrack.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-fasttrack.repo <<\EOF
 [fasttrack]
 name=CentOS-7 - fasttrack
 mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=fasttrack&infra=$infra
@@ -396,7 +408,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-        cat >/etc/yum.repos.d/CentOS-Media.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Media.repo <<\EOF
 # CentOS-Media.repo
 #
 #  This repo can be used with mounted DVD media, verify the mount point for
@@ -419,7 +431,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-        cat >/etc/yum.repos.d/CentOS-Sources.repo <<\EOF
+    cat >/etc/yum.repos.d/CentOS-Sources.repo <<\EOF
 # CentOS-Sources.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -463,22 +475,22 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-    elif [ $SYSTEM_NAME = "Fedora" ]; then
-        rm -rf /etc/yum.repos.d/fedora-cisco-openh264.repo
-        rm -rf /etc/yum.repos.d/fedora.repo
-        rm -rf /etc/yum.repos.d/fedora-updates.repo
-        rm -rf /etc/yum.repos.d/fedora-modular.repo
-        rm -rf /etc/yum.repos.d/fedora-updates-modular.repo
-        rm -rf /etc/yum.repos.d/fedora-updates-testing.repo
-        rm -rf /etc/yum.repos.d/fedora-updates-testing-modular.repo
-        touch /etc/yum.repos.d/fedora-cisco-openh264.repo
-        touch /etc/yum.repos.d/fedora.repo
-        touch /etc/yum.repos.d/fedora-updates.repo
-        touch /etc/yum.repos.d/fedora-modular.repo
-        touch /etc/yum.repos.d/fedora-updates-modular.repo
-        touch /etc/yum.repos.d/fedora-updates-testing.repo
-        touch /etc/yum.repos.d/fedora-updates-testing-modular.repo
-        cat >/etc/yum.repos.d/fedora-cisco-openh264.repo <<\EOF
+  elif [ $SYSTEM_NAME = "Fedora" ]; then
+    rm -rf /etc/yum.repos.d/fedora-cisco-openh264.repo
+    rm -rf /etc/yum.repos.d/fedora.repo
+    rm -rf /etc/yum.repos.d/fedora-updates.repo
+    rm -rf /etc/yum.repos.d/fedora-modular.repo
+    rm -rf /etc/yum.repos.d/fedora-updates-modular.repo
+    rm -rf /etc/yum.repos.d/fedora-updates-testing.repo
+    rm -rf /etc/yum.repos.d/fedora-updates-testing-modular.repo
+    touch /etc/yum.repos.d/fedora-cisco-openh264.repo
+    touch /etc/yum.repos.d/fedora.repo
+    touch /etc/yum.repos.d/fedora-updates.repo
+    touch /etc/yum.repos.d/fedora-modular.repo
+    touch /etc/yum.repos.d/fedora-updates-modular.repo
+    touch /etc/yum.repos.d/fedora-updates-testing.repo
+    touch /etc/yum.repos.d/fedora-updates-testing-modular.repo
+    cat >/etc/yum.repos.d/fedora-cisco-openh264.repo <<\EOF
 [fedora-cisco-openh264]
 name=Fedora $releasever openh264 (From Cisco) - $basearch
 metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-$releasever&arch=$basearch
@@ -501,7 +513,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=True
 EOF
-        cat >/etc/yum.repos.d/fedora.repo <<\EOF
+    cat >/etc/yum.repos.d/fedora.repo <<\EOF
 [fedora]
 name=Fedora $releasever - $basearch
 #baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/
@@ -539,7 +551,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >/etc/yum.repos.d/fedora-updates.repo <<\EOF
+    cat >/etc/yum.repos.d/fedora-updates.repo <<\EOF
 [updates]
 name=Fedora $releasever - $basearch - Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Everything/$basearch/
@@ -577,7 +589,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >/etc/yum.repos.d/fedora-modular.repo <<\EOF
+    cat >/etc/yum.repos.d/fedora-modular.repo <<\EOF
 [fedora-modular]
 name=Fedora Modular $releasever - $basearch
 #baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Modular/$basearch/os/
@@ -615,7 +627,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >/etc/yum.repos.d/fedora-updates-modular.repo <<\EOF
+    cat >/etc/yum.repos.d/fedora-updates-modular.repo <<\EOF
 [updates-modular]
 name=Fedora Modular $releasever - $basearch - Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/$basearch/
@@ -653,7 +665,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >/etc/yum.repos.d/fedora-updates-testing.repo <<\EOF
+    cat >/etc/yum.repos.d/fedora-updates-testing.repo <<\EOF
 [updates-testing]
 name=Fedora $releasever - $basearch - Test Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Everything/$basearch/
@@ -691,7 +703,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >/etc/yum.repos.d/fedora-updates-testing-modular.repo <<\EOF
+    cat >/etc/yum.repos.d/fedora-updates-testing-modular.repo <<\EOF
 [updates-testing-modular]
 name=Fedora Modular $releasever - $basearch - Test Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Modular/$basearch/
@@ -729,6 +741,6 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-    fi
+  fi
 }
 RedHatOfficialMirror
