@@ -13,10 +13,17 @@
 - __Gitee:__
 
       bash <(curl -sL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ReplaceMirror.sh)
+# 基于 RedHat 系列 Linux 官方源一键生成脚本
+- __Github:__
+
+      bash <(curl -sL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/RedHat-Official-Mirror-Generation.sh)
+- __Gitee:__
+
+      bash <(curl -sL https://gitee.com/SuperManito/LinuxMirrors/raw/main/RedHat-Official-Mirror-Generation.sh)
 - 附1. 如果提示`Command 'curl' not found`则说明当前未安装`curl`软件包，安装命令如下：
 
       apt install -y curl 或 yum install -y curl
-- 附2. 如果没有科学上网方式提示无法解决`Hosts`，可通过添加解析记录以解决连通性问题，添加命令如下：
+- 附2. 如果没有科学上网方式使用Github命令部署项目时提示`无法解决Hosts`，可通过添加解析记录以解决连通性问题，添加命令如下：
 
       echo "199.232.96.133 raw.githubusercontent.com" >> /etc/hosts
       echo "151.101.88.133 raw.githubusercontent.com" >> /etc/hosts
