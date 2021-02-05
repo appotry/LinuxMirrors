@@ -1,3 +1,7 @@
+__如果您觉得这个项目不错的话可以在右上角给颗小星星吗？方便分享给更多的朋友吗？ (∩_∩)__
+
+***
+
 # 已适配的 GNU/Linux 发行版：
 | 系统 | 支持的版本 |
 | ------ | ------ |
@@ -33,3 +37,5 @@
 - __Gitee:__
 
       bash <(curl -sL https://gitee.com/SuperManito/LinuxMirrors/raw/main/RedHat-Official-Mirror-Generation.sh)
+
+***
