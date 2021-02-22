@@ -1,8 +1,9 @@
-__如果您觉得这个项目不错的话可以在右上角给颗小星星吗？方便分享给更多的朋友吗？ (∩_∩)__
+__如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便分享给更多的朋友吗？__
 
 ***
 
-# 已适配的 GNU/Linux 发行版：
+# GNU/Linux 一键更换国内更新源脚本
+## 已适配的 GNU/Linux 发行版：
 | 系统 | 支持的版本 |
 | ------ | ------ |
 | Ubuntu | 14.04 ~ 20.10 |
@@ -13,7 +14,7 @@ __如果您觉得这个项目不错的话可以在右上角给颗小星星吗？
 
 ***
 
-# 一键命令
+## 一键命令
 - __Github:__
 
       bash <(curl -sL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/ReplaceMirror.sh)
@@ -30,7 +31,7 @@ __如果您觉得这个项目不错的话可以在右上角给颗小星星吗？
       
 ***
 
-# 基于 RedHat 系列 Linux 官方源一键生成脚本
+## 基于 RedHat 系列 Linux 官方源一键生成脚本
 - __Github:__
 
       bash <(curl -sL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/RedHat-Official-Mirror-Generation.sh)
@@ -39,3 +40,5 @@ __如果您觉得这个项目不错的话可以在右上角给颗小星星吗？
       bash <(curl -sL https://gitee.com/SuperManito/LinuxMirrors/raw/main/RedHat-Official-Mirror-Generation.sh)
 
 ***
+
+__如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便分享给更多的朋友吗？__
