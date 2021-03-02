@@ -1,7 +1,7 @@
 #!/bin/bash
 #Author:SuperManito
 
-## 生成基于RedHat系Linux发行版的repo官方更新源：
+## 生成基于 RedHat 发行版和及其衍生发行版的 repo 官方更新源：
 function RedHatOfficialMirror() {
   SYSTEM_NAME=$(cat /etc/redhat-release | cut -c1-6)
   CENTOS_VERSION=$(cat /etc/redhat-release | cut -c22)
@@ -13,20 +13,20 @@ function RedHatOfficialMirror() {
     cp -rf /etc/yum.repos.d/* /etc/yum.repos.d.bak
     echo -e '\033[32m已备份原有 repo源 文件至 /etc/yum.repos.d.bak ...... \033[0m'
   fi
-    sleep 3s
+  sleep 3s
   if [ $CENTOS_VERSION = "8" ]; then
-    rm -rf /etc/yum.repos.d/CentOS-Linux-AppStream.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-Debuginfo.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-Devel.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-Extras.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-FastTrack.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-HighAvailability.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-Media.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-Plus.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-PowerTools.repo
-    rm -rf /etc/yum.repos.d/CentOS-Linux-Sources.repo
+    rm -rf /etc/yum.repos.d/*AppStream.repo
+    rm -rf /etc/yum.repos.d/*BaseOS.repo
+    rm -rf /etc/yum.repos.d/*ContinuousRelease.repo
+    rm -rf /etc/yum.repos.d/*Debuginfo.repo
+    rm -rf /etc/yum.repos.d/*Devel.repo
+    rm -rf /etc/yum.repos.d/*Extras.repo
+    rm -rf /etc/yum.repos.d/*FastTrack.repo
+    rm -rf /etc/yum.repos.d/*HighAvailability.repo
+    rm -rf /etc/yum.repos.d/*Media.repo
+    rm -rf /etc/yum.repos.d/*Plus.repo
+    rm -rf /etc/yum.repos.d/*PowerTools.repo
+    rm -rf /etc/yum.repos.d/*Sources.repo
     touch /etc/yum.repos.d/CentOS-Linux-AppStream.repo
     touch /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
     touch /etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo
@@ -287,13 +287,13 @@ enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
   elif [ $CENTOS_VERSION = "7" ]; then
-    rm -rf /etc/yum.repos.d/CentOS-BaseOS.repo
-    rm -rf /etc/yum.repos.d/CentOS-CR.repo
-    rm -rf /etc/yum.repos.d/CentOS-Debuginfo.repo
-    rm -rf /etc/yum.repos.d/CentOS-fasttrack.repo
-    rm -rf /etc/yum.repos.d/CentOS-Media.repo
-    rm -rf /etc/yum.repos.d/CentOS-Sources.repo
-    rm -rf /etc/yum.repos.d/CentOS-Vault.repo
+    rm -rf /etc/yum.repos.d/*BaseOS.repo
+    rm -rf /etc/yum.repos.d/*CR.repo
+    rm -rf /etc/yum.repos.d/*Debuginfo.repo
+    rm -rf /etc/yum.repos.d/*fasttrack.repo
+    rm -rf /etc/yum.repos.d/*Media.repo
+    rm -rf /etc/yum.repos.d/*Sources.repo
+    rm -rf /etc/yum.repos.d/*Vault.repo
     touch /etc/yum.repos.d/CentOS-BaseOS.repo
     touch /etc/yum.repos.d/CentOS-CR.repo
     touch /etc/yum.repos.d/CentOS-Debuginfo.repo
@@ -476,13 +476,13 @@ enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
   elif [ $SYSTEM_NAME = "Fedora" ]; then
-    rm -rf /etc/yum.repos.d/fedora-cisco-openh264.repo
+    rm -rf /etc/yum.repos.d/*cisco-openh264.repo
     rm -rf /etc/yum.repos.d/fedora.repo
-    rm -rf /etc/yum.repos.d/fedora-updates.repo
-    rm -rf /etc/yum.repos.d/fedora-modular.repo
-    rm -rf /etc/yum.repos.d/fedora-updates-modular.repo
-    rm -rf /etc/yum.repos.d/fedora-updates-testing.repo
-    rm -rf /etc/yum.repos.d/fedora-updates-testing-modular.repo
+    rm -rf /etc/yum.repos.d/*updates.repo
+    rm -rf /etc/yum.repos.d/*modular.repo
+    rm -rf /etc/yum.repos.d/*updates-modular.repo
+    rm -rf /etc/yum.repos.d/*updates-testing.repo
+    rm -rf /etc/yum.repos.d/*updates-testing-modular.repo
     touch /etc/yum.repos.d/fedora-cisco-openh264.repo
     touch /etc/yum.repos.d/fedora.repo
     touch /etc/yum.repos.d/fedora-updates.repo
