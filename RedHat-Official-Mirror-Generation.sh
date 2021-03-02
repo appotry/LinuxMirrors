@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 #Author:SuperManito
 
 ## 生成基于 RedHat 发行版和及其衍生发行版的 repo 官方更新源：
