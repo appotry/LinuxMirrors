@@ -27,7 +27,7 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
       
 ***
 
-## 基于 RedHat 系列 Linux 官方源一键生成脚本
+## 基于 RedHat 发行版和及其衍生发行版的 repo 官方更新源生成脚本
 - __Github:__
 
       bash <(curl -sSL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/RedHat-Official-Mirror-Generation.sh)
