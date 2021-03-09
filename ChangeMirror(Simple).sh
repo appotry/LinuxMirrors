@@ -25,7 +25,7 @@ elif [ $SYSTEM = "RedHat" ]; then
 fi
 
 ## 更换国内源：
-function ReplaceMirror() {
+function ChangeMirror() {
   echo -e ''
   echo -e '+---------------------------------------------------+'
   echo -e '|                                                   |'
@@ -202,4 +202,6 @@ function RedHatMirrors() {
   fi
   yum makecache
 }
-ReplaceMirror
+
+SystemJudgment
+ChangeMirror
