@@ -5,9 +5,9 @@
 ## 判定系统是基于 Debian 还是 RedHat
 ls /etc | grep redhat-release -qw
 if [ $? -eq 0 ]; then
-    SYSTEM="RedHat"
+  SYSTEM="RedHat"
 else
-    SYSTEM="Debian"
+  SYSTEM="Debian"
 fi
 ## 定义一些变量（系统名称、系统版本、系统版本号）
 if [ $SYSTEM = "Debian" ]; then
@@ -183,22 +183,22 @@ function RedHatMirrors() {
     sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' /etc/yum.repos.d/*
     sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://mirror.centos.org|g' /etc/yum.repos.d/*
     sed -i "s|mirror.centos.org|$SOURCE|g" /etc/yum.repos.d/*
-    elif [ $SYSTEM_NAME = "Fedora" ]; then
+  elif [ $SYSTEM_NAME = "Fedora" ]; then
     sed -i 's|^metalink=|#metalink=|g' \
-    /etc/yum.repos.d/fedora.repo \
-    /etc/yum.repos.d/fedora-updates.repo \
-    /etc/yum.repos.d/fedora-modular.repo \
-    /etc/yum.repos.d/fedora-updates-modular.repo \
-    /etc/yum.repos.d/fedora-updates-testing.repo \
-    /etc/yum.repos.d/fedora-updates-testing-modular.repo
+      /etc/yum.repos.d/fedora.repo \
+      /etc/yum.repos.d/fedora-updates.repo \
+      /etc/yum.repos.d/fedora-modular.repo \
+      /etc/yum.repos.d/fedora-updates-modular.repo \
+      /etc/yum.repos.d/fedora-updates-testing.repo \
+      /etc/yum.repos.d/fedora-updates-testing-modular.repo
     sed -i 's|^#baseurl=|baseurl=|g' /etc/yum.repos.d/*
     sed -i "s|http://download.example/pub/fedora/linux|https://$SOURCE/fedora|g" \
-    /etc/yum.repos.d/fedora.repo \
-    /etc/yum.repos.d/fedora-updates.repo \
-    /etc/yum.repos.d/fedora-modular.repo \
-    /etc/yum.repos.d/fedora-updates-modular.repo \
-    /etc/yum.repos.d/fedora-updates-testing.repo \
-    /etc/yum.repos.d/fedora-updates-testing-modular.repo
+      /etc/yum.repos.d/fedora.repo \
+      /etc/yum.repos.d/fedora-updates.repo \
+      /etc/yum.repos.d/fedora-modular.repo \
+      /etc/yum.repos.d/fedora-updates-modular.repo \
+      /etc/yum.repos.d/fedora-updates-testing.repo \
+      /etc/yum.repos.d/fedora-updates-testing-modular.repo
   fi
   yum makecache
 }
