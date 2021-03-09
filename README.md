@@ -17,10 +17,10 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 ## 一键命令
 - __Github:__
 
-      bash <(curl -sSL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/ReplaceMirror.sh)
+      bash <(curl -sSL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/ChangeMirror.sh)
 - __Gitee:__
 
-      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ReplaceMirror.sh)
+      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirror.sh)
 - 附. 如果提示`Command 'curl' not found`则说明当前未安装`curl`软件包，安装命令如下：
 
       apt install -y curl 或 yum install -y curl
