@@ -19,12 +19,7 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 ***
 
 ## 一键命令：
-- __Github__
-
-      bash <(curl -sSL https://raw.githubusercontent.com/SuperManito/LinuxMirrors/main/ChangeMirror.sh)
-- __码云Gitee__
-
-      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirror.sh)
+    sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirror.sh)
       
 ***
 
@@ -34,6 +29,8 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
       apt install -y curl 或 yum install -y curl
 
 ***
+
+### <img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> CSDN博客：https://blog.csdn.net/u013246692/article/details/113124295
 
 > 项目已设立开源许可证书，所有脚本不得用于商业目的，请尊重本人的知识成果\
 > 如需使用请直接调用脚本，不要复制后进行传播，如有意见与建议请提交至 Issues
