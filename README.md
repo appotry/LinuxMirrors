@@ -18,7 +18,7 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 ***
 
 ## 一键命令：
-    sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirror.sh)
+    bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirror.sh)
 > 脚本自带备份功能，无需手动备份原有官方源
 
 ***
