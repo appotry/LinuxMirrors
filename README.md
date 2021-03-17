@@ -23,13 +23,10 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 
 ***
 
-ㅤ
 ## 其它脚本
+- `Docker CE` 国内一键安装脚本：
 
-***
-
-### `Docker CE` 国内一键安装脚本：
-    bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/install-docker.sh)
+      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/install-docker.sh)
 
 ***
 
