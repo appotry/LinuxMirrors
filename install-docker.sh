@@ -40,6 +40,13 @@ function Installation() {
         add-apt-repository -y "deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable"
         apt update
         apt install -y docker-ce docker-ce-cli containerd.io
+    elif [ $SYSTEM_NAME = "Kali" ]; then
+        apt remove -y docker docker-engine docker.io containerd runc
+        apt install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+        curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+        add-apt-repository -y "deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable"
+        apt update
+        apt install -y docker-ce docker-ce-cli containerd.io
     elif [ $SYSTEM_NAME = "CentOS" ]; then
         yum remove -y docker* runc
         yum install -y yum-utils device-mapper-persistent-data lvm2
