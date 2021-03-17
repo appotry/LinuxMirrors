@@ -19,7 +19,7 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 
 ## 一键命令：
     bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirror.sh)
-> 脚本自带备份功能，无需手动备份原有官方源
+> _注意：脚本自带备份功能，无需手动备份原有官方源_
 
 ***
 
@@ -27,7 +27,7 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 - `Docker CE` 国内一键安装脚本：
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/install-docker.sh)
-> ㅤ默认配置阿里云镜像加速器
+> _ㅤ注意：默认配置阿里云镜像加速器_
 
 ***
 
