@@ -27,11 +27,12 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 - `Docker CE` 国内一键安装脚本：
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/install-docker.sh)
+> ㅤ默认配置阿里云镜像加速器
 
 ***
 
 ## 常见问题与帮助：
-- 如果提示 `Command 'curl' not found`则说明当前未安装`curl`软件包，安装命令如下：
+- 如果提示 `Command 'curl' not found` 则说明当前未安装 `curl` 软件包，安装命令如下：
 
       apt install -y curl 或 yum install -y curl
 
