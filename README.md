@@ -44,4 +44,8 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 ***
 
 ### <img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> CSDN博客：[blog.csdn.net/u013246692/article/details/113124295](https://blog.csdn.net/u013246692/article/details/113124295)
+
+### 赞赏码
+<img src="./icon/thank.jpg" width="280" height="280" alt="微信赞赏码"/><br/>
+
 __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便分享给更多的朋友吗？__
