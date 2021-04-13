@@ -5,9 +5,9 @@
 ## 判定系统是基于 Debian 还是 RedHat
 ls /etc | grep redhat-release -qw
 if [ $? -eq 0 ]; then
-    SYSTEM="RedHat"
+  SYSTEM="RedHat"
 else
-    SYSTEM="Debian"
+  SYSTEM="Debian"
 fi
 ## 定义一些变量（系统名称、系统版本、系统版本号）
 if [ $SYSTEM = "Debian" ]; then
@@ -42,23 +42,18 @@ function ChangeMirror() {
   echo -e '            提供以下国内更新源可供选择：'
   echo -e ''
   echo -e '#####################################################'
-  echo -e ' *  1)    中科大'
-  echo -e ' *  2)    华为云'
-  echo -e ' *  3)    阿里云'
+  echo -e ''
+  echo -e ' *  1)    阿里云'
+  echo -e ' *  2)    腾讯云'
+  echo -e ' *  3)    华为云'
   echo -e ' *  4)    网易'
   echo -e ' *  4)    搜狐'
   echo -e ' *  6)    清华大学'
   echo -e ' *  7)    浙江大学'
-  echo -e ' *  8)    南京大学'
-  echo -e ' *  9)    重庆大学'
-  echo -e ' *  10)   兰州大学'
+  echo -e ' *  8)    重庆大学'
+  echo -e ' *  9)    兰州大学'
+  echo -e ' *  10)   中国科技大学'
   echo -e ' *  11)   上海交通大学'
-  echo -e ' *  12)   北京交通大学'
-  echo -e ' *  13)   北京理工大学'
-  echo -e ' *  14)   南京邮电大学'
-  echo -e ' *  15)   华中科技大学'
-  echo -e ' *  16)   哈尔滨工业大学'
-  echo -e ' *  17)   北京外国语大学'
   echo -e ''
   echo -e '#####################################################'
   echo -e ''
@@ -67,17 +62,17 @@ function ChangeMirror() {
   echo -e ''
   echo -e '#####################################################'
   echo -e ''
-  CHOICE=$(echo -e '\033[32m请输入您想使用的国内更新源 [ 1~17 ]：\033[0m')
+  CHOICE=$(echo -e '\033[32m├ 请输入您想使用的国内更新源 [ 1~17 ]：\033[0m')
   read -p "$CHOICE" INPUT
   case $INPUT in
   1)
-    SOURCE="mirrors.ustc.edu.cn"
+    SOURCE="mirrors.aliyun.com"
     ;;
   2)
-    SOURCE="mirrors.huaweicloud.com"
+    SOURCE="mirrors.cloud.tencent.com"
     ;;
   3)
-    SOURCE="mirrors.aliyun.com"
+    SOURCE="mirrors.huaweicloud.com"
     ;;
   4)
     SOURCE="mirrors.163.com"
@@ -92,39 +87,21 @@ function ChangeMirror() {
     SOURCE="mirrors.zju.edu.cn"
     ;;
   8)
-    SOURCE="mirrors.nju.edu.cn"
-    ;;
-  9)
     SOURCE="mirrors.cqu.edu.cn"
     ;;
-  10)
+  9)
     SOURCE="mirror.lzu.edu.cn"
+    ;;
+  10)
+    SOURCE="mirrors.ustc.edu.cn"
     ;;
   11)
     SOURCE="ftp.sjtu.edu.cn"
     ;;
-  12)
-    SOURCE="mirror.bjtu.edu.cn"
-    ;;
-  13)
-    SOURCE="mirror.bit.edu.cn"
-    ;;
-  14)
-    SOURCE="mirrors.njupt.edu.cn"
-    ;;
-  15)
-    SOURCE="mirrors.hust.edu.cn"
-    ;;
-  16)
-    SOURCE="mirrors.hit.edu.cn"
-    ;;
-  17)
-    SOURCE="mirrors.bfsu.edu.cn"
-    ;;
   *)
-    SOURCE="mirrors.ustc.edu.cn"
+    SOURCE="mirrors.aliyun.com"
     echo -e ''
-    echo -e '\033[33m---------- 输入错误，更新源将默认使用中科大源 ---------- \033[0m'
+    echo -e '\033[33m---------- 输入错误，更新源将默认使用阿里源 ---------- \033[0m'
     sleep 3s
     ;;
   esac
@@ -133,8 +110,6 @@ function ChangeMirror() {
     DebianMirrors
   elif [ $SYSTEM = "RedHat" ]; then
     RedHatMirrors
-  else
-    echo -e '\033[31m---------- 此脚本不支持您所使用的操作系统 ---------- \033[0m'
   fi
 }
 
@@ -186,20 +161,20 @@ function RedHatMirrors() {
     sed -i "s|mirror.centos.org|$SOURCE|g" /etc/yum.repos.d/*
   elif [ $SYSTEM_NAME = "Fedora" ]; then
     sed -i 's|^metalink=|#metalink=|g' \
-    /etc/yum.repos.d/fedora.repo \
-    /etc/yum.repos.d/fedora-updates.repo \
-    /etc/yum.repos.d/fedora-modular.repo \
-    /etc/yum.repos.d/fedora-updates-modular.repo \
-    /etc/yum.repos.d/fedora-updates-testing.repo \
-    /etc/yum.repos.d/fedora-updates-testing-modular.repo
+      /etc/yum.repos.d/fedora.repo \
+      /etc/yum.repos.d/fedora-updates.repo \
+      /etc/yum.repos.d/fedora-modular.repo \
+      /etc/yum.repos.d/fedora-updates-modular.repo \
+      /etc/yum.repos.d/fedora-updates-testing.repo \
+      /etc/yum.repos.d/fedora-updates-testing-modular.repo
     sed -i 's|^#baseurl=|baseurl=|g' /etc/yum.repos.d/*
     sed -i "s|http://download.example/pub/fedora/linux|https://$SOURCE/fedora|g" \
-    /etc/yum.repos.d/fedora.repo \
-    /etc/yum.repos.d/fedora-updates.repo \
-    /etc/yum.repos.d/fedora-modular.repo \
-    /etc/yum.repos.d/fedora-updates-modular.repo \
-    /etc/yum.repos.d/fedora-updates-testing.repo \
-    /etc/yum.repos.d/fedora-updates-testing-modular.repo
+      /etc/yum.repos.d/fedora.repo \
+      /etc/yum.repos.d/fedora-updates.repo \
+      /etc/yum.repos.d/fedora-modular.repo \
+      /etc/yum.repos.d/fedora-updates-modular.repo \
+      /etc/yum.repos.d/fedora-updates-testing.repo \
+      /etc/yum.repos.d/fedora-updates-testing-modular.repo
   fi
   yum makecache
 }
