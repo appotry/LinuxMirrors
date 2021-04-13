@@ -46,22 +46,16 @@ function ChangeMirror() {
     echo -e '#####################################################'
     echo -e ''
     echo -e ' *  1)    阿里云'
-    echo -e ' *  2)    中科大'
+    echo -e ' *  2)    腾讯云'
     echo -e ' *  3)    华为云'
     echo -e ' *  4)    网易'
     echo -e ' *  4)    搜狐'
     echo -e ' *  6)    清华大学'
     echo -e ' *  7)    浙江大学'
-    echo -e ' *  8)    南京大学'
-    echo -e ' *  9)    重庆大学'
-    echo -e ' *  10)   兰州大学'
+    echo -e ' *  8)    重庆大学'
+    echo -e ' *  9)    兰州大学'
+    echo -e ' *  10)   中国科技大学'
     echo -e ' *  11)   上海交通大学'
-    echo -e ' *  12)   北京交通大学'
-    echo -e ' *  13)   北京理工大学'
-    echo -e ' *  14)   南京邮电大学'
-    echo -e ' *  15)   华中科技大学'
-    echo -e ' *  16)   哈尔滨工业大学'
-    echo -e ' *  17)   北京外国语大学'
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
@@ -70,14 +64,14 @@ function ChangeMirror() {
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    CHOICE1=$(echo -e '\033[32m├ 请输入您想使用的国内 Docker CE 源 [ 1~17 ]：\033[0m')
+    CHOICE1=$(echo -e '\033[32m├ 请输入您想使用的国内 Docker CE 源 [ 1~11 ]：\033[0m')
     read -p "$CHOICE1" INPUT
     case $INPUT in
     1)
         SOURCE="mirrors.aliyun.com"
         ;;
     2)
-        SOURCE="mirrors.ustc.edu.cn"
+        SOURCE="mirrors.cloud.tencent.com"
         ;;
     3)
         SOURCE="mirrors.huaweicloud.com"
@@ -95,34 +89,16 @@ function ChangeMirror() {
         SOURCE="mirrors.zju.edu.cn"
         ;;
     8)
-        SOURCE="mirrors.nju.edu.cn"
-        ;;
-    9)
         SOURCE="mirrors.cqu.edu.cn"
         ;;
-    10)
+    9)
         SOURCE="mirror.lzu.edu.cn"
+        ;;
+    10)
+        SOURCE="mirrors.ustc.edu.cn"
         ;;
     11)
         SOURCE="ftp.sjtu.edu.cn"
-        ;;
-    12)
-        SOURCE="mirror.bjtu.edu.cn"
-        ;;
-    13)
-        SOURCE="mirror.bit.edu.cn"
-        ;;
-    14)
-        SOURCE="mirrors.njupt.edu.cn"
-        ;;
-    15)
-        SOURCE="mirrors.hust.edu.cn"
-        ;;
-    16)
-        SOURCE="mirrors.hit.edu.cn"
-        ;;
-    17)
-        SOURCE="mirrors.bfsu.edu.cn"
         ;;
     *)
         SOURCE="mirrors.aliyun.com"
