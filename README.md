@@ -19,15 +19,15 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 
 ## 一键命令：
     bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirror.sh)
-> _注意：脚本自带备份功能，无需手动备份原有官方源_
+> _注意：脚本自带备份功能，无需手动备份原有官方源。_
 
 ***
 
 ## 其它脚本
-- `Docker Engine` 国内一键安装脚本：
+- `Docker` 国内一键安装脚本：
 
-      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/install-docker.sh)
-> _ㅤ注意：默认配置阿里云镜像加速器_
+      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
+> _ㅤ注意：脚本集成安装最新版的 `Docker Engine` 与 `Docker Compose` ，可手动选择 `Docker CE源` 与` 镜像加速器` 。_
 
 ***
 
@@ -45,7 +45,7 @@ __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便
 
 ### <img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> CSDN博客：[blog.csdn.net/u013246692/article/details/113124295](https://blog.csdn.net/u013246692/article/details/113124295)
 
-### 赞赏码
+### 明天会更好
 <img src="./icon/thank.jpg" width="280" height="280" alt="微信赞赏码"/><br/>
 
 __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便分享给更多的朋友吗？__
