@@ -52,8 +52,8 @@ function ChangeMirror() {
   echo -e ' *  7)    浙江大学'
   echo -e ' *  8)    重庆大学'
   echo -e ' *  9)    兰州大学'
-  echo -e ' *  10)   中国科技大学'
-  echo -e ' *  11)   上海交通大学'
+  echo -e ' *  10)   上海交通大学'
+  echo -e ' *  11)   中国科学技术大学'
   echo -e ''
   echo -e '#####################################################'
   echo -e ''
@@ -62,7 +62,7 @@ function ChangeMirror() {
   echo -e ''
   echo -e '#####################################################'
   echo -e ''
-  CHOICE=$(echo -e '\033[32m├ 请输入您想使用的国内更新源 [ 1~17 ]：\033[0m')
+  CHOICE=$(echo -e '\033[32m├ 请输入您想使用的国内更新源 [ 1~11 ]：\033[0m')
   read -p "$CHOICE" INPUT
   case $INPUT in
   1)
@@ -93,10 +93,10 @@ function ChangeMirror() {
     SOURCE="mirror.lzu.edu.cn"
     ;;
   10)
-    SOURCE="mirrors.ustc.edu.cn"
+    SOURCE="ftp.sjtu.edu.cn"
     ;;
   11)
-    SOURCE="ftp.sjtu.edu.cn"
+    SOURCE="mirrors.ustc.edu.cn"
     ;;
   *)
     SOURCE="mirrors.aliyun.com"
@@ -117,10 +117,10 @@ function ChangeMirror() {
 function DebianMirrors() {
   ls /etc/apt | grep sources.list.bak -qw
   if [ $? -eq 0 ]; then
-    echo -e '\033[32m检测到已备份的 source.list源 文件，跳过备份操作...... \033[0m'
+    echo -e '\033[32m├ 检测到已备份的 source.list源 文件，跳过备份操作...... \033[0m'
   else
     cp -rf /etc/apt/sources.list /etc/apt/sources.list.bak >/dev/null 2>&1
-    echo -e '\033[32m已备份原有 source.list 更新源文件...... \033[0m'
+    echo -e '\033[32m├ 已备份原有 source.list 更新源文件...... \033[0m'
   fi
   sleep 3s
   sed -i '1,$d' /etc/apt/sources.list
@@ -183,11 +183,11 @@ function RedHatMirrors() {
 function RedHatOfficialMirror() {
   ls /etc | grep yum.repos.d.bak -qw
   if [ $? -eq 0 ]; then
-    echo -e '\033[32m检测到已备份的 repo源 文件，跳过备份操作...... \033[0m'
+    echo -e '\033[32m├ 检测到已备份的 repo源 文件，跳过备份操作...... \033[0m'
   else
     mkdir -p /etc/yum.repos.d.bak
     cp -rf /etc/yum.repos.d/* /etc/yum.repos.d.bak >/dev/null 2>&1
-    echo -e '\033[32m已备份原有 repo源 文件至 /etc/yum.repos.d.bak ...... \033[0m'
+    echo -e '\033[32m├ 已备份原有 repo源 文件至 /etc/yum.repos.d.bak ...... \033[0m'
   fi
   sleep 3s
   if [ $CENTOS_VERSION = "8" ]; then
