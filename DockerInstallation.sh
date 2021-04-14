@@ -11,7 +11,8 @@ if [ $? -eq 0 ]; then
 else
     SYSTEM="Debian"
 fi
-## 系统判定变量（系统名称、系统版本、系统版本号）
+## 系统判定变量
+## 名称、版本、版本号、使用架构
 if [ $SYSTEM = "Debian" ]; then
     SYSTEM_NAME=$(lsb_release -is)
     SYSTEM_VERSION=$(lsb_release -cs)
@@ -54,8 +55,8 @@ function ChangeMirror() {
     echo -e ' *  7)    浙江大学'
     echo -e ' *  8)    重庆大学'
     echo -e ' *  9)    兰州大学'
-    echo -e ' *  10)   中国科技大学'
-    echo -e ' *  11)   上海交通大学'
+    echo -e ' *  10)   上海交通大学'
+    echo -e ' *  11)   中国科学技术大学'
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
@@ -95,10 +96,10 @@ function ChangeMirror() {
         SOURCE="mirror.lzu.edu.cn"
         ;;
     10)
-        SOURCE="mirrors.ustc.edu.cn"
+        SOURCE="ftp.sjtu.edu.cn"
         ;;
     11)
-        SOURCE="ftp.sjtu.edu.cn"
+        SOURCE="mirrors.ustc.edu.cn"
         ;;
     *)
         SOURCE="mirrors.aliyun.com"
@@ -183,12 +184,13 @@ function ImageAccelerator() {
     echo -e ' *  1)    官方'
     echo -e ' *  2)    阿里云'
     echo -e ' *  3)    腾讯云'
-    echo -e ' *  4)    中科大'
-    echo -e ' *  5)    网易'
+    echo -e ' *  4)    DaoCloud'
+    echo -e ' *  5)    中国科学技术大学'
+    echo -e ' *  6)    网易'
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    CHOICE2=$(echo -e '\033[32m├ 请输入您想使用的国内镜像加速器 [ 1~5 ]：\033[0m')
+    CHOICE2=$(echo -e '\033[32m├ 请输入您想使用的国内镜像加速器 [ 1~6 ]：\033[0m')
     read -p "$CHOICE2" INPUT
     case $INPUT in
     1)
@@ -201,9 +203,12 @@ function ImageAccelerator() {
         REGISTRYSOURCE="mirror.ccs.tencentyun.com"
         ;;
     4)
-        REGISTRYSOURCE="docker.mirrors.ustc.edu.cn "
+        REGISTRYSOURCE="f1361db2.m.daocloud.io"
         ;;
     5)
+        REGISTRYSOURCE="docker.mirrors.ustc.edu.cn"
+        ;;
+    6)
         REGISTRYSOURCE="hub-mirror.c.163.com"
         ;;
     *)
