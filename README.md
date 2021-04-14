@@ -1,8 +1,10 @@
 # LinuxMirrors
 - __GNU/Linux 更换国内更新源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
-## 本项目所使用的镜像站
-| | 镜像站 | 地址链接 | 支持协议 |
+- __目前仅支持 `x86_64` 架构的环境，`arm` 架构正在完善中__
+
+## 本项目所使用的开源镜像站
+| | 镜像站名称 | 镜像站地址 | 支持协议 |
 | :------: | :------: | :------: | :------: |
 | 1 | 阿里云 | [mirrors.aliyun.com](https://developer.aliyun.com/special/mirrors/notice) |   |
 | 2 | 腾讯云 | [mirrors.cloud.tencent.com](https://mirrors.cloud.tencent.com) |  |
