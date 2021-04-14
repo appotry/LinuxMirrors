@@ -15,8 +15,9 @@
 | 7 | 浙江大学 | [mirrors.zju.edu.cn](https://mirrors.zju.edu.cn) |  |
 | 8 | 重庆大学 | [mirrors.cqu.edu.cn](https://mirrors.cqu.edu.cn) |  |
 | 9 | 兰州大学 | [mirror.lzu.edu.cn](https://mirror.lzu.edu.cn) |  |
-| 10 | 中国科技大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) |  |
-| 11 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) |  |
+| 10 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) |  |
+| 11 | 中国科学技术大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) |  |
+> 如果脚本中文乱码可对照此列表使用，顺序与脚本一致
 
 ***
 
