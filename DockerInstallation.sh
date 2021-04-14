@@ -27,6 +27,8 @@ elif [ $SYSTEM = "RedHat" ]; then
     fi
 fi
 
+Architecture=$(arch)
+
 ## 更换 Docker CE 国内源：
 function ChangeMirror() {
     echo -e ''
@@ -161,18 +163,6 @@ function DockerEngine() {
 
 ## 配置镜像加速器：
 function ImageAccelerator() {
-
-    ## 创建目录和文件
-    ls /etc | grep docker/daemon.json
-    if [ $? -eq 0 ]; then
-        mv ${DockerConfig} /etc/docker/daemon.json.bak
-        echo -e '已备份原有 Docker 配置文件......'
-        sleep 2s
-    else
-        mkdir -p /etc/docker >/dev/null 2>&1
-        touch ${DockerConfig}
-    fi
-
     ## 定义镜像加速器
     echo -e ''
     echo -e '#####################################################'
@@ -220,6 +210,17 @@ function ImageAccelerator() {
     esac
     echo -e ''
 
+    ## 创建目录和文件
+    ls /etc | grep docker/daemon.json
+    if [ $? -eq 0 ]; then
+        mv ${DockerConfig} /etc/docker/daemon.json.bak
+        echo -e '├ 已备份原有 Docker 配置文件......'
+        sleep 2s
+    else
+        mkdir -p /etc/docker >/dev/null 2>&1
+        touch ${DockerConfig}
+    fi
+    
     ## 配置镜像加速器
     echo -e '{\n  "registry-mirrors": ["https://SOURCE"]\n}' >${DockerConfig}
     sed -i "s/SOURCE/$REGISTRYSOURCE/g" ${DockerConfig}
