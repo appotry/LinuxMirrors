@@ -29,14 +29,14 @@ fi
 
 Architecture=$(arch)
 if [ $Architecture = "x86_64" ]; then
-  SOURCE_ARCH=amd64
-  UBUNTU_ARCH=ubuntu
+    SOURCE_ARCH=amd64
+    UBUNTU_ARCH=ubuntu
 elif [ $Architecture = "aarch64" ]; then
-  SOURCE_ARCH=arm64
-  UBUNTU_ARCH=ubuntu_port
+    SOURCE_ARCH=arm64
+    UBUNTU_ARCH=ubuntu_port
 else
-  SOURCE_ARCH=${Architecture}
-  UBUNTU_ARCH=ubuntu_port
+    SOURCE_ARCH=${Architecture}
+    UBUNTU_ARCH=ubuntu_port
 fi
 
 ## 更换 Docker 国内源：
@@ -55,9 +55,11 @@ function ChangeMirror() {
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    echo -e '         提供以下国内 Docker CE 源可供选择：'
+    echo -e '  提供以下国内 Docker CE 和 Docker Hub 源可供选择：'
     echo -e ''
     echo -e '#####################################################'
+    echo -e ''
+    echo -e ' Docker CE '
     echo -e ''
     echo -e ' *  1)    阿里云'
     echo -e ' *  2)    腾讯云'
@@ -71,15 +73,11 @@ function ChangeMirror() {
     echo -e ' *  10)   上海交通大学'
     echo -e ' *  11)   中国科学技术大学'
     echo -e ''
-    echo -e '#####################################################'
+    echo -e ' Docker Hub（镜像加速器） '
     echo -e ''
-    echo -e '         提供以下国内 Docker Hub 源可供选择：'
-    echo -e ''
-    echo -e '#####################################################'
-    echo -e ''
-    echo -e ' *  1)    官方'
-    echo -e ' *  2)    阿里云'
-    echo -e ' *  3)    腾讯云'
+    echo -e ' *  1)    阿里云'
+    echo -e ' *  2)    腾讯云'
+    echo -e ' *  3)    官方中国区'
     echo -e ' *  4)    DaoCloud'
     echo -e ' *  5)    中国科学技术大学'
     echo -e ' *  6)    网易'
@@ -140,13 +138,13 @@ function ChangeMirror() {
     read -p "$CHOICE_B" INPUT
     case $INPUT in
     1)
-        REGISTRYSOURCE="registry.docker-cn.com"
-        ;;
-    2)
         REGISTRYSOURCE="registry.cn-hangzhou.aliyuncs.com"
         ;;
-    3)
+    2)
         REGISTRYSOURCE="mirror.ccs.tencentyun.com"
+        ;;
+    3)
+        REGISTRYSOURCE="registry.docker-cn.com"
         ;;
     4)
         REGISTRYSOURCE="f1361db2.m.daocloud.io"
@@ -216,8 +214,6 @@ function DockerEngine() {
 
 ## 配置镜像加速器：
 function ImageAccelerator() {
-
-
     ## 创建目录和文件
     ls /etc | grep docker/daemon.json
     if [ $? -eq 0 ]; then
