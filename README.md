@@ -43,7 +43,7 @@
 
 ## `Docker` 国内一键安装脚本
     sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE源`与 `镜像加速器` 。_
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE源`与 `Docker Hub源（镜像加速器）` ，后续会加入手动选择版本功能。_
 
 ***
 
