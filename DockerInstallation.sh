@@ -28,9 +28,20 @@ elif [ $SYSTEM = "RedHat" ]; then
 fi
 
 Architecture=$(arch)
+if [ $Architecture = "x86_64" ]; then
+  SOURCE_ARCH=amd64
+  UBUNTU_ARCH=ubuntu
+elif [ $Architecture = "aarch64" ]; then
+  SOURCE_ARCH=arm64
+  UBUNTU_ARCH=ubuntu_port
+else
+  SOURCE_ARCH=${Architecture}
+  UBUNTU_ARCH=ubuntu_port
+fi
 
-## 更换 Docker CE 国内源：
+## 更换 Docker 国内源：
 function ChangeMirror() {
+    ## 定义 Docker CE 源
     echo -e ''
     echo -e '+---------------------------------------------------+'
     echo -e '|                                                   |'
@@ -62,13 +73,26 @@ function ChangeMirror() {
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
+    echo -e '         提供以下国内 Docker Hub 源可供选择：'
+    echo -e ''
+    echo -e '#####################################################'
+    echo -e ''
+    echo -e ' *  1)    官方'
+    echo -e ' *  2)    阿里云'
+    echo -e ' *  3)    腾讯云'
+    echo -e ' *  4)    DaoCloud'
+    echo -e ' *  5)    中国科学技术大学'
+    echo -e ' *  6)    网易'
+    echo -e ''
+    echo -e '#####################################################'
+    echo -e ''
     echo -e "      当前操作系统  $SYSTEM_NAME $SYSTEM_VERSION_NUMBER"
     echo -e "      当前系统时间  $(date "+%Y-%m-%d %H:%M")"
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    CHOICE1=$(echo -e '\033[32m├ 请输入您想使用的国内 Docker CE 源 [ 1~11 ]：\033[0m')
-    read -p "$CHOICE1" INPUT
+    CHOICE_A=$(echo -e '\033[32m└ 请输入您想使用的 Docker CE 源 [ 1~11 ]：\033[0m')
+    read -p "$CHOICE_A" INPUT
     case $INPUT in
     1)
         SOURCE="mirrors.aliyun.com"
@@ -105,8 +129,37 @@ function ChangeMirror() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com"
-        echo -e ''
-        echo -e '\033[33m---------- 输入错误，更新源将默认使用阿里源 ---------- \033[0m'
+        echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里源 ---------- \033[0m'
+        sleep 2s
+        ;;
+    esac
+    echo -e ''
+
+    ## 定义镜像加速器
+    CHOICE_B=$(echo -e '\033[32m└ 请输入您想使用的 Docker Hub 源 [ 1~6 ]：\033[0m')
+    read -p "$CHOICE_B" INPUT
+    case $INPUT in
+    1)
+        REGISTRYSOURCE="registry.docker-cn.com"
+        ;;
+    2)
+        REGISTRYSOURCE="registry.cn-hangzhou.aliyuncs.com"
+        ;;
+    3)
+        REGISTRYSOURCE="mirror.ccs.tencentyun.com"
+        ;;
+    4)
+        REGISTRYSOURCE="f1361db2.m.daocloud.io"
+        ;;
+    5)
+        REGISTRYSOURCE="docker.mirrors.ustc.edu.cn"
+        ;;
+    6)
+        REGISTRYSOURCE="hub-mirror.c.163.com"
+        ;;
+    *)
+        REGISTRYSOURCE="registry.cn-hangzhou.aliyuncs.com"
+        echo -e '\033[33m---------- 输入错误，将默认使用阿里云镜像加速器 ---------- \033[0m'
         sleep 3s
         ;;
     esac
@@ -163,64 +216,18 @@ function DockerEngine() {
 
 ## 配置镜像加速器：
 function ImageAccelerator() {
-    ## 定义镜像加速器
-    echo -e ''
-    echo -e '#####################################################'
-    echo -e ''
-    echo -e '           提供以下国内镜像加速器可供选择：'
-    echo -e ''
-    echo -e '#####################################################'
-    echo -e ''
-    echo -e ' *  1)    官方'
-    echo -e ' *  2)    阿里云'
-    echo -e ' *  3)    腾讯云'
-    echo -e ' *  4)    DaoCloud'
-    echo -e ' *  5)    中国科学技术大学'
-    echo -e ' *  6)    网易'
-    echo -e ''
-    echo -e '#####################################################'
-    echo -e ''
-    CHOICE2=$(echo -e '\033[32m├ 请输入您想使用的国内镜像加速器 [ 1~6 ]：\033[0m')
-    read -p "$CHOICE2" INPUT
-    case $INPUT in
-    1)
-        REGISTRYSOURCE="registry.docker-cn.com"
-        ;;
-    2)
-        REGISTRYSOURCE="registry.cn-hangzhou.aliyuncs.com"
-        ;;
-    3)
-        REGISTRYSOURCE="mirror.ccs.tencentyun.com"
-        ;;
-    4)
-        REGISTRYSOURCE="f1361db2.m.daocloud.io"
-        ;;
-    5)
-        REGISTRYSOURCE="docker.mirrors.ustc.edu.cn"
-        ;;
-    6)
-        REGISTRYSOURCE="hub-mirror.c.163.com"
-        ;;
-    *)
-        REGISTRYSOURCE="registry.cn-hangzhou.aliyuncs.com"
-        echo -e ''
-        echo -e '\033[33m---------- 输入错误，将默认使用阿里云镜像加速器 ---------- \033[0m'
-        sleep 3s
-        ;;
-    esac
-    echo -e ''
+
 
     ## 创建目录和文件
     ls /etc | grep docker/daemon.json
     if [ $? -eq 0 ]; then
-        mv ${DockerConfig} /etc/docker/daemon.json.bak
-        echo -e '├ 已备份原有 Docker 配置文件......'
+        mv -f ${DockerConfig} /etc/docker/daemon.json.bak
+        echo -e '\n└ 已备份原有 Docker 配置文件......\n'
         sleep 2s
     else
         mkdir -p /etc/docker >/dev/null 2>&1
         touch ${DockerConfig}
     fi
-    
     ## 配置镜像加速器
     echo -e '{\n  "registry-mirrors": ["https://SOURCE"]\n}' >${DockerConfig}
     sed -i "s/SOURCE/$REGISTRYSOURCE/g" ${DockerConfig}
@@ -233,8 +240,7 @@ function ImageAccelerator() {
 
 ## 安装 Docker Compose：
 function DockerCompose() {
-    echo -e '\033[32m---------- 开始下载 Docker Compose ---------- \033[0m'
-    echo -e ''
+    echo -e '\033[32m---------- 开始下载 Docker Compose ---------- \033[0m\n'
     curl -L https://get.daocloud.io/docker/compose/releases/download/1.29.0/docker-compose-$(uname -s)-$(uname -m) >/usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
     echo -e ''
@@ -245,4 +251,6 @@ DockerCompose
 
 ## 查看版本信息
 docker info
+echo -e ''
 docker-compose --version
+echo -e ''
