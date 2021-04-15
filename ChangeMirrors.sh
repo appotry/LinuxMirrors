@@ -119,7 +119,7 @@ function ChangeMirrors() {
   *)
     SOURCE="mirrors.aliyun.com"
     echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里源 ---------- \033[0m'
-    sleep 3s
+    sleep 2s
     ;;
   esac
 
@@ -175,7 +175,6 @@ function UpgradeSoftware() {
     fi
     ;;
   [Nn]*) ;;
-
   *)
     echo -e '\n\033[33m---------- 输入错误，默认不更新软件包 ---------- \033[0m\n'
     ;;
