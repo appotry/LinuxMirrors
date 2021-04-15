@@ -5,7 +5,7 @@
 DebianConfig=/etc/apt/sources.list
 DebianConfigBackup=/etc/apt/sources.list.bak
 RedHatDirectory=/etc/yum.repos.d
-RedHatDirectoryBakup=/etc/yum.repos.d.bak
+RedHatDirectoryBackup=/etc/yum.repos.d.bak
 
 ## 判定系统是基于 Debian 还是 RedHat
 ls /etc | grep redhat-release -qw
@@ -153,12 +153,33 @@ function MirrorsBackup() {
     if [ $? -eq 0 ]; then
       echo -e "\n\033[32m└ 检测到已备份的 repo 源文件，跳过备份操作...... \033[0m\n"
     else
-      mkdir -p ${RedHatDirectoryBakup}
-      cp -rf ${RedHatDirectory}/* ${RedHatDirectoryBakup} >/dev/null 2>&1
-      echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatDirectoryBakup} ...... \033[0m\n"
+      mkdir -p ${RedHatDirectoryBackup}
+      cp -rf ${RedHatDirectory}/* ${RedHatDirectoryBackup} >/dev/null 2>&1
+      echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatDirectoryBackup} ...... \033[0m\n"
     fi
     sleep 2s
   fi
+}
+
+## 更新软件包
+function UpgradeSoftware() {
+  CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包（Y/N）：\033[0m')
+  read -p "$CHOICE_B" INPUT
+  case $INPUT in
+  [Yy]*)
+    echo -e ''
+    if [ $SYSTEM = "Debian" ]; then
+      apt-get dist-upgrade -y
+    elif [ $SYSTEM = "RedHat" ]; then
+      yum update -y
+    fi
+    ;;
+  [Nn]*) ;;
+
+  *)
+    echo -e '\n\033[33m---------- 输入错误，默认不更新软件包 ---------- \033[0m\n'
+    ;;
+  esac
 }
 
 ## 基于 Debian 系 Linux 发行版的 source 源
@@ -216,27 +237,6 @@ function RedHatMirrors() {
       ${RedHatDirectory}/fedora-updates-testing-modular.repo
   fi
   yum makecache
-}
-
-## 升级软件包
-function UpgradeSoftware() {
-  CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包（Y/N）：\033[0m')
-  read -p "$CHOICE_B" INPUT
-  case $INPUT in
-  [Yy]*)
-    echo -e ''
-    if [ $SYSTEM = "Debian" ]; then
-      apt-get dist-upgrade -y
-    elif [ $SYSTEM = "RedHat" ]; then
-      yum update -y
-    fi
-    ;;
-  [Nn]*) ;;
-
-  *)
-    echo -e '\n\033[33m---------- 输入错误，默认不更新软件包 ---------- \033[0m\n'
-    ;;
-  esac
 }
 
 ## 生成基于 RedHat 发行版和及其衍生发行版的 repo 官方 repo 源文件
