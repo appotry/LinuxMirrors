@@ -171,14 +171,14 @@ function DockerEngine() {
 
     ## 卸载旧版本
     if [ $SYSTEM = "Debian" ]; then
-        apt remove -y docker docker-engine docker.io containerd runc >/dev/null 2>&1
+        apt-get remove -y docker docker-engine docker.io containerd runc >/dev/null 2>&1
     elif [ $SYSTEM = "RedHat" ]; then
         yum remove -y docker* runc >/dev/null 2>&1
     fi
 
     ## 安装环境软件包
     if [ $SYSTEM = "Debian" ]; then
-        apt install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+        apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
     elif [ $SYSTEM = "RedHat" ]; then
         yum install -y yum-utils device-mapper-persistent-data lvm2
     fi
@@ -201,8 +201,8 @@ function DockerEngine() {
 
     ## 安装 Docker Engine
     if [ $SYSTEM = "Debian" ]; then
-        apt update
-        apt install -y docker-ce docker-ce-cli containerd.io
+        apt-get update
+        apt-get install -y docker-ce docker-ce-cli containerd.io
     elif [ $SYSTEM = "RedHat" ]; then
         yum makecache
         yum install -y docker-ce docker-ce-cli containerd.io
@@ -247,6 +247,5 @@ DockerCompose
 
 ## 查看版本信息
 docker info
-echo -e ''
 docker-compose --version
 echo -e ''
