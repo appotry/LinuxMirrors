@@ -1,7 +1,12 @@
 #!/bin/env bash
 #Author:SuperManito
 
-## 系统判定变量：
+## 定义配置文件变量：
+DebianConfig=/etc/apt/sources.list
+DebianConfigBackup=/etc/apt/sources.list.bak
+RedHatDirectory=/etc/yum.repos.d
+RedHatDirectoryBakup=/etc/yum.repos.d.bak
+
 ## 判定系统是基于 Debian 还是 RedHat
 ls /etc | grep redhat-release -qw
 if [ $? -eq 0 ]; then
@@ -9,7 +14,8 @@ if [ $? -eq 0 ]; then
 else
   SYSTEM="Debian"
 fi
-## 定义一些变量（系统名称、系统版本、系统版本号）
+
+## 系统判定变量（名称、版本、版本号、使用架构）
 if [ $SYSTEM = "Debian" ]; then
   SYSTEM_NAME=$(lsb_release -is)
   SYSTEM_VERSION=$(lsb_release -cs)
@@ -24,8 +30,20 @@ elif [ $SYSTEM = "RedHat" ]; then
   fi
 fi
 
+Architecture=$(arch)
+if [ $Architecture = "x86_64" ]; then
+  SOURCE_ARCH=amd64
+  UBUNTU_ARCH=ubuntu
+elif [ $Architecture = "aarch64" ]; then
+  SOURCE_ARCH=arm64
+  UBUNTU_ARCH=ubuntu_port
+else
+  SOURCE_ARCH=${Architecture}
+  UBUNTU_ARCH=ubuntu_port
+fi
+
 ## 更换国内源：
-function ChangeMirror() {
+function ChangeMirrors() {
   echo -e ''
   echo -e '+---------------------------------------------------+'
   echo -e '|                                                   |'
@@ -62,8 +80,8 @@ function ChangeMirror() {
   echo -e ''
   echo -e '#####################################################'
   echo -e ''
-  CHOICE=$(echo -e '\033[32m├ 请输入您想使用的国内更新源 [ 1~11 ]：\033[0m')
-  read -p "$CHOICE" INPUT
+  CHOICE_A=$(echo -e '\033[32m└ 请输入您想使用的国内更新源 [ 1~11 ]：\033[0m')
+  read -p "$CHOICE_A" INPUT
   case $INPUT in
   1)
     SOURCE="mirrors.aliyun.com"
@@ -100,122 +118,146 @@ function ChangeMirror() {
     ;;
   *)
     SOURCE="mirrors.aliyun.com"
-    echo -e ''
-    echo -e '\033[33m---------- 输入错误，更新源将默认使用阿里源 ---------- \033[0m'
+    echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里源 ---------- \033[0m'
     sleep 3s
     ;;
   esac
 
+  ## 备份原有源文件
+  MirrorsBackup
+
   if [ $SYSTEM = "Debian" ]; then
     DebianMirrors
   elif [ $SYSTEM = "RedHat" ]; then
+    RedHatOfficialMirrorsCreate
     RedHatMirrors
   fi
+
+  ## 升级软件包
+  UpgradeSoftware
 }
 
-## 基Debian系Linux发行版的Source更新源：
+## 备份原有源文件
+function MirrorsBackup() {
+  if [ $SYSTEM = "Debian" ]; then
+    ls /etc/apt | grep sources.list.bak -qw
+    if [ $? -eq 0 ]; then
+      echo -e "\n\033[32m└ 检测到已备份的 source.list 源文件，跳过备份操作...... \033[0m\n"
+    else
+      cp -rf ${DebianConfig} ${DebianConfigBackup} >/dev/null 2>&1
+      echo -e "\n\033[32m└ 已备份原有 source.list 源文件至 ${DebianConfigBackup} ...... \033[0m\n"
+    fi
+    sleep 2s
+  elif [ $SYSTEM = "RedHat" ]; then
+    ls /etc | grep yum.repos.d.bak -qw
+    if [ $? -eq 0 ]; then
+      echo -e "\n\033[32m└ 检测到已备份的 repo 源文件，跳过备份操作...... \033[0m\n"
+    else
+      mkdir -p ${RedHatDirectoryBakup}
+      cp -rf ${RedHatDirectory}/* ${RedHatDirectoryBakup} >/dev/null 2>&1
+      echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatDirectoryBakup} ...... \033[0m\n"
+    fi
+    sleep 2s
+  fi
+}
+
+## 基于 Debian 系 Linux 发行版的 source 源
 function DebianMirrors() {
-  ls /etc/apt | grep sources.list.bak -qw
-  if [ $? -eq 0 ]; then
-    echo -e '\033[32m├ 检测到已备份的 source.list源 文件，跳过备份操作...... \033[0m'
-  else
-    cp -rf /etc/apt/sources.list /etc/apt/sources.list.bak >/dev/null 2>&1
-    echo -e '\033[32m├ 已备份原有 source.list 更新源文件...... \033[0m'
-  fi
-  sleep 3s
-  sed -i '1,$d' /etc/apt/sources.list
+  sed -i '1,$d' ${DebianConfig}
   if [ $SYSTEM_NAME = "Ubuntu" ]; then
-    echo "deb https://$SOURCE/ubuntu/ $SYSTEM_VERSION main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/ubuntu/ $SYSTEM_VERSION main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb https://$SOURCE/ubuntu/ $SYSTEM_VERSION-security main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/ubuntu/ $SYSTEM_VERSION-security main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb https://$SOURCE/ubuntu/ $SYSTEM_VERSION-updates main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/ubuntu/ $SYSTEM_VERSION-updates main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb https://$SOURCE/ubuntu/ $SYSTEM_VERSION-proposed main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/ubuntu/ $SYSTEM_VERSION-proposed main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb https://$SOURCE/ubuntu/ $SYSTEM_VERSION-backports main restricted universe multiverse" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/ubuntu/ $SYSTEM_VERSION-backports main restricted universe multiverse" >>/etc/apt/sources.list
+    echo "deb https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION main restricted universe multiverse" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION main restricted universe multiverse" >>${DebianConfig}
+    echo "deb https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-security main restricted universe multiverse" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-security main restricted universe multiverse" >>${DebianConfig}
+    echo "deb https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-updates main restricted universe multiverse" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-updates main restricted universe multiverse" >>${DebianConfig}
+    echo "deb https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-proposed main restricted universe multiverse" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-proposed main restricted universe multiverse" >>${DebianConfig}
+    echo "deb https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-backports main restricted universe multiverse" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-backports main restricted universe multiverse" >>${DebianConfig}
   elif [ $SYSTEM_NAME = "Debian" ]; then
-    echo "deb https://$SOURCE/debian/ $SYSTEM_VERSION main contrib non-free" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/debian/ $SYSTEM_VERSION main contrib non-free" >>/etc/apt/sources.list
-    echo "deb https://$SOURCE/debian/ $SYSTEM_VERSION-updates main contrib non-free" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/debian/ $SYSTEM_VERSION-updates main contrib non-free" >>/etc/apt/sources.list
-    echo "deb https://$SOURCE/debian/ $SYSTEM_VERSION-backports main contrib non-free" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/debian/ $SYSTEM_VERSION-backports main contrib non-free" >>/etc/apt/sources.list
-    echo "deb https://$SOURCE/debian-security $SYSTEM_VERSION/updates main contrib non-free" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/debian-security $SYSTEM_VERSION/updates main contrib non-free" >>/etc/apt/sources.list
+    echo "deb https://$SOURCE/debian $SYSTEM_VERSION main contrib non-free" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/debian $SYSTEM_VERSION main contrib non-free" >>${DebianConfig}
+    echo "deb https://$SOURCE/debian $SYSTEM_VERSION-updates main contrib non-free" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/debian $SYSTEM_VERSION-updates main contrib non-free" >>${DebianConfig}
+    echo "deb https://$SOURCE/debian $SYSTEM_VERSION-backports main contrib non-free" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/debian $SYSTEM_VERSION-backports main contrib non-free" >>${DebianConfig}
+    echo "deb https://$SOURCE/debian-security $SYSTEM_VERSION/updates main contrib non-free" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/debian-security $SYSTEM_VERSION/updates main contrib non-free" >>${DebianConfig}
   elif [ $SYSTEM_NAME = "Kali" ]; then
-    echo "deb https://$SOURCE/kali $SYSTEM_VERSION main non-free contrib" >>/etc/apt/sources.list
-    echo "deb-src https://$SOURCE/kali $SYSTEM_VERSION main non-free contrib" >>/etc/apt/sources.list
+    echo "deb https://$SOURCE/kali $SYSTEM_VERSION main non-free contrib" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/kali $SYSTEM_VERSION main non-free contrib" >>${DebianConfig}
   fi
-  apt update
+  apt-get update
 }
 
-## 基于RedHat系Linux发行版的repo更新源：
+## 基于 RedHat 系 Linux 发行版的 repo 源
 function RedHatMirrors() {
-  RedHatOfficialMirror
   if [ $SYSTEM_NAME = "CentOS" ]; then
-    sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/*
-    sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' /etc/yum.repos.d/*
-    sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://mirror.centos.org|g' /etc/yum.repos.d/*
-    sed -i "s|mirror.centos.org|$SOURCE|g" /etc/yum.repos.d/*
+    sed -i 's|^mirrorlist=|#mirrorlist=|g' ${RedHatDirectory}/CentOS-*.repo
+    sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' ${RedHatDirectory}/CentOS-*.repo
+    sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://mirror.centos.org|g' ${RedHatDirectory}/CentOS-*.repo
+    sed -i "s|mirror.centos.org|$SOURCE|g" ${RedHatDirectory}/CentOS-*.repo
   elif [ $SYSTEM_NAME = "Fedora" ]; then
     sed -i 's|^metalink=|#metalink=|g' \
-      /etc/yum.repos.d/fedora.repo \
-      /etc/yum.repos.d/fedora-updates.repo \
-      /etc/yum.repos.d/fedora-modular.repo \
-      /etc/yum.repos.d/fedora-updates-modular.repo \
-      /etc/yum.repos.d/fedora-updates-testing.repo \
-      /etc/yum.repos.d/fedora-updates-testing-modular.repo
-    sed -i 's|^#baseurl=|baseurl=|g' /etc/yum.repos.d/*
+      ${RedHatDirectory}/fedora.repo \
+      ${RedHatDirectory}/fedora-updates.repo \
+      ${RedHatDirectory}/fedora-modular.repo \
+      ${RedHatDirectory}/fedora-updates-modular.repo \
+      ${RedHatDirectory}/fedora-updates-testing.repo \
+      ${RedHatDirectory}/fedora-updates-testing-modular.repo
+    sed -i 's|^#baseurl=|baseurl=|g' ${RedHatDirectory}/*
     sed -i "s|http://download.example/pub/fedora/linux|https://$SOURCE/fedora|g" \
-      /etc/yum.repos.d/fedora.repo \
-      /etc/yum.repos.d/fedora-updates.repo \
-      /etc/yum.repos.d/fedora-modular.repo \
-      /etc/yum.repos.d/fedora-updates-modular.repo \
-      /etc/yum.repos.d/fedora-updates-testing.repo \
-      /etc/yum.repos.d/fedora-updates-testing-modular.repo
+      ${RedHatDirectory}/fedora.repo \
+      ${RedHatDirectory}/fedora-updates.repo \
+      ${RedHatDirectory}/fedora-modular.repo \
+      ${RedHatDirectory}/fedora-updates-modular.repo \
+      ${RedHatDirectory}/fedora-updates-testing.repo \
+      ${RedHatDirectory}/fedora-updates-testing-modular.repo
   fi
   yum makecache
 }
 
-## 生成基于 RedHat 发行版和及其衍生发行版的 repo 官方更新源：
-function RedHatOfficialMirror() {
-  ls /etc | grep yum.repos.d.bak -qw
-  if [ $? -eq 0 ]; then
-    echo -e '\033[32m├ 检测到已备份的 repo源 文件，跳过备份操作...... \033[0m'
-  else
-    mkdir -p /etc/yum.repos.d.bak
-    cp -rf /etc/yum.repos.d/* /etc/yum.repos.d.bak >/dev/null 2>&1
-    echo -e '\033[32m├ 已备份原有 repo源 文件至 /etc/yum.repos.d.bak ...... \033[0m'
-  fi
-  sleep 3s
-  if [ $CENTOS_VERSION = "8" ]; then
-    rm -rf /etc/yum.repos.d/*AppStream.repo
-    rm -rf /etc/yum.repos.d/*BaseOS.repo
-    rm -rf /etc/yum.repos.d/*ContinuousRelease.repo
-    rm -rf /etc/yum.repos.d/*Debuginfo.repo
-    rm -rf /etc/yum.repos.d/*Devel.repo
-    rm -rf /etc/yum.repos.d/*Extras.repo
-    rm -rf /etc/yum.repos.d/*FastTrack.repo
-    rm -rf /etc/yum.repos.d/*HighAvailability.repo
-    rm -rf /etc/yum.repos.d/*Media.repo
-    rm -rf /etc/yum.repos.d/*Plus.repo
-    rm -rf /etc/yum.repos.d/*PowerTools.repo
-    rm -rf /etc/yum.repos.d/*Sources.repo
-    touch /etc/yum.repos.d/CentOS-Linux-AppStream.repo
-    touch /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
-    touch /etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo
-    touch /etc/yum.repos.d/CentOS-Linux-Debuginfo.repo
-    touch /etc/yum.repos.d/CentOS-Linux-Devel.repo
-    touch /etc/yum.repos.d/CentOS-Linux-Extras.repo
-    touch /etc/yum.repos.d/CentOS-Linux-FastTrack.repo
-    touch /etc/yum.repos.d/CentOS-Linux-HighAvailability.repo
-    touch /etc/yum.repos.d/CentOS-Linux-Media.repo
-    touch /etc/yum.repos.d/CentOS-Linux-Plus.repo
-    touch /etc/yum.repos.d/CentOS-Linux-PowerTools.repo
-    touch /etc/yum.repos.d/CentOS-Linux-Sources.repo
-    cat >/etc/yum.repos.d/CentOS-Linux-AppStream.repo <<\EOF
+## 升级软件包
+function UpgradeSoftware() {
+  CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包（Y/N）：\033[0m')
+  read -p "$CHOICE_B" INPUT
+  case $INPUT in
+  [Yy]*)
+    echo -e ''
+    if [ $SYSTEM = "Debian" ]; then
+      apt-get dist-upgrade -y
+    elif [ $SYSTEM = "RedHat" ]; then
+      yum update -y
+    fi
+    ;;
+  [Nn]*) ;;
+
+  *)
+    echo -e '\n\033[33m---------- 输入错误，默认不更新软件包 ---------- \033[0m\n'
+    ;;
+  esac
+}
+
+## 生成基于 RedHat 发行版和及其衍生发行版的 repo 官方 repo 源文件
+function RedHatOfficialMirrorsCreate() {
+  if [ $SYSTEM_NAME = "CentOS" ]; then
+    if [ $CENTOS_VERSION -eq "8" ]; then
+      cd ${RedHatDirectory}
+      rm -rf *AppStream.repo *BaseOS.repo *ContinuousRelease.repo *Debuginfo.repo *Devel.repo *Extras.repo *HighAvailability.repo *Media.repo *Plus.repo *PowerTools.repo *Sources.repo
+      touch ${RedHatDirectory}/CentOS-Linux-AppStream.repo
+      touch ${RedHatDirectory}/CentOS-Linux-BaseOS.repo
+      touch ${RedHatDirectory}/CentOS-Linux-ContinuousRelease.repo
+      touch ${RedHatDirectory}/CentOS-Linux-Debuginfo.repo
+      touch ${RedHatDirectory}/CentOS-Linux-Devel.repo
+      touch ${RedHatDirectory}/CentOS-Linux-Extras.repo
+      touch ${RedHatDirectory}/CentOS-Linux-FastTrack.repo
+      touch ${RedHatDirectory}/CentOS-Linux-HighAvailability.repo
+      touch ${RedHatDirectory}/CentOS-Linux-Media.repo
+      touch ${RedHatDirectory}/CentOS-Linux-Plus.repo
+      touch ${RedHatDirectory}/CentOS-Linux-PowerTools.repo
+      touch ${RedHatDirectory}/CentOS-Linux-Sources.repo
+      cat >${RedHatDirectory}/CentOS-Linux-AppStream.repo <<\EOF
 # CentOS-Linux-AppStream.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -234,7 +276,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-BaseOS.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-BaseOS.repo <<\EOF
 # CentOS-Linux-BaseOS.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -253,7 +295,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-ContinuousRelease.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-ContinuousRelease.repo <<\EOF
 # CentOS-Linux-ContinuousRelease.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -279,7 +321,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-Debuginfo.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-Debuginfo.repo <<\EOF
 # CentOS-Linux-Debuginfo.repo
 #
 # All debug packages are merged into a single repo, split by basearch, and are
@@ -292,7 +334,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-Devel.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-Devel.repo <<\EOF
 # CentOS-Linux-Devel.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -311,7 +353,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-Extras.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-Extras.repo <<\EOF
 # CentOS-Linux-Extras.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -330,7 +372,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-FastTrack.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-FastTrack.repo <<\EOF
 # CentOS-Linux-FastTrack.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -349,7 +391,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-HighAvailability.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-HighAvailability.repo <<\EOF
 # CentOS-Linux-HighAvailability.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -368,7 +410,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-Media.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-Media.repo <<\EOF
 # CentOS-Linux-Media.repo
 #
 # You can use this repo to install items directly off the installation media.
@@ -392,7 +434,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-Plus.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-Plus.repo <<\EOF
 # CentOS-Linux-Plus.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -411,7 +453,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-PowerTools.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-PowerTools.repo <<\EOF
 # CentOS-Linux-PowerTools.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -430,7 +472,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-    cat >/etc/yum.repos.d/CentOS-Linux-Sources.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Linux-Sources.repo <<\EOF
 # CentOS-Linux-Sources.repo
 
 
@@ -462,23 +504,17 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-  elif [ $CENTOS_VERSION = "7" ]; then
-    rm -rf /etc/yum.repos.d/*Base.repo
-    rm -rf /etc/yum.repos.d/*BaseOS.repo
-    rm -rf /etc/yum.repos.d/*CR.repo
-    rm -rf /etc/yum.repos.d/*Debuginfo.repo
-    rm -rf /etc/yum.repos.d/*fasttrack.repo
-    rm -rf /etc/yum.repos.d/*Media.repo
-    rm -rf /etc/yum.repos.d/*Sources.repo
-    rm -rf /etc/yum.repos.d/*Vault.repo
-    touch /etc/yum.repos.d/CentOS-Base.repo
-    touch /etc/yum.repos.d/CentOS-CR.repo
-    touch /etc/yum.repos.d/CentOS-Debuginfo.repo
-    touch /etc/yum.repos.d/CentOS-fasttrack.repo
-    touch /etc/yum.repos.d/CentOS-Media.repo
-    touch /etc/yum.repos.d/CentOS-Sources.repo
-    touch /etc/yum.repos.d/CentOS-Vault.repo
-    cat >/etc/yum.repos.d/CentOS-BaseOS.repo <<\EOF
+    elif [ $CENTOS_VERSION -eq "7" ]; then
+      cd ${RedHatDirectory}
+      rm -rf *Base.repo *BaseOS.repo *CR.repo *Debuginfo.repo *fasttrack.repo *Media.repo *Sources.repo *Vault.repo
+      touch ${RedHatDirectory}/CentOS-Base.repo
+      touch ${RedHatDirectory}/CentOS-CR.repo
+      touch ${RedHatDirectory}/CentOS-Debuginfo.repo
+      touch ${RedHatDirectory}/CentOS-fasttrack.repo
+      touch ${RedHatDirectory}/CentOS-Media.repo
+      touch ${RedHatDirectory}/CentOS-Sources.repo
+      touch ${RedHatDirectory}/CentOS-Vault.repo
+      cat >${RedHatDirectory}/CentOS-BaseOS.repo <<\EOF
 # CentOS-Base.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -523,7 +559,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-    cat >/etc/yum.repos.d/CentOS-CR.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-CR.repo <<\EOF
 # CentOS-CR.repo
 #
 # The Continuous Release ( CR )  repository contains rpms that are due in the next
@@ -553,7 +589,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 enabled=0
 EOF
-    cat >/etc/yum.repos.d/CentOS-Debuginfo.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Debuginfo.repo <<\EOF
 # CentOS-Debug.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -576,7 +612,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-Debug-7
 enabled=0
 #
 EOF
-    cat >/etc/yum.repos.d/CentOS-fasttrack.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-fasttrack.repo <<\EOF
 [fasttrack]
 name=CentOS-7 - fasttrack
 mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=fasttrack&infra=$infra
@@ -585,7 +621,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-    cat >/etc/yum.repos.d/CentOS-Media.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Media.repo <<\EOF
 # CentOS-Media.repo
 #
 #  This repo can be used with mounted DVD media, verify the mount point for
@@ -608,7 +644,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-    cat >/etc/yum.repos.d/CentOS-Sources.repo <<\EOF
+      cat >${RedHatDirectory}/CentOS-Sources.repo <<\EOF
 # CentOS-Sources.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -652,22 +688,18 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
+    fi
   elif [ $SYSTEM_NAME = "Fedora" ]; then
-    rm -rf /etc/yum.repos.d/*cisco-openh264.repo
-    rm -rf /etc/yum.repos.d/fedora.repo
-    rm -rf /etc/yum.repos.d/*updates.repo
-    rm -rf /etc/yum.repos.d/*modular.repo
-    rm -rf /etc/yum.repos.d/*updates-modular.repo
-    rm -rf /etc/yum.repos.d/*updates-testing.repo
-    rm -rf /etc/yum.repos.d/*updates-testing-modular.repo
-    touch /etc/yum.repos.d/fedora-cisco-openh264.repo
-    touch /etc/yum.repos.d/fedora.repo
-    touch /etc/yum.repos.d/fedora-updates.repo
-    touch /etc/yum.repos.d/fedora-modular.repo
-    touch /etc/yum.repos.d/fedora-updates-modular.repo
-    touch /etc/yum.repos.d/fedora-updates-testing.repo
-    touch /etc/yum.repos.d/fedora-updates-testing-modular.repo
-    cat >/etc/yum.repos.d/fedora-cisco-openh264.repo <<\EOF
+    cd ${RedHatDirectory}
+    rm -rf *cisco-openh264.repo fedora.repo *updates.repo *modular.repo *updates-modular.repo *updates-testing-modular.repo
+    touch ${RedHatDirectory}/fedora-cisco-openh264.repo
+    touch ${RedHatDirectory}/fedora.repo
+    touch ${RedHatDirectory}/fedora-updates.repo
+    touch ${RedHatDirectory}/fedora-modular.repo
+    touch ${RedHatDirectory}/fedora-updates-modular.repo
+    touch ${RedHatDirectory}/fedora-updates-testing.repo
+    touch ${RedHatDirectory}/fedora-updates-testing-modular.repo
+    cat >${RedHatDirectory}/fedora-cisco-openh264.repo <<\EOF
 [fedora-cisco-openh264]
 name=Fedora $releasever openh264 (From Cisco) - $basearch
 metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-$releasever&arch=$basearch
@@ -690,7 +722,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=True
 EOF
-    cat >/etc/yum.repos.d/fedora.repo <<\EOF
+    cat >${RedHatDirectory}/fedora.repo <<\EOF
 [fedora]
 name=Fedora $releasever - $basearch
 #baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/
@@ -728,7 +760,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-    cat >/etc/yum.repos.d/fedora-updates.repo <<\EOF
+    cat >${RedHatDirectory}/fedora-updates.repo <<\EOF
 [updates]
 name=Fedora $releasever - $basearch - Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Everything/$basearch/
@@ -766,7 +798,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-    cat >/etc/yum.repos.d/fedora-modular.repo <<\EOF
+    cat >${RedHatDirectory}/fedora-modular.repo <<\EOF
 [fedora-modular]
 name=Fedora Modular $releasever - $basearch
 #baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Modular/$basearch/os/
@@ -804,7 +836,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-    cat >/etc/yum.repos.d/fedora-updates-modular.repo <<\EOF
+    cat >${RedHatDirectory}/fedora-updates-modular.repo <<\EOF
 [updates-modular]
 name=Fedora Modular $releasever - $basearch - Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/$basearch/
@@ -842,7 +874,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-    cat >/etc/yum.repos.d/fedora-updates-testing.repo <<\EOF
+    cat >${RedHatDirectory}/fedora-updates-testing.repo <<\EOF
 [updates-testing]
 name=Fedora $releasever - $basearch - Test Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Everything/$basearch/
@@ -880,7 +912,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-    cat >/etc/yum.repos.d/fedora-updates-testing-modular.repo <<\EOF
+    cat >${RedHatDirectory}/fedora-updates-testing-modular.repo <<\EOF
 [updates-testing-modular]
 name=Fedora Modular $releasever - $basearch - Test Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Modular/$basearch/
@@ -920,4 +952,5 @@ skip_if_unavailable=False
 EOF
   fi
 }
-ChangeMirror
+
+ChangeMirrors
