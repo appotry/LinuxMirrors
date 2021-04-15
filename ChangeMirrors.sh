@@ -163,7 +163,7 @@ function MirrorsBackup() {
 
 ## 更新软件包
 function UpgradeSoftware() {
-  CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包（Y/N）：\033[0m')
+  CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包 [ Y/N ]：\033[0m')
   read -p "$CHOICE_B" INPUT
   case $INPUT in
   [Yy]*)
