@@ -29,13 +29,13 @@ fi
 
 Architecture=$(arch)
 if [ $Architecture = "x86_64" ]; then
-    SOURCE_ARCH=amd64
+    SYSTEM_ARCH=x86_64
     UBUNTU_ARCH=ubuntu
 elif [ $Architecture = "aarch64" ]; then
-    SOURCE_ARCH=arm64
+    SYSTEM_ARCH=ARM64
     UBUNTU_ARCH=ubuntu_port
 else
-    SOURCE_ARCH=${Architecture}
+    SYSTEM_ARCH=${Architecture}
     UBUNTU_ARCH=ubuntu_port
 fi
 
@@ -84,8 +84,8 @@ function ChangeMirror() {
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    echo -e "      当前操作系统  $SYSTEM_NAME $SYSTEM_VERSION_NUMBER"
-    echo -e "      当前系统时间  $(date "+%Y-%m-%d %H:%M")"
+    echo -e "         操作系统  $SYSTEM_NAME $SYSTEM_VERSION_NUMBER $SYSTEM_ARCH"
+    echo -e "         系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
