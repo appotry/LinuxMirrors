@@ -244,18 +244,7 @@ function RedHatOfficialMirrorsCreate() {
     if [ $CENTOS_VERSION -eq "8" ]; then
       cd ${RedHatDirectory}
       rm -rf *AppStream.repo *BaseOS.repo *ContinuousRelease.repo *Debuginfo.repo *Devel.repo *Extras.repo *HighAvailability.repo *Media.repo *Plus.repo *PowerTools.repo *Sources.repo
-      touch ${RedHatDirectory}/CentOS-Linux-AppStream.repo
-      touch ${RedHatDirectory}/CentOS-Linux-BaseOS.repo
-      touch ${RedHatDirectory}/CentOS-Linux-ContinuousRelease.repo
-      touch ${RedHatDirectory}/CentOS-Linux-Debuginfo.repo
-      touch ${RedHatDirectory}/CentOS-Linux-Devel.repo
-      touch ${RedHatDirectory}/CentOS-Linux-Extras.repo
-      touch ${RedHatDirectory}/CentOS-Linux-FastTrack.repo
-      touch ${RedHatDirectory}/CentOS-Linux-HighAvailability.repo
-      touch ${RedHatDirectory}/CentOS-Linux-Media.repo
-      touch ${RedHatDirectory}/CentOS-Linux-Plus.repo
-      touch ${RedHatDirectory}/CentOS-Linux-PowerTools.repo
-      touch ${RedHatDirectory}/CentOS-Linux-Sources.repo
+      touch CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo
       cat >${RedHatDirectory}/CentOS-Linux-AppStream.repo <<\EOF
 # CentOS-Linux-AppStream.repo
 #
@@ -506,13 +495,7 @@ EOF
     elif [ $CENTOS_VERSION -eq "7" ]; then
       cd ${RedHatDirectory}
       rm -rf *Base.repo *BaseOS.repo *CR.repo *Debuginfo.repo *fasttrack.repo *Media.repo *Sources.repo *Vault.repo
-      touch ${RedHatDirectory}/CentOS-Base.repo
-      touch ${RedHatDirectory}/CentOS-CR.repo
-      touch ${RedHatDirectory}/CentOS-Debuginfo.repo
-      touch ${RedHatDirectory}/CentOS-fasttrack.repo
-      touch ${RedHatDirectory}/CentOS-Media.repo
-      touch ${RedHatDirectory}/CentOS-Sources.repo
-      touch ${RedHatDirectory}/CentOS-Vault.repo
+      touch CentOS-Base.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo
       cat >${RedHatDirectory}/CentOS-BaseOS.repo <<\EOF
 # CentOS-Base.repo
 #
@@ -691,13 +674,7 @@ EOF
   elif [ $SYSTEM_NAME = "Fedora" ]; then
     cd ${RedHatDirectory}
     rm -rf *cisco-openh264.repo fedora.repo *updates.repo *modular.repo *updates-modular.repo *updates-testing-modular.repo
-    touch ${RedHatDirectory}/fedora-cisco-openh264.repo
-    touch ${RedHatDirectory}/fedora.repo
-    touch ${RedHatDirectory}/fedora-updates.repo
-    touch ${RedHatDirectory}/fedora-modular.repo
-    touch ${RedHatDirectory}/fedora-updates-modular.repo
-    touch ${RedHatDirectory}/fedora-updates-testing.repo
-    touch ${RedHatDirectory}/fedora-updates-testing-modular.repo
+    touch fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo
     cat >${RedHatDirectory}/fedora-cisco-openh264.repo <<\EOF
 [fedora-cisco-openh264]
 name=Fedora $releasever openh264 (From Cisco) - $basearch
