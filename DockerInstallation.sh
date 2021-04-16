@@ -1,8 +1,13 @@
 #!/bin/env bash
-## Author:SuperManito
+## Author: SuperManito
 
-## 定义变量：
+## 定义目录文件变量：
+DebianConfig=/etc/apt/sources.list
+DebianConfigBackup=/etc/apt/sources.list.bak
+RedHatDirectory=/etc/yum.repos.d
+RedHatDirectoryBackup=/etc/yum.repos.d.bak
 DockerConfig=/etc/docker/daemon.json
+DockerConfigBackup=/etc/docker/daemon.json.bak
 
 ## 判定系统是基于 Debian 还是 RedHat
 ls /etc | grep redhat-release -qw
@@ -27,22 +32,36 @@ elif [ $SYSTEM = "RedHat" ]; then
     fi
 fi
 
+if [ $SYSTEM_NAME = "Ubuntu" ]; then
+    SOURCE_BRANCH=ubuntu
+elif [ $SYSTEM_NAME = "Debian" ]; then
+    SOURCE_BRANCH=debian
+elif [ $SYSTEM_NAME = "Kali" ]; then
+    SOURCE_BRANCH=debian
+elif [ $SYSTEM_NAME = "CentOS" ]; then
+    SOURCE_BRANCH=centos
+elif [ $SYSTEM_NAME = "Fedora" ]; then
+    SOURCE_BRANCH=fedora
+fi
+
 Architecture=$(arch)
 if [ $Architecture = "x86_64" ]; then
     SYSTEM_ARCH=x86_64
-    UBUNTU_ARCH=ubuntu
+    SOURCE_ARCH=amd64
 elif [ $Architecture = "aarch64" ]; then
-    SYSTEM_ARCH=ARM64
-    UBUNTU_ARCH=ubuntu_port
+    SYSTEM_ARCH=arm64
+    SOURCE_ARCH=arm64
+elif [ $Architecture = "armv*" ]; then
+    SYSTEM_ARCH=arm32
+    SOURCE_ARCH=armhf
 else
     SYSTEM_ARCH=${Architecture}
-    UBUNTU_ARCH=ubuntu_port
+    SOURCE_ARCH=armhf
 fi
 
 ## 更换 Docker 国内源：
-function ChangeMirror() {
-    ## 定义 Docker CE 源
-    echo -e ''
+function ChangeMirrors() {
+    clear
     echo -e '+---------------------------------------------------+'
     echo -e '|                                                   |'
     echo -e '|   =============================================   |'
@@ -84,7 +103,7 @@ function ChangeMirror() {
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    echo -e "         操作系统  $SYSTEM_NAME $SYSTEM_VERSION_NUMBER $SYSTEM_ARCH"
+    echo -e "         运行环境  $SYSTEM_NAME $SYSTEM_VERSION_NUMBER $SYSTEM_ARCH"
     echo -e "         系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
@@ -166,14 +185,14 @@ function ChangeMirror() {
 
 ## 安装 Docker Engine ：
 function DockerEngine() {
-    ## 配置 Docker CE 国内源
-    ChangeMirror
+    ## 定义 Docker CE 国内源
+    ChangeMirrors
 
     ## 卸载旧版本
     if [ $SYSTEM = "Debian" ]; then
-        apt-get remove -y docker docker-engine docker.io containerd runc >/dev/null 2>&1
+        apt-get remove -y docker* containerd runc >/dev/null 2>&1
     elif [ $SYSTEM = "RedHat" ]; then
-        yum remove -y docker* runc >/dev/null 2>&1
+        yum remove -y docker* >/dev/null 2>&1
     fi
 
     ## 安装环境软件包
@@ -183,20 +202,19 @@ function DockerEngine() {
         yum install -y yum-utils device-mapper-persistent-data lvm2
     fi
 
-    ## 更换 Docker CE 国内源
-    if [ $SYSTEM_NAME = "Ubuntu" ]; then
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-        add-apt-repository -y "deb [arch=amd64] https://$SOURCE/docker-ce/linux/ubuntu $(lsb_release -cs) stable"
-    elif [ $SYSTEM_NAME = "Debian" ]; then
-        curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-        add-apt-repository -y "deb [arch=amd64] https://$SOURCE/docker-ce/linux/debian $(lsb_release -cs) stable"
-    elif [ $SYSTEM_NAME = "Kali" ]; then
-        curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-        add-apt-repository -y "deb [arch=amd64] https://$SOURCE/docker-ce/linux/debian $(lsb_release -cs) stable"
-    elif [ $SYSTEM_NAME = "CentOS" ]; then
-        yum-config-manager -y --add-repo https://$SOURCE/docker-ce/linux/centos/docker-ce.repo
-    elif [ $SYSTEM_NAME = "Fedora" ]; then
-        yum config-manager -y --add-repo https://$SOURCE/docker-ce/linux/fedora/docker-ce.repo
+    ## 删除旧的 Docker CE 源
+    if [ $SYSTEM = "Debian" ]; then
+        sed -i '/docker-ce/d' ${DebianConfig}
+    elif [ $SYSTEM = "RedHat" ]; then
+        rm -rf ${RedHatDirectory}/docker-ce.repo
+    fi
+
+    ## 配置 Docker CE 源
+    if [ $SYSTEM = "Debian" ]; then
+        curl -fsSL https://download.docker.com/linux/${SOURCE_BRANCH}/gpg | apt-key add -
+        add-apt-repository -y "deb [arch=$SOURCE_ARCH] https://$SOURCE/docker-ce/linux/${SOURCE_BRANCH} $SYSTEM_VERSION stable"
+    elif [ $SYSTEM = "RedHat" ]; then
+        yum-config-manager -y --add-repo https://$SOURCE/docker-ce/linux/${SOURCE_BRANCH}/docker-ce.repo
     fi
 
     ## 安装 Docker Engine
@@ -217,29 +235,44 @@ function ImageAccelerator() {
     ## 创建目录和文件
     ls /etc | grep docker/daemon.json
     if [ $? -eq 0 ]; then
-        mv -f ${DockerConfig} /etc/docker/daemon.json.bak
-        echo -e '\n└ 已备份原有 Docker 配置文件......\n'
-        sleep 2s
+        ls /etc | grep docker/daemon.json.bak
+        if [ $? -eq 0 ]; then
+            echo -e '\n└ 监测到已备份的 Docker 配置文件，跳过执行备份操作......\n'
+            sleep 2s
+        else
+            mv -f ${DockerConfig} ${DockerConfigBackup}
+            echo -e '\n└ 已备份原有 Docker 配置文件......\n'
+            sleep 2s
+        fi
     else
         mkdir -p /etc/docker >/dev/null 2>&1
         touch ${DockerConfig}
     fi
+
     ## 配置镜像加速器
     echo -e '{\n  "registry-mirrors": ["https://SOURCE"]\n}' >${DockerConfig}
     sed -i "s/SOURCE/$REGISTRYSOURCE/g" ${DockerConfig}
 
     ## 启动 Docker Engine
-    systemctl stop docker
+    systemctl stop docker >/dev/null 2>&1
     systemctl enable --now docker
-    echo -e ''
 }
 
 ## 安装 Docker Compose：
 function DockerCompose() {
-    echo -e '\033[32m---------- 开始下载 Docker Compose ---------- \033[0m\n'
-    curl -L https://get.daocloud.io/docker/compose/releases/download/1.29.0/docker-compose-$(uname -s)-$(uname -m) >/usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
-    echo -e ''
+    CHOICE_C=$(echo -e '\n\033[32m└ 是否安装 Docker Compose [ Y/N ]：\033[0m')
+    read -p "$CHOICE_C" INPUT
+    case $INPUT in
+    [Yy]*)
+        curl -L https://get.daocloud.io/docker/compose/releases/download/1.29.0/docker-compose-$(uname -s)-$(uname -m) >/usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        echo -e ''
+        ;;
+    [Nn]*) ;;
+    *)
+        echo -e '\033[33m---------- 输入错误，默认不安装 Docker Compose ---------- \033[0m\n'
+        ;;
+    esac
 }
 
 DockerEngine
@@ -247,5 +280,5 @@ DockerCompose
 
 ## 查看版本信息
 docker info
-docker-compose --version
+docker compose --version
 echo -e ''
