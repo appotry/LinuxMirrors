@@ -1,7 +1,7 @@
 #!/bin/env bash
-#Author:SuperManito
+## Author: SuperManito
 
-## 定义配置文件变量：
+## 定义目录文件变量：
 DebianConfig=/etc/apt/sources.list
 DebianConfigBackup=/etc/apt/sources.list.bak
 RedHatDirectory=/etc/yum.repos.d
@@ -30,20 +30,36 @@ elif [ $SYSTEM = "RedHat" ]; then
   fi
 fi
 
+if [ $SYSTEM_NAME = "Ubuntu" ]; then
+  SOURCE_BRANCH=ubuntu
+elif [ $SYSTEM_NAME = "Debian" ]; then
+  SOURCE_BRANCH=debian
+elif [ $SYSTEM_NAME = "Kali" ]; then
+  SOURCE_BRANCH=debian
+elif [ $SYSTEM_NAME = "CentOS" ]; then
+  SOURCE_BRANCH=centos
+elif [ $SYSTEM_NAME = "Fedora" ]; then
+  SOURCE_BRANCH=fedora
+fi
+
 Architecture=$(arch)
 if [ $Architecture = "x86_64" ]; then
   SYSTEM_ARCH=x86_64
   UBUNTU_ARCH=ubuntu
 elif [ $Architecture = "aarch64" ]; then
-  SYSTEM_ARCH=ARM64
-  UBUNTU_ARCH=ubuntu_port
+  SYSTEM_ARCH=arm64
+  UBUNTU_ARCH=ubuntu-ports
+elif [ $Architecture = "armv*" ]; then
+  SYSTEM_ARCH=arm32
+  UBUNTU_ARCH=ubuntu-ports
 else
   SYSTEM_ARCH=${Architecture}
-  UBUNTU_ARCH=ubuntu_port
+  UBUNTU_ARCH=ubuntu-ports
 fi
 
 ## 更换国内源：
 function ChangeMirrors() {
+  clear
   echo -e ''
   echo -e '+---------------------------------------------------+'
   echo -e '|                                                   |'
@@ -75,7 +91,7 @@ function ChangeMirrors() {
   echo -e ''
   echo -e '#####################################################'
   echo -e ''
-  echo -e "         操作系统  $SYSTEM_NAME $SYSTEM_VERSION_NUMBER $SYSTEM_ARCH"
+  echo -e "         运行环境  $SYSTEM_NAME $SYSTEM_VERSION_NUMBER $SYSTEM_ARCH"
   echo -e "         系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
   echo -e ''
   echo -e '#####################################################'
@@ -196,17 +212,17 @@ function DebianMirrors() {
     echo "deb https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-backports main restricted universe multiverse" >>${DebianConfig}
     echo "deb-src https://$SOURCE/$UBUNTU_ARCH $SYSTEM_VERSION-backports main restricted universe multiverse" >>${DebianConfig}
   elif [ $SYSTEM_NAME = "Debian" ]; then
-    echo "deb https://$SOURCE/debian $SYSTEM_VERSION main contrib non-free" >>${DebianConfig}
-    echo "deb-src https://$SOURCE/debian $SYSTEM_VERSION main contrib non-free" >>${DebianConfig}
-    echo "deb https://$SOURCE/debian $SYSTEM_VERSION-updates main contrib non-free" >>${DebianConfig}
-    echo "deb-src https://$SOURCE/debian $SYSTEM_VERSION-updates main contrib non-free" >>${DebianConfig}
-    echo "deb https://$SOURCE/debian $SYSTEM_VERSION-backports main contrib non-free" >>${DebianConfig}
-    echo "deb-src https://$SOURCE/debian $SYSTEM_VERSION-backports main contrib non-free" >>${DebianConfig}
-    echo "deb https://$SOURCE/debian-security $SYSTEM_VERSION/updates main contrib non-free" >>${DebianConfig}
-    echo "deb-src https://$SOURCE/debian-security $SYSTEM_VERSION/updates main contrib non-free" >>${DebianConfig}
+    echo "deb https://$SOURCE/$SOURCE_BRANCH $SYSTEM_VERSION main contrib non-free" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$SOURCE_BRANCH $SYSTEM_VERSION main contrib non-free" >>${DebianConfig}
+    echo "deb https://$SOURCE/$SOURCE_BRANCH $SYSTEM_VERSION-updates main contrib non-free" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$SOURCE_BRANCH $SYSTEM_VERSION-updates main contrib non-free" >>${DebianConfig}
+    echo "deb https://$SOURCE/$SOURCE_BRANCH $SYSTEM_VERSION-backports main contrib non-free" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$SOURCE_BRANCH $SYSTEM_VERSION-backports main contrib non-free" >>${DebianConfig}
+    echo "deb https://$SOURCE/$SOURCE_BRANCH-security $SYSTEM_VERSION/updates main contrib non-free" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$SOURCE_BRANCH-security $SYSTEM_VERSION/updates main contrib non-free" >>${DebianConfig}
   elif [ $SYSTEM_NAME = "Kali" ]; then
-    echo "deb https://$SOURCE/kali $SYSTEM_VERSION main non-free contrib" >>${DebianConfig}
-    echo "deb-src https://$SOURCE/kali $SYSTEM_VERSION main non-free contrib" >>${DebianConfig}
+    echo "deb https://$SOURCE/$SOURCE_BRANCH $SYSTEM_VERSION main non-free contrib" >>${DebianConfig}
+    echo "deb-src https://$SOURCE/$SOURCE_BRANCH $SYSTEM_VERSION main non-free contrib" >>${DebianConfig}
   fi
   apt-get update
 }
