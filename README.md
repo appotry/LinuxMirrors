@@ -1,7 +1,7 @@
 # LinuxMirrors
 - __GNU/Linux 更换国内更新源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
-- __目前仅支持 `x86_64` 架构的环境，`arm` 架构正在完善中__
+- __目前支持 绝大部分 架构的环境，`x86_64`与`arm64` 架构已经过测试__
 
 ## 本项目所使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
@@ -17,33 +17,36 @@
 | 9 | 兰州大学 | [mirror.lzu.edu.cn](https://mirror.lzu.edu.cn) |  |  |
 | 10 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) |  |  |
 | 11 | 中国科学技术大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) | √ | √ |
-> 如果脚本中文乱码可对照此列表使用，顺序与脚本一致
+> 如果脚本中文乱码可对照此列表使用，顺序与脚本一致\
+> 正在完善数据中
 
 ***
 
 ## 已适配的 `GNU/Linux` 发行版
-| 操作系统  |   支持的版本   |
-| :------: | :-----------: |
-| Ubuntu   | 14.04 ~ 20.10 |
-| Debian   | 8.0 ~ 10.8    |
-| Fedora   | 28 ~ 33       |
-| CentOS   | 7.0 ~ 8.3     |
-| Kali     | 2.0 ~ 2021.1  |
+
+|             | Ubuntu |  Debian  |  Fedora  |  CentOS  |  Kali  |
+| :------:    | :-----------: | :-----------: | :-----------: | :-----------: | :-----------: |
+| 支持版本     | 14.04 ~ 20.10 | 8.0 ~ 10.8 | 28 ~ 33 | 7.0 ~ 8.3 | 2.0 ~ 2021.1  |
+
 > 仅支持 Debian 与 Redhat 发行版和及其衍生发行版
 
 ***
 
-## `GNU/Linux` 一键更换国内更新源脚本
-    sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
+## 一键执行脚本
+
+- `GNU/Linux` 一键更换国内更新源脚本
+
+      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
 > _友情提示：脚本自带备份功能，无需手动备份原有官方源，如果检测到本地已有备份文件则会跳过备份操作。_
 
 > _注意：`CentOS`和 `Fedora`配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用请将 `repo`文件中的 `enabled=0`修改成 `enabled=1`_
 
 ***
 
-## `Docker` 国内一键安装脚本
-    sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE源`与 `Docker Hub源（镜像加速器）` ，后续会加入手动选择版本功能。_
+- `Docker` 国内一键安装脚本
+
+      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE源`与 `Docker Hub源（镜像加速器）` ，后续会加入"手动选择安装版本"功能。_
 
 ***
 
