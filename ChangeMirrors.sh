@@ -1,5 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
+## Modified: 2021-04-18
 
 ## 定义目录文件变量：
 DebianConfig=/etc/apt/sources.list
@@ -45,6 +46,9 @@ fi
 Architecture=$(arch)
 if [ $Architecture = "x86_64" ]; then
   SYSTEM_ARCH=x86_64
+  UBUNTU_ARCH=ubuntu
+elif [ $Architecture = "*86*" ]; then
+  SYSTEM_ARCH=x86_32
   UBUNTU_ARCH=ubuntu
 elif [ $Architecture = "aarch64" ]; then
   SYSTEM_ARCH=arm64
