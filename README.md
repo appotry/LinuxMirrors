@@ -3,6 +3,14 @@
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
 - __目前已支持绝大部分架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
 
+## 已适配的 `GNU/Linux` 发行版
+|             | Ubuntu |  Debian  |  Fedora  |  CentOS  |  Kali  |
+| :------:    | :-----------: | :-----------: | :-----------: | :-----------: | :-----------: |
+| 支持版本     | 14.04 ~ 20.10 | 8.0 ~ 10.8 | 28 ~ 33 | 7.0 ~ 8.3 | 2.0 ~ 2021.1  |
+> 注意：仅支持 Debian 与 Redhat 发行版和及其衍生发行版
+
+***
+
 ## 本项目所使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
 | :------: | :------: | :------: | :------: | :------: |
@@ -18,14 +26,6 @@
 | 10 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) |  |  |
 | 11 | 中国科学技术大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) | √ | √ |
 > 如果脚本中文乱码可对照此列表使用，顺序与脚本一致，数据正在完善中...
-
-***
-
-## 已适配的 `GNU/Linux` 发行版
-|             | Ubuntu |  Debian  |  Fedora  |  CentOS  |  Kali  |
-| :------:    | :-----------: | :-----------: | :-----------: | :-----------: | :-----------: |
-| 支持版本     | 14.04 ~ 20.10 | 8.0 ~ 10.8 | 28 ~ 33 | 7.0 ~ 8.3 | 2.0 ~ 2021.1  |
-> 注意：仅支持 Debian 与 Redhat 发行版和及其衍生发行版
 
 ***
 
@@ -60,9 +60,9 @@
 
 ***
 
-### <img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> [CSDN 博客](https://blog.csdn.net/u013246692/article/details/113124295)
+## <img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> [CSDN 博客](https://blog.csdn.net/u013246692/article/details/113124295)
 
-### 明天会更好
-<img src="./icon/thank.jpg" width="280" height="280" alt="微信赞赏码"/><br/>
+## 明天会更好
+<img src="./icon/thank.jpg" width="250" height="250" alt="微信赞赏码"/><br/>
 
 __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便分享给更多的朋友吗？__
