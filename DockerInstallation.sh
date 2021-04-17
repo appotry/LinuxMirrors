@@ -1,5 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
+## Modified: 2021-04-18
 
 ## 定义目录文件变量：
 DebianConfig=/etc/apt/sources.list
@@ -16,8 +17,8 @@ if [ $? -eq 0 ]; then
 else
     SYSTEM="Debian"
 fi
-## 系统判定变量
-## 名称、版本、版本号、使用架构
+
+## 系统判定变量（名称、版本、版本号、使用架构）
 if [ $SYSTEM = "Debian" ]; then
     SYSTEM_NAME=$(lsb_release -is)
     SYSTEM_VERSION=$(lsb_release -cs)
@@ -48,6 +49,10 @@ Architecture=$(arch)
 if [ $Architecture = "x86_64" ]; then
     SYSTEM_ARCH=x86_64
     SOURCE_ARCH=amd64
+elif [ $Architecture = "*86*" ]; then
+    SYSTEM_ARCH=x86_32
+    echo -e '\n\033[31m---------- 抱歉，Docker Engine 不支持安装在 x86_32 架构的环境上！ ---------- \033[0m'
+    exit 1
 elif [ $Architecture = "aarch64" ]; then
     SYSTEM_ARCH=arm64
     SOURCE_ARCH=arm64
