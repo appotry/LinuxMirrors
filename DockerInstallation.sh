@@ -49,7 +49,7 @@ Architecture=$(arch)
 if [ $Architecture = "x86_64" ]; then
     SYSTEM_ARCH=x86_64
     SOURCE_ARCH=amd64
-elif [ $Architecture = "*86*" ]; then
+elif [ $Architecture = "*i?86*" ]; then
     SYSTEM_ARCH=x86_32
     echo -e '\n\033[31m---------- 抱歉，Docker Engine 不支持安装在 x86_32 架构的环境上！ ---------- \033[0m'
     exit 1
