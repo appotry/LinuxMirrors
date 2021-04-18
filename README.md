@@ -4,10 +4,10 @@
 - __目前已支持绝大部分架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
 
 ## 已适配的 GNU/Linux 发行版
-|             | Ubuntu |  Debian  |  Fedora  |  CentOS  |  Kali  |
+|             | Ubuntu |  Debian  |  Kali  |  Fedora  |  CentOS  |
 | :------:    | :-----------: | :-----------: | :-----------: | :-----------: | :-----------: |
-| 支持版本     | 14.04 ~ 20.10 | 8.0 ~ 10.8 | 28 ~ 33 | 7.0 ~ 8.3 | 2.0 ~ 2021.1  |
-> 注意：仅支持 Debian 与 Redhat 发行版和及其衍生发行版
+| 支持版本     | 14.04 ~ 20.10 | 8.0 ~ 10.8 | 2.0 ~ 2021.1 | 28 ~ 33 | 7.0 ~ 8.3 |
+> 目前仅支持 Debian 与 Redhat 发行版和及其衍生发行版
 
 ***
 
@@ -21,11 +21,11 @@
 | 5 | 搜狐 | [mirrors.sohu.com](https://mirrors.sohu.com) |  |  |
 | 6 | 清华大学 | [mirrors.tuna.tsinghua.edu.cn](https://mirrors.tuna.tsinghua.edu.cn) | √ | √ |
 | 7 | 浙江大学 | [mirrors.zju.edu.cn](https://mirrors.zju.edu.cn) |  |  |
-| 8 | 重庆大学 | [mirrors.cqu.edu.cn](https://mirrors.cqu.edu.cn) |  |  |
-| 9 | 兰州大学 | [mirror.lzu.edu.cn](https://mirror.lzu.edu.cn) |  |  |
-| 10 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) |  |  |
+| 8 | 重庆大学 | [mirrors.cqu.edu.cn](https://mirrors.cqu.edu.cn) | √ |  |
+| 9 | 兰州大学 | [mirror.lzu.edu.cn](https://mirror.lzu.edu.cn) | √ | √ |
+| 10 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) | √ | √ |
 | 11 | 中国科学技术大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) | √ | √ |
-> 如果脚本中文乱码可对照此列表使用，顺序与脚本一致，数据正在完善中...
+> 如果使用过程中脚本乱码可对照此列表使用，顺序与脚本一致，数据正在完善中...
 
 ***
 
@@ -43,8 +43,7 @@
 - `Docker` 国内一键安装脚本
 
       sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE源`与 `Docker Hub源（镜像加速器）` ，后续会加入"手动选择安装版本"功能。_\
-> _此脚本将在未来与此项目分离独立建项。_
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器 ，后续会加入"手动选择安装版本"功能，此脚本将在未来与此项目分离独立建项。_
 
 ***
 
@@ -56,7 +55,7 @@
 ***
 
 > 项目已设立开源许可证书，传播时需在显著位置标注来源和作者，请尊重本人的知识成果\
-> 如需使用建议直接调用脚本，如有意见与建议请提交至 Issues，谢谢
+> 如需使用建议直接调用脚本，如有意见与建议请提交至 __Issues__，谢谢
 
 ***
 
