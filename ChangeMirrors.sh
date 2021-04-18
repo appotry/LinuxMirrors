@@ -156,7 +156,7 @@ function MirrorsList() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com"
-        echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里源 ---------- \033[0m'
+        echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里云 ---------- \033[0m'
         sleep 2s
         ;;
     esac
@@ -228,10 +228,8 @@ function UpgradeSoftware() {
         echo -e ''
         if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
             apt-get upgrade -y
-            apt-get autoremove -y
         elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
             yum update -y
-            yum autoremove -y
         fi
         CHOICE_C=$(echo -e '\n\033[32m└ 是否删除已下载的软件包 [ Y/n ]：\033[0m')
         read -p "${CHOICE_C}" INPUT
@@ -239,8 +237,10 @@ function UpgradeSoftware() {
         [Yy]*)
             echo -e ''
             if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+                apt-get autoremove -y >/dev/null 2>&1            
                 apt-get clean >/dev/null 2>&1
             elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+                yum autoremove -y >/dev/null 2>&1
                 yum clean all >/dev/null 2>&1
             fi
             echo -e '删除完毕\n'
@@ -316,7 +316,7 @@ function RedHatMirrors() {
     fi
 }
 
-## 生成基于 RedHat 发行版和及其衍生发行版的 repo 官方 repo 源文件
+## 生成基于 RedHat 发行版和及其衍生发行版的官方源 repo 文件
 function RedHatOfficialMirrorsCreate() {
     if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
         if [ ${CENTOS_VERSION} -eq "8" ]; then
