@@ -1,12 +1,14 @@
 # LinuxMirrors
 - __GNU/Linux 更换国内更新源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
-- __目前已支持绝大部分架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
+- __支持所有架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
+
+## <img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> [CSDN 博客](https://blog.csdn.net/u013246692/article/details/113124295)
 
 ## 已适配的 GNU/Linux 发行版
-|             | Ubuntu |  Debian  |  Kali  |  Fedora  |  CentOS  |
-| :------:    | :-----------: | :-----------: | :-----------: | :-----------: | :-----------: |
-| 支持版本     | 14.04 ~ 20.10 | 8.0 ~ 10.8 | 2.0 ~ 2021.1 | 28 ~ 33 | 7.0 ~ 8.3 |
+|          | Ubuntu |  Debian  |  Kali  |  Fedora  |  CentOS  |
+| :------: | :------: | :------: | :------: | :------: | :------: |
+| 支持版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
 > 目前仅支持 Debian 与 Redhat 发行版和及其衍生发行版
 
 ***
@@ -34,7 +36,7 @@
 - `GNU/Linux` 一键更换国内更新源脚本
 
       sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
-> _友情提示：脚本自带备份功能，无需手动备份原有官方源，如果检测到本地已有备份文件则会跳过备份操作。_
+> _友情提示：脚本自带备份功能，无需手动备份原有官方源，如果检测到本地已有备份文件则会跳过执行备份操作。_
 
 > _注意：`CentOS`和 `Fedora`配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用请将 `repo`文件中的 `enabled=0`修改成 `enabled=1`_
 
@@ -59,9 +61,7 @@
 
 ***
 
-## <img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> [CSDN 博客](https://blog.csdn.net/u013246692/article/details/113124295)
-
-## 明天会更好
+## 赞赏码
 <img src="./icon/thank.jpg" width="250" height="250" alt="微信赞赏码"/><br/>
 
 __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便分享给更多的朋友吗？__
