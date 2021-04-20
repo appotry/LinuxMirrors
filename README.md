@@ -15,7 +15,7 @@
 ***
 
 ### 已适配的 GNU/Linux 发行版 <img src="./icon/linux.svg" width="16" height="16" alt="Linux Logo"/>
-|          | <img src="./icon/ubuntu.svg" width="14" height="14"/>&nbsp;Ubuntu |  <img src="./icon/debian.svg" width="14" height="14"/>&nbsp;Debian  |  <img src="./icon/kali.svg" width="14" height="14"/>&nbsp;Kali Linux  |  <img src="./icon/fedora.svg" width="14" height="14"/>&nbsp;Fedora  |  <img src="./icon/centos.svg" width="14" height="14"/>&nbsp;CentOS  |
+|          | <img src="./icon/ubuntu.svg" width="14" height="14"/>&nbsp;Ubuntu |  <img src="./icon/debian.svg" width="14" height="14"/>&nbsp;Debian  |  <img src="./icon/kali.svg" width="14" height="14"/>&nbsp;Kali Linux  |  <img src="./icon/fedora.svg" width="14" height="14"/>&nbsp;Fedora  |  <img src="./icon/centos.svg" width="16" height="16"/>&nbsp;CentOS  |
 | :------: | :------: | :------: | :------: | :------: | :------: |
 | 支持版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
 > 目前仅支持 Debian 与 Redhat 的部分发行版和及其衍生发行版
