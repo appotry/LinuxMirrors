@@ -1,19 +1,22 @@
-# LinuxMirrors
-- __GNU/Linux 更换国内更新源脚本__
+# LinuxMirrors 
+## __<img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> [CSDN](https://blog.csdn.net/u013246692/article/details/113124295)__
+- __GNU/Linux 一键更换国内更新源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
 - __支持所有架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
 
-## <img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> [CSDN 博客](https://blog.csdn.net/u013246692/article/details/113124295)
-
-## 已适配的 GNU/Linux 发行版
-|          | Ubuntu |  Debian  |  Kali  |  Fedora  |  CentOS  |
-| :------: | :------: | :------: | :------: | :------: | :------: |
-| 支持版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
-> 目前仅支持 Debian 与 Redhat 发行版和及其衍生发行版
+## 更新日志
+- __2021/4/20__
+ㅤ修复了对于 `Kali Linux` 的错误，适配了其最新版本。
 
 ***
 
-## 本项目所使用的开源镜像站
+### 已适配的 GNU/Linux 发行版
+|          | Ubuntu |  Debian  |  Kali Linux  |  Fedora  |  CentOS  |
+| :------: | :------: | :------: | :------: | :------: | :------: |
+| 支持版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
+> 目前仅支持 Debian 与 Redhat 的部分发行版和及其衍生发行版
+
+### 脚本所使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
 | :------: | :------: | :------: | :------: | :------: |
 | 1 | 阿里云 | [mirrors.aliyun.com](https://developer.aliyun.com/special/mirrors/notice) | √ | √ |
@@ -32,27 +35,29 @@
 ***
 
 ## 一键执行脚本
+> 友情提示：
+>
+> 1. 为了适配所有环境，请使用 `Root` 用户执行脚本，切换命令为 `sudo -i`。如果无法执行一键命令，可复制源码到本地并手动执行。
+> 2. 脚本自带备份功能，无需手动备份原有官方源，如果检测到本地已有备份文件则会跳过执行备份操作。
 
 - `GNU/Linux` 一键更换国内更新源脚本
 
-      sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
-> _友情提示：脚本自带备份功能，无需手动备份原有官方源，如果检测到本地已有备份文件则会跳过执行备份操作。_
-
-> _注意：`CentOS`和 `Fedora`配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用请将 `repo`文件中的 `enabled=0`修改成 `enabled=1`_
+      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
+> _注意：`RedHat` 系 Linux 发行版和及其衍生发行版配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用请将 `repo`文件中的 `enabled=0`修改成 `enabled=1`。_
 
 ***
 
 - `Docker` 国内一键安装脚本
 
-      sudo bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器 ，后续会加入"手动选择安装版本"功能，此脚本将在未来与此项目分离独立建项。_
+      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，目前仅保证 Linux 发行版的最新稳定版可用，后续会加入 "手动选择安装版本" 功能，此脚本将在未来与此项目分离独立建项。_
 
 ***
 
 ## 常见问题与帮助
 - 如果提示 `Command 'curl' not found` 则说明当前未安装 `curl` 软件包，安装命令如下：
 
-      sudo apt install -y curl  或  sudo yum install -y curl
+      apt install -y curl  或  yum install -y curl
 
 ***
 
@@ -61,7 +66,9 @@
 
 ***
 
-## 赞赏码
+## 捐助作者
 <img src="./icon/thank.jpg" width="250" height="250" alt="微信赞赏码"/><br/>
+
+***
 
 __如果您觉得这个项目不错的话可以在右上角给颗⭐吗？方便分享给更多的朋友吗？__
