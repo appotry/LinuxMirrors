@@ -1,15 +1,9 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-04-19
+## Modified: 2021-04-21
 
 ## 定义变量：
-SYSTEM_DEBIAN=Debian
-SYSTEM_UBUNTU=Ubuntu
-SYSTEM_KALI=Kali
-SYSTEM_REDHAT=RedHat
-SYSTEM_CENTOS=CentOS
-SYSTEM_FEDORA=Fedora
-
+Architecture=$(uname -m)
 DebianRelease=lsb_release
 RedHatRelease=/etc/redhat-release
 DebianConfig=/etc/apt/sources.list
@@ -17,6 +11,13 @@ DebianConfigBackup=/etc/apt/sources.list.bak
 DebianDirectory=/etc/apt/sources.list.d
 RedHatDirectory=/etc/yum.repos.d
 RedHatDirectoryBackup=/etc/yum.repos.d.bak
+
+SYSTEM_DEBIAN=Debian
+SYSTEM_UBUNTU=Ubuntu
+SYSTEM_KALI=Kali
+SYSTEM_REDHAT=RedHat
+SYSTEM_CENTOS=CentOS
+SYSTEM_FEDORA=Fedora
 
 ## 判定系统基于 Debian 还是基于 RedHat
 if [ -e ${RedHatRelease} ]; then
@@ -41,45 +42,53 @@ elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
 fi
 
 if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
-    SOURCE_BRANCH=ubuntu
-elif [ ${SYSTEM_NAME} = ${SYSTEM_DEBIAN} ]; then
-    SOURCE_BRANCH=debian
-elif [ ${SYSTEM_NAME} = ${SYSTEM_KALI} ]; then
-    SOURCE_BRANCH=kali
-elif [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-    SOURCE_BRANCH=centos
-elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-    SOURCE_BRANCH=fedora
-fi
-
-ARCHITECTURE=$(arch)
-if [ ${ARCHITECTURE} = "x86_64" ]; then
-    SYSTEM_ARCH=x86_64
-    UBUNTU_ARCH=ubuntu
-elif [ ${ARCHITECTURE} = "aarch64" ]; then
-    SYSTEM_ARCH=arm64
-    UBUNTU_ARCH=ubuntu-ports
-elif [ ${ARCHITECTURE} = "armv*" ]; then
-    SYSTEM_ARCH=arm32
-    UBUNTU_ARCH=ubuntu-ports
-elif [ ${ARCHITECTURE} = "*i?86*" ]; then
-    SYSTEM_ARCH=x86_32
-    UBUNTU_ARCH=ubuntu
+    if [ ${Architecture} = "x86_64" ] || [ ${Architecture} = "*i?86*" ]; then
+        SOURCE_BRANCH=${SYSTEM_NAME,,}
+    else
+        SOURCE_BRANCH=ubuntu-ports
+    fi
 else
-    SYSTEM_ARCH=${ARCHITECTURE}
-    UBUNTU_ARCH=ubuntu-ports
+    SOURCE_BRANCH=${SYSTEM_NAME,,}
 fi
 
-clear
+if [ ${Architecture} = "x86_64" ]; then
+    SYSTEM_ARCH=x86_64
+elif [ ${Architecture} = "aarch64" ]; then
+    SYSTEM_ARCH=arm64
+elif [ ${Architecture} = "armv*" ]; then
+    SYSTEM_ARCH=armhf
+elif [ ${Architecture} = "*i?86*" ]; then
+    SYSTEM_ARCH=x86_32
+else
+    SYSTEM_ARCH=${Architecture}
+fi
+
+clear ## 清空终端所有已显示的内容
 
 ## 组合各个函数模块
 function CombinationFunction() {
+    EnvJudgment
     MirrorsList
     MirrorsBackup
     RemoveOldMirrors
     ChangeMirrors
     MirrorsSync
     UpgradeSoftware
+}
+
+## 环境判定：
+function EnvJudgment() {
+    ## 权限判定：
+    if [ $UID -ne 0 ]; then
+        echo -e '\033[31m ------------ Permission no enough, please use user ROOT! ------------ \033[0m'
+        exit
+    fi
+    ## 网络环境判定：
+    ping -c 1 www.baidu.com >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "\033[31m ----- Network connection error.Please check the network environment and try again later! ----- \033[0m"
+        exit
+    fi
 }
 
 ## 选择国内源
@@ -167,14 +176,14 @@ function MirrorsList() {
 function MirrorsBackup() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         if [ -e ${DebianConfig} ]; then
-            echo -e "\n\033[32m└ 检测到已备份的 source.list 源文件，跳过执行备份操作...... \033[0m\n"
+            echo -e "\n\033[32m└ 检测到已备份的 ${DebianConfigBackup} 源文件，跳过备份操作...... \033[0m\n"
         else
             cp -rf ${DebianConfig} ${DebianConfigBackup} >/dev/null 2>&1
             echo -e "\n\033[32m└ 已备份原有 source.list 源文件至 ${DebianConfigBackup} ...... \033[0m\n"
         fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         if [ -d ${RedHatDirectoryBackup} ]; then
-            echo -e "\n\033[32m└ 检测到已备份的 repo 源文件，跳过执行备份操作...... \033[0m\n"
+            echo -e "\n\033[32m└ 检测到 ${RedHatDirectoryBackup} 目录下存在已备份的 repo 文件，跳过备份操作...... \033[0m\n"
         else
             mkdir -p ${RedHatDirectoryBackup}
             cp -rf ${RedHatDirectory}/* ${RedHatDirectoryBackup} >/dev/null 2>&1
@@ -216,6 +225,7 @@ function MirrorsSync() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         apt-get update
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+        yum clean all >/dev/null 2>&1
         yum makecache
     fi
 }
@@ -238,7 +248,7 @@ function UpgradeSoftware() {
         [Yy]*)
             echo -e ''
             if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-                apt-get autoremove -y >/dev/null 2>&1            
+                apt-get autoremove -y >/dev/null 2>&1
                 apt-get clean >/dev/null 2>&1
             elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
                 yum autoremove -y >/dev/null 2>&1
@@ -263,16 +273,16 @@ function UpgradeSoftware() {
 function DebianMirrors() {
     ## 修改国内源
     if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
-        echo "deb https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianConfig}
-        echo "deb-src https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianConfig}
-        echo "deb https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianConfig}
-        echo "deb-src https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianConfig}
-        echo "deb https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianConfig}
-        echo "deb-src https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianConfig}
-        echo "deb https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianConfig}
-        echo "deb-src https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianConfig}
-        echo "deb https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianConfig}
-        echo "deb-src https://${SOURCE}/${UBUNTU_ARCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianConfig}
+        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianConfig}
+        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianConfig}
+        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianConfig}
+        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianConfig}
+        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianConfig}
+        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianConfig}
+        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianConfig}
+        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianConfig}
+        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianConfig}
+        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianConfig}
     elif [ ${SYSTEM_NAME} = ${SYSTEM_DEBIAN} ]; then
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianConfig}
         echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianConfig}
