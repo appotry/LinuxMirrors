@@ -14,6 +14,7 @@ DebianRelease=lsb_release
 RedHatRelease=/etc/redhat-release
 DebianConfig=/etc/apt/sources.list
 DebianConfigBackup=/etc/apt/sources.list.bak
+DebianDirectory=/etc/apt/sources.list.d
 RedHatDirectory=/etc/yum.repos.d
 RedHatDirectoryBackup=/etc/yum.repos.d.bak
 
@@ -44,7 +45,7 @@ if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
 elif [ ${SYSTEM_NAME} = ${SYSTEM_DEBIAN} ]; then
     SOURCE_BRANCH=debian
 elif [ ${SYSTEM_NAME} = ${SYSTEM_KALI} ]; then
-    SOURCE_BRANCH=debian
+    SOURCE_BRANCH=kali
 elif [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
     SOURCE_BRANCH=centos
 elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
