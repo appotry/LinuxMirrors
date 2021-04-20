@@ -1,6 +1,7 @@
 # LinuxMirrors
-<a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github.png" width="155" height="50"></a>
-<a href="https://gitee.com/SuperManito/LinuxMirrors"><img src="./icon/gitee.svg" width="100" height="50"/></a>
+<a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-1.svg" width="33" height="43"></a>
+<a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-2.svg" width="70" height="53"></a>
+ㅤ<a href="https://gitee.com/SuperManito/LinuxMirrors"><img src="./icon/gitee.svg" width="100" height="50"/></a>
 &nbsp;<a href="https://blog.csdn.net/u013246692/article/details/113124295"><img src="./icon/csdn.png" width="100" height="50"/></a>
 
 - __GNU/Linux 一键更换国内更新源脚本__
