@@ -25,15 +25,15 @@
 | 1 | 阿里云 | [mirrors.aliyun.com](https://developer.aliyun.com/special/mirrors/notice) | √ | √ |
 | 2 | 腾讯云 | [mirrors.cloud.tencent.com](https://mirrors.cloud.tencent.com) | √ | √ |
 | 3 | 华为云 | [mirrors.huaweicloud.com](https://mirrors.huaweicloud.com) | √ | √ |
-| 4 | 网易 | [mirrors.163.com](https://mirrors.163.com) |  |  |
-| 5 | 搜狐 | [mirrors.sohu.com](https://mirrors.sohu.com) |  |  |
+| 4 | 网易 | [mirrors.163.com](https://mirrors.163.com) | √ | × |
+| 5 | 搜狐 | [mirrors.sohu.com](https://mirrors.sohu.com) | √ | × |
 | 6 | 清华大学 | [mirrors.tuna.tsinghua.edu.cn](https://mirrors.tuna.tsinghua.edu.cn) | √ | √ |
-| 7 | 浙江大学 | [mirrors.zju.edu.cn](https://mirrors.zju.edu.cn) |  |  |
-| 8 | 重庆大学 | [mirrors.cqu.edu.cn](https://mirrors.cqu.edu.cn) | √ |  |
+| 7 | 浙江大学 | [mirrors.zju.edu.cn](https://mirrors.zju.edu.cn) | √ | × |
+| 8 | 重庆大学 | [mirrors.cqu.edu.cn](https://mirrors.cqu.edu.cn) | √ | × |
 | 9 | 兰州大学 | [mirror.lzu.edu.cn](https://mirror.lzu.edu.cn) | √ | √ |
 | 10 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) | √ | √ |
 | 11 | 中国科学技术大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) | √ | √ |
-> 如果使用过程中脚本乱码可对照此列表使用，顺序与脚本一致，数据正在完善中...
+> 如果使用过程中脚本不能正常输出中文内容则可对照此列表使用，顺序与脚本一致
 
 ***
 
