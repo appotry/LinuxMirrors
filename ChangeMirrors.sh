@@ -83,12 +83,6 @@ function EnvJudgment() {
         echo -e '\033[31m ------------ Permission no enough, please use user ROOT! ------------ \033[0m'
         exit
     fi
-    ## 网络环境判定：
-    ping -c 1 www.baidu.com >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo -e "\033[31m ----- Network connection error.Please check the network environment and try again later! ----- \033[0m"
-        exit
-    fi
 }
 
 ## 选择国内源
@@ -175,7 +169,7 @@ function MirrorsList() {
 ## 备份原有源
 function MirrorsBackup() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        if [ -e ${DebianConfig} ]; then
+        if [ -e ${DebianConfigBackup} ]; then
             echo -e "\n\033[32m└ 检测到已备份的 ${DebianConfigBackup} 源文件，跳过备份操作...... \033[0m\n"
         else
             cp -rf ${DebianConfig} ${DebianConfigBackup} >/dev/null 2>&1
