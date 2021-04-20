@@ -1,5 +1,5 @@
-# LinuxMirrors 
-<a href="https://blog.csdn.net/u013246692/article/details/113124295"><img src="https://csdnimg.cn/cdn/content-toolbar/csdn-logo_.png?v=20190924.1" width="100" height="50" alt="CSDN"/></a>
+# LinuxMirrors
+<img src="./icon/github.png" onclick="javascript:window.open('https://github.com/SuperManito/LinuxMirrors')" width="155" height="50" alt="Github"/><img src="./icon/gitee.svg" onclick="javascript:window.open('https://gitee.com/SuperManito/LinuxMirrors')" width="100" height="50" alt="Gitee"/><img src="./icon/csdn.png" onclick="javascript:window.open('https://blog.csdn.net/u013246692/article/details/113124295')" width="100" height="50" alt="CSDN"/>
 
 - __GNU/Linux 一键更换国内更新源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
@@ -11,7 +11,7 @@
 
 ***
 
-### 已适配的 GNU/Linux 发行版 <img src="./icon/linux.svg" width="20" height="20" alt="Linux Logo"/>
+### 已适配的 GNU/Linux 发行版 <img src="./icon/linux.svg" width="16" height="16" alt="Linux Logo"/>
 |          | Ubuntu |  Debian  |  Kali Linux  |  Fedora  |  CentOS  |
 | :------: | :------: | :------: | :------: | :------: | :------: |
 | 支持版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
@@ -59,7 +59,7 @@
 
       apt install -y curl  或  yum install -y curl
 
-- 如果提示 `bash: /proc/self/fd/11: 没有那个文件或目录` ，请切换至 Root 用户执行。
+- 如果提示 `bash: /proc/self/fd/11: 没有那个文件或目录` ，请切换至 `Root` 用户执行。
 
 ***
 
