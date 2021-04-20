@@ -1,16 +1,17 @@
 # LinuxMirrors 
-## __<img src="https://g.csdnimg.cn/static/logo/favicon32.ico" width="16" height="16" alt="CSDN LOGO"/> [CSDN](https://blog.csdn.net/u013246692/article/details/113124295)__
+<a href="https://blog.csdn.net/u013246692/article/details/113124295"><img src="https://csdnimg.cn/cdn/content-toolbar/csdn-logo_.png?v=20190924.1" width="100" height="50" alt="CSDN"/></a>
+
 - __GNU/Linux 一键更换国内更新源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
 - __支持所有架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
 
-## 更新日志
+### 更新日志
 - __2021/4/20__
 ㅤ修复了对于 `Kali Linux` 的错误，适配了其最新版本。
 
 ***
 
-### 已适配的 GNU/Linux 发行版
+### 已适配的 GNU/Linux 发行版 <img src="./icon/linux.svg" width="20" height="20" alt="Linux Logo"/>
 |          | Ubuntu |  Debian  |  Kali Linux  |  Fedora  |  CentOS  |
 | :------: | :------: | :------: | :------: | :------: | :------: |
 | 支持版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
@@ -34,11 +35,10 @@
 
 ***
 
-## 一键执行脚本
-> 友情提示：
->
-> 1. 为了适配所有环境，请使用 `Root` 用户执行脚本，切换命令为 `sudo -i`。如果无法执行一键命令，可复制源码到本地并手动执行。
-> 2. 脚本自带备份功能，无需手动备份原有官方源，如果检测到本地已有备份文件则会跳过执行备份操作。
+### 如何使用
+> 1. 复制完整命令到终端回车执行，如果执行出错，可复制源码到本地并手动执行。
+> 2. 为了适配所有环境，请使用 `Root` 用户执行脚本，切换命令为 `sudo -i`。
+> 3. 脚本自带备份功能，无需手动备份原有源，如果本地检测到已存在的备份文件则会跳过执行备份操作。
 
 - `GNU/Linux` 一键更换国内更新源脚本
 
@@ -54,20 +54,22 @@
 
 ***
 
-## 常见问题与帮助
+### 常见问题与帮助
 - 如果提示 `Command 'curl' not found` 则说明当前未安装 `curl` 软件包，安装命令如下：
 
       apt install -y curl  或  yum install -y curl
+
+- 如果提示 `bash: /proc/self/fd/11: 没有那个文件或目录` ，请切换至 Root 用户执行。
+
+***
+
+### 捐助作者
+<img src="./icon/thank.jpg" width="250" height="250" alt="微信赞赏码"/><br/>
 
 ***
 
 > 项目已设立开源许可证书，传播时需在显著位置标注来源和作者，请尊重本人的知识成果\
 > 如需使用建议直接调用脚本，如有意见与建议请提交至 __Issues__，谢谢
-
-***
-
-## 捐助作者
-<img src="./icon/thank.jpg" width="250" height="250" alt="微信赞赏码"/><br/>
 
 ***
 
