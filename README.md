@@ -1,11 +1,12 @@
-# LinuxMirrors - GNU/Linux 一键更换国内源
+# LinuxMirrors
 <a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-1.svg" width="34" height="42"></a>
 <a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-2.svg" width="70" height="52"></a>
 ㅤ<a href="https://gitee.com/SuperManito/LinuxMirrors"><img src="./icon/gitee.svg" width="100" height="50"/></a>
 &nbsp;<a href="https://blog.csdn.net/u013246692/article/details/113124295"><img src="./icon/csdn.png" width="100" height="50"/></a>
 
+- __`GNU/Linux` 一键更换国内源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
-- __支持所有架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
+- __理论支持所有架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
 
 ### 更新日志
 - __2021 / 04 / 21__
@@ -46,7 +47,7 @@
 > 4. 脚本支持在原有源配置错误或者不存在的情况下使用，并且支持重复使用。
 
 ### 一键脚本
-- `GNU/Linux` 一键更换国内更新源脚本
+- `GNU/Linux` 一键更换国内源脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
 > _注意：`RedHat` 系 Linux 发行版和及其衍生发行版配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用请将 `repo`文件中的 `enabled=0`修改成 `enabled=1`。_
@@ -75,7 +76,7 @@
 ***
 
 > 项目已设立开源许可协议，传播时需在显著位置标注来源和作者，请尊重本人的知识成果\
-> 如需使用建议直接使用命令调用脚本，如有意见与建议请提交至 __Issues__，谢谢
+> 建议通过命令直接调用脚本，若有意见与建议您可以提交至 __Issues__，谢谢
 
 ***
 
