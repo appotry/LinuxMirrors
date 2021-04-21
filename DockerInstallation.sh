@@ -14,6 +14,14 @@ DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
 RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
 
+DockerSourceList=${DebianExtendListDirectory}/docker.list
+DockerRepo=${RedHatReposDirectory}/docker-ce.repo
+DockerDirectory=/etc/docker
+DockerConfig=${DockerDirectory}/daemon.json
+DockerConfigBackup=${DockerDirectory}/daemon.json.bak
+DockerCompose=/usr/local/bin/docker-compose
+DOCKER_COMPOSE_URL=https://get.daocloud.io/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)
+
 SYSTEM_DEBIAN=Debian
 SYSTEM_UBUNTU=Ubuntu
 SYSTEM_KALI=Kali
@@ -43,38 +51,33 @@ elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
     fi
 fi
 
-if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
-    if [ ${Architecture} = "x86_64" ] || [ ${Architecture} = "*i?86*" ]; then
-        SOURCE_BRANCH=${SYSTEM_NAME,,}
-    else
-        SOURCE_BRANCH=ubuntu-ports
-    fi
-else
-    SOURCE_BRANCH=${SYSTEM_NAME,,}
-fi
+SOURCE_BRANCH=${SYSTEM_NAME,,}
 
-if [ ${Architecture} = "x86_64" ]; then
+if [ $Architecture = "x86_64" ]; then
     SYSTEM_ARCH=x86_64
-elif [ ${Architecture} = "aarch64" ]; then
+    SOURCE_ARCH=amd64
+elif [ $Architecture = "aarch64" ]; then
     SYSTEM_ARCH=arm64
-elif [ ${Architecture} = "armv*" ]; then
+    SOURCE_ARCH=arm64
+elif [ $Architecture = "armv*" ]; then
     SYSTEM_ARCH=armhf
-elif [ ${Architecture} = "*i?86*" ]; then
+    SOURCE_ARCH=armhf
+elif [ $Architecture = "*i?86*" ]; then
     SYSTEM_ARCH=x86_32
+    echo -e '\n\033[31m---------- 抱歉，Docker Engine 不支持安装在 x86_32 架构的环境上！ ---------- \033[0m'
+    exit 1
 else
     SYSTEM_ARCH=${Architecture}
+    SOURCE_ARCH=armhf
 fi
-
-clear ## 清空终端所有已显示的内容
 
 ## 组合各个函数模块
 function CombinationFunction() {
     EnvJudgment
     ChooseMirrors
-    MirrorsBackup
-    RemoveOldMirrors
-    ChangeMirrors
-    UpgradeSoftware
+    DockerEngine
+    DockerCompose
+    ShowVersion
 }
 
 ## 环境判定：
@@ -84,15 +87,22 @@ function EnvJudgment() {
         echo -e '\033[31m ------------ Permission no enough, please use user ROOT! ------------ \033[0m'
         exit
     fi
+    ## 网络环境判定：
+    ping -c 1 www.baidu.com >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "\033[31m ----- Network connection error.Please check the network environment and try again later! ----- \033[0m"
+        exit
+    fi
+    clear ## 清空终端所有已显示的内容
 }
 
-## 选择国内源
+## 更换 Docker 国内源：
 function ChooseMirrors() {
     echo -e '+---------------------------------------------------+'
     echo -e '|                                                   |'
     echo -e '|   =============================================   |'
     echo -e '|                                                   |'
-    echo -e '|         欢迎使用 Linux 一键更换国内源脚本         |'
+    echo -e '|         欢迎使用 Docker 国内一键安装脚本          |'
     echo -e '|                                                   |'
     echo -e '|   =============================================   |'
     echo -e '|                                                   |'
@@ -100,9 +110,11 @@ function ChooseMirrors() {
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    echo -e '            提供以下国内更新源可供选择：'
+    echo -e '  提供以下国内 Docker CE 和 Docker Hub 源可供选择：'
     echo -e ''
     echo -e '#####################################################'
+    echo -e ''
+    echo -e ' Docker CE '
     echo -e ''
     echo -e ' *  1)    阿里云'
     echo -e ' *  2)    腾讯云'
@@ -116,13 +128,22 @@ function ChooseMirrors() {
     echo -e ' *  10)   上海交通大学'
     echo -e ' *  11)   中国科学技术大学'
     echo -e ''
+    echo -e ' Docker Hub（镜像加速器） '
+    echo -e ''
+    echo -e ' *  1)    阿里云'
+    echo -e ' *  2)    腾讯云'
+    echo -e ' *  3)    官方中国区'
+    echo -e ' *  4)    DaoCloud'
+    echo -e ' *  5)    中国科学技术大学'
+    echo -e ' *  6)    网易'
+    echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    echo -e "           运行环境  ${SYSTEM_NAME} ${SYSTEM_VERSION_NUMBER} ${SYSTEM_ARCH}"
-    echo -e "           系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
+    echo -e "         运行环境  ${SYSTEM_NAME} ${SYSTEM_VERSION_NUMBER} ${SYSTEM_ARCH}"
+    echo -e "         系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
-    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内更新源 [ 1~11 ]：\033[0m')
+    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的 Docker CE 源 [ 1~11 ]：\033[0m')
     read -p "${CHOICE_A}" INPUT
     case $INPUT in
     1)
@@ -160,878 +181,149 @@ function ChooseMirrors() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com"
-        echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里云 ---------- \033[0m'
+        echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里源 ---------- \033[0m'
         sleep 2s
         ;;
     esac
-}
+    echo -e ''
 
-## 备份原有源
-function MirrorsBackup() {
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        ## 判断 /etc/apt/sources.list.d 目录下是否存在文件
-        [ -d ${DebianExtendListDirectory} ] && ls ${DebianExtendListDirectory} | grep *.list -q
-        VERIFICATION_FILE=$?
-        ## 判断 /etc/apt/sources.list.d.bak 目录下是否存在文件
-        [ -d ${DebianExtendListDirectoryBackup} ] && ls ${DebianExtendListDirectoryBackup} | grep *.list -q
-        VERIFICATION_BACKUPFILE=$?
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-        ## 判断 /etc/yum.repos.d 目录下是否存在文件
-        [ -d ${RedHatReposDirectory} ] && ls ${RedHatReposDirectory} | grep repo -q
-        VERIFICATION_FILE=$?
-        ## 判断 /etc/yum.repos.d.bak 目录下是否存在文件
-        [ -d ${RedHatReposDirectoryBackup} ] && ls ${RedHatReposDirectoryBackup} | grep repo -q
-        VERIFICATION_BACKUPFILE=$?
-    fi
-
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        ## /etc/apt/sources.list
-        if [ -e ${DebianSourceListBackup} ] && [ -s ${DebianSourceListBackup} ]; then
-            echo -e "\n\033[32m└ 检测到已备份的 ${DebianSourceListBackup} 源文件，跳过备份操作...... \033[0m\n"
-        else
-            [ -e ${DebianSourceList} ] || touch ${DebianSourceList}
-            cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
-            echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ...... \033[0m\n"
-        fi
-        ## /etc/apt/sources.list.d
-        if [ -d ${DebianExtendListDirectory} ] && [ ${VERIFICATION_FILE} -eq 0 ]; then
-            if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
-                echo -e "\033[32m└ 检测到 ${DebianExtendListDirectoryBackup} 目录下存在已备份的 list 扩展源文件，跳过备份操作...... \033[0m\n"
-            else
-                [ -d ${DebianExtendListDirectoryBackup} ] || mkdir -p ${DebianExtendListDirectoryBackup}
-                cp -rf ${DebianExtendListDirectory}/* ${DebianExtendListDirectoryBackup} >/dev/null 2>&1
-                echo -e "\033[32m└ 已备份原有 list 扩展源文件至 ${DebianExtendListDirectoryBackup} 目录...... \033[0m\n"
-            fi
-        fi
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-        if [ ${VERIFICATION_FILE} -eq 0 ]; then
-            if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
-                echo -e "\n\033[32m└ 检测到 ${RedHatReposDirectoryBackup} 目录下存在已备份的 repo 源文件，跳过备份操作...... \033[0m\n"
-            else
-                [ -d ${RedHatReposDirectoryBackup} ] || mkdir -p ${RedHatReposDirectoryBackup}
-                cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
-                echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatReposDirectoryBackup} 目录...... \033[0m\n"
-            fi
-        else
-            [ -d ${RedHatReposDirectory} ] || mkdir -p ${RedHatReposDirectory}
-            echo ''
-        fi
-    fi
-    sleep 2s
-}
-
-## 删除原有源
-function RemoveOldMirrors() {
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        [ -e ${DebianSourceList} ] && sed -i '1,$d' ${DebianSourceList}
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-        if [ -d ${RedHatReposDirectory} ]; then
-            cd ${RedHatReposDirectory}
-            if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-                rm -rf ${SYSTEM_CENTOS}*
-            elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-                rm -rf ${SOURCE_BRANCH}*
-            fi
-        fi
-    fi
-}
-
-## 更换国内源
-function ChangeMirrors() {
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        DebianMirrors
-        apt-get update
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-        RedHatMirrors
-        yum clean all >/dev/null 2>&1
-        yum makecache
-    fi
-}
-
-## 更新软件包
-function UpgradeSoftware() {
-    CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包 [ Y/n ]：\033[0m')
+    ## 定义镜像加速器
+    CHOICE_B=$(echo -e '\033[32m└ 请选择并输入您想使用的 Docker Hub 源 [ 1~6 ]：\033[0m')
     read -p "${CHOICE_B}" INPUT
+    case $INPUT in
+    1)
+        REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
+        ;;
+    2)
+        REGISTRY_SOURCE="mirror.ccs.tencentyun.com"
+        ;;
+    3)
+        REGISTRY_SOURCE="registry.docker-cn.com"
+        ;;
+    4)
+        REGISTRY_SOURCE="f1361db2.m.daocloud.io"
+        ;;
+    5)
+        REGISTRY_SOURCE="docker.mirrors.ustc.edu.cn"
+        ;;
+    6)
+        REGISTRY_SOURCE="hub-mirror.c.163.com"
+        ;;
+    *)
+        REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
+        echo -e '\033[33m---------- 输入错误，将默认使用阿里云镜像加速器 ---------- \033[0m'
+        sleep 3s
+        ;;
+    esac
+    echo -e ''
+}
+
+## 安装 Docker Engine ：
+function DockerEngine() {
+    ## 卸载旧版本
+    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+        systemctl disable --now docker >/dev/null 2>&1
+        apt-get remove -y docker* containerd runc >/dev/null 2>&1
+    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+        systemctl disable --now docker >/dev/null 2>&1
+        yum remove -y docker* >/dev/null 2>&1
+    fi
+
+    ## 安装环境软件包
+    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+        apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+        yum install -y yum-utils device-mapper-persistent-data lvm2
+    fi
+
+    ## 删除旧的 Docker CE 源
+    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+        sed -i '/docker-ce/d' ${DebianSourceList}
+        rm -rf ${DockerSourceList}
+    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+        rm -rf ${DockerRepo}
+    fi
+
+    ## 配置 Docker CE 源
+    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+        if [ $SYSTEM_NAME = ${SYSTEM_KALI} ]; then
+            curl -fsSL https://${SOURCE}/docker-ce/linux/debian/gpg | apt-key add -
+        else
+            curl -fsSL https://${SOURCE}/docker-ce/linux/${SOURCE_BRANCH}/gpg | apt-key add -
+        fi
+
+        echo "deb [arch=${SOURCE_ARCH}] https://${SOURCE}/docker-ce/linux/${SOURCE_BRANCH} $SYSTEM_VERSION stable" | tee ${DockerSourceList} >/dev/null 2>&1
+
+        if [ $SYSTEM_NAME = ${SYSTEM_KALI} ]; then
+            sed -i "s/${SYSTEM_VERSION}/buster/g" ${DockerSourceList}
+            sed -i "s/${SOURCE_BRANCH}/debian/g" ${DockerSourceList}
+        fi
+    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+        yum-config-manager -y --add-repo https://${SOURCE}/docker-ce/linux/${SOURCE_BRANCH}/docker-ce.repo
+    fi
+
+    ## 安装 Docker Engine
+    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+        apt-get update
+        apt-get install -y docker-ce docker-ce-cli containerd.io
+    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+        yum makecache
+        yum install -y docker-ce docker-ce-cli containerd.io
+    fi
+
+    ## 配置镜像加速器
+    ImageAccelerator
+}
+
+## 配置镜像加速器：
+function ImageAccelerator() {
+    ## 创建目录和文件
+    if [ -d ${DockerDirectory} ] && [ -e ${DockerConfig} ]; then
+        if [ -e ${DockerConfigBackup} ]; then
+            echo -e "\n\033[32m└ 检测到已备份的 Docker 配置文件，跳过备份操作 ...... \033[0m\n"
+        else
+            cp -rf ${DockerConfig} ${DockerConfigBackup}
+            echo -e "\n\033[32m└ 已备份原有 Docker 配置文件至 ${DockerConfigBackup} ...... \033[0m\n"
+        fi
+        sleep 2s
+    else
+        mkdir -p ${DockerDirectory} >/dev/null 2>&1
+        touch ${DockerConfig}
+    fi
+
+    ## 配置镜像加速器
+    echo -e '{\n  "registry-mirrors": ["https://SOURCE"]\n}' >${DockerConfig}
+    sed -i "s/SOURCE/$REGISTRY_SOURCE/g" ${DockerConfig}
+
+    ## 启动 Docker Engine
+    systemctl stop docker >/dev/null 2>&1
+    systemctl enable --now docker
+}
+
+## 安装 Docker Compose：
+function DockerCompose() {
+    CHOICE_C=$(echo -e '\n\033[32m└ 是否安装 Docker Compose [ Y/n ]：\033[0m')
+    read -p "${CHOICE_C}" INPUT
     case $INPUT in
     [Yy]*)
         echo -e ''
-        if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-            apt-get upgrade -y
-        elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-            yum update -y
-        fi
-        CHOICE_C=$(echo -e '\n\033[32m└ 是否删除已下载的软件包 [ Y/n ]：\033[0m')
-        read -p "${CHOICE_C}" INPUT
-        case $INPUT in
-        [Yy]*)
-            echo -e ''
-            if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-                apt-get autoremove -y >/dev/null 2>&1
-                apt-get clean >/dev/null 2>&1
-            elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-                yum autoremove -y >/dev/null 2>&1
-                yum clean all >/dev/null 2>&1
-            fi
-            echo -e '删除完毕\n'
-            ;;
-        [Nn]*)
-            echo -e ''
-            ;;
-        *)
-            echo -e '\n\033[33m---------- 输入错误，默认不删除已下载的软件包 ---------- \033[0m\n'
-            ;;
-        esac
-        ;;
-    [Nn]*)
+        curl -L ${DOCKER_COMPOSE_URL} >${DockerCompose}
+        chmod +x ${DockerCompose}
         echo -e ''
         ;;
+    [Nn]*) ;;
     *)
-        echo -e '\n\033[33m---------- 输入错误，默认不更新软件包 ---------- \033[0m\n'
+        echo -e '\n\033[33m---------- 输入错误，默认不安装 Docker Compose ---------- \033[0m\n'
         ;;
     esac
 }
 
-## 更换基于 Debian 系 Linux 发行版的 source 国内源
-function DebianMirrors() {
-    ## 修改国内源
-    if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_DEBIAN} ]; then
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_KALI} ]; then
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
-    fi
-}
-
-## 更换基于 RedHat 系 Linux 发行版的 repo 国内源
-function RedHatMirrors() {
-    ## 创建官方源
-    RedHatOfficialMirrorsCreate
-    ## 修改国内源
-    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-        sed -i 's|^mirrorlist=|#mirrorlist=|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*.repo
-        sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*.repo
-        sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://mirror.centos.org|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*.repo
-        sed -i "s|mirror.centos.org|${SOURCE}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*.repo
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-        sed -i 's|^metalink=|#metalink=|g' \
-            ${RedHatReposDirectory}/fedora.repo \
-            ${RedHatReposDirectory}/fedora-updates.repo \
-            ${RedHatReposDirectory}/fedora-modular.repo \
-            ${RedHatReposDirectory}/fedora-updates-modular.repo \
-            ${RedHatReposDirectory}/fedora-updates-testing.repo \
-            ${RedHatReposDirectory}/fedora-updates-testing-modular.repo
-        sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/*
-        sed -i "s|http://download.example/pub/fedora/linux|https://${SOURCE}/fedora|g" \
-            ${RedHatReposDirectory}/fedora.repo \
-            ${RedHatReposDirectory}/fedora-updates.repo \
-            ${RedHatReposDirectory}/fedora-modular.repo \
-            ${RedHatReposDirectory}/fedora-updates-modular.repo \
-            ${RedHatReposDirectory}/fedora-updates-testing.repo \
-            ${RedHatReposDirectory}/fedora-updates-testing-modular.repo
-    fi
-}
-
-## 生成基于 RedHat 发行版和及其衍生发行版的官方源 repo 文件
-function RedHatOfficialMirrorsCreate() {
-    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-        if [ ${CENTOS_VERSION} -eq "8" ]; then
-            touch CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-AppStream.repo <<\EOF
-# CentOS-Linux-AppStream.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-
-[appstream]
-name=CentOS Linux $releasever - AppStream
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=AppStream&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/AppStream/$basearch/os/
-gpgcheck=1
-enabled=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-BaseOS.repo <<\EOF
-# CentOS-Linux-BaseOS.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-
-[baseos]
-name=CentOS Linux $releasever - BaseOS
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=BaseOS&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/BaseOS/$basearch/os/
-gpgcheck=1
-enabled=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-ContinuousRelease.repo <<\EOF
-# CentOS-Linux-ContinuousRelease.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-#
-# The Continuous Release (CR) repository contains packages for the next minor
-# release of CentOS Linux.  This repository only has content in the time period
-# between an upstream release and the official CentOS Linux release.  These
-# packages have not been fully tested yet and should be considered beta
-# quality.  They are made available for people willing to test and provide
-# feedback for the next release.
-
-[cr]
-name=CentOS Linux $releasever - ContinuousRelease
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=cr&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/cr/$basearch/os/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Debuginfo.repo <<\EOF
-# CentOS-Linux-Debuginfo.repo
-#
-# All debug packages are merged into a single repo, split by basearch, and are
-# not signed.
-
-[debuginfo]
-name=CentOS Linux $releasever - Debuginfo
-baseurl=http://debuginfo.centos.org/$releasever/$basearch/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Devel.repo <<\EOF
-# CentOS-Linux-Devel.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-
-[devel]
-name=CentOS Linux $releasever - Devel WARNING! FOR BUILDROOT USE ONLY!
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=Devel&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/Devel/$basearch/os/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Extras.repo <<\EOF
-# CentOS-Linux-Extras.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-
-[extras]
-name=CentOS Linux $releasever - Extras
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/extras/$basearch/os/
-gpgcheck=1
-enabled=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-FastTrack.repo <<\EOF
-# CentOS-Linux-FastTrack.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-
-[fasttrack]
-name=CentOS Linux $releasever - FastTrack
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=fasttrack&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/fasttrack/$basearch/os/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-HighAvailability.repo <<\EOF
-# CentOS-Linux-HighAvailability.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-
-[ha]
-name=CentOS Linux $releasever - HighAvailability
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=HighAvailability&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/HighAvailability/$basearch/os/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Media.repo <<\EOF
-# CentOS-Linux-Media.repo
-#
-# You can use this repo to install items directly off the installation media.
-# Verify your mount point matches one of the below file:// paths.
-
-[media-baseos]
-name=CentOS Linux $releasever - Media - BaseOS
-baseurl=file:///media/CentOS/BaseOS
-        file:///media/cdrom/BaseOS
-        file:///media/cdrecorder/BaseOS
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-
-[media-appstream]
-name=CentOS Linux $releasever - Media - AppStream
-baseurl=file:///media/CentOS/AppStream
-        file:///media/cdrom/AppStream
-        file:///media/cdrecorder/AppStream
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Plus.repo <<\EOF
-# CentOS-Linux-Plus.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-
-[plus]
-name=CentOS Linux $releasever - Plus
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/centosplus/$basearch/os/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-PowerTools.repo <<\EOF
-# CentOS-Linux-PowerTools.repo
-#
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for CentOS updates unless you are
-# manually picking other mirrors.
-#
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-
-[powertools]
-name=CentOS Linux $releasever - PowerTools
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=PowerTools&infra=$infra
-#baseurl=http://mirror.centos.org/$contentdir/$releasever/PowerTools/$basearch/os/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Sources.repo <<\EOF
-# CentOS-Linux-Sources.repo
-
-
-[baseos-source]
-name=CentOS Linux $releasever - BaseOS - Source
-baseurl=http://vault.centos.org/$contentdir/$releasever/BaseOS/Source/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-
-[appstream-source]
-name=CentOS Linux $releasever - AppStream - Source
-baseurl=http://vault.centos.org/$contentdir/$releasever/AppStream/Source/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-
-[extras-source]
-name=CentOS Linux $releasever - Extras - Source
-baseurl=http://vault.centos.org/$contentdir/$releasever/extras/Source/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-
-[plus-source]
-name=CentOS Linux $releasever - Plus - Source
-baseurl=http://vault.centos.org/$contentdir/$releasever/centosplus/Source/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
-        elif [ ${CENTOS_VERSION} -eq "7" ]; then
-            touch CentOS-Base.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-BaseOS.repo <<\EOF
-# CentOS-Base.repo
-#
-# The mirror system uses the connecting IP address of the client and the
-# update status of each mirror to pick mirrors that are updated to and
-# geographically close to the client.  You should use this for CentOS updates
-# unless you are manually picking other mirrors.
-#
-# If the mirrorlist= does not work for you, as a fall back you can try the 
-# remarked out baseurl= line instead.
-#
-#
-
-[base]
-name=CentOS-$releasever - Base
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os&infra=$infra
-#baseurl=http://mirror.centos.org/centos/$releasever/os/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-#released updates 
-[updates]
-name=CentOS-$releasever - Updates
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates&infra=$infra
-#baseurl=http://mirror.centos.org/centos/$releasever/updates/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-#additional packages that may be useful
-[extras]
-name=CentOS-$releasever - Extras
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras&infra=$infra
-#baseurl=http://mirror.centos.org/centos/$releasever/extras/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-#additional packages that extend functionality of existing packages
-[centosplus]
-name=CentOS-$releasever - Plus
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus&infra=$infra
-#baseurl=http://mirror.centos.org/centos/$releasever/centosplus/$basearch/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-CR.repo <<\EOF
-# CentOS-CR.repo
-#
-# The Continuous Release ( CR )  repository contains rpms that are due in the next
-# release for a specific CentOS Version ( eg. next release in CentOS-7 ); these rpms
-# are far less tested, with no integration checking or update path testing having
-# taken place. They are still built from the upstream sources, but might not map 
-# to an exact upstream distro release.
-#
-# These packages are made available soon after they are built, for people willing 
-# to test their environments, provide feedback on content for the next release, and
-# for people looking for early-access to next release content.
-#
-# The CR repo is shipped in a disabled state by default; its important that users 
-# understand the implications of turning this on. 
-#
-# NOTE: We do not use a mirrorlist for the CR repos, to ensure content is available
-#       to everyone as soon as possible, and not need to wait for the external
-#       mirror network to seed first. However, many local mirrors will carry CR repos
-#       and if desired you can use one of these local mirrors by editing the baseurl
-#       line in the repo config below.
-#
-
-[cr]
-name=CentOS-$releasever - cr
-baseurl=http://mirror.centos.org/centos/$releasever/cr/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-enabled=0
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Debuginfo.repo <<\EOF
-# CentOS-Debug.repo
-#
-# The mirror system uses the connecting IP address of the client and the
-# update status of each mirror to pick mirrors that are updated to and
-# geographically close to the client.  You should use this for CentOS updates
-# unless you are manually picking other mirrors.
-#
-
-# All debug packages from all the various CentOS-7 releases
-# are merged into a single repo, split by BaseArch
-#
-# Note: packages in the debuginfo repo are currently not signed
-#
-
-[base-debuginfo]
-name=CentOS-7 - Debuginfo
-baseurl=http://debuginfo.centos.org/7/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-Debug-7
-enabled=0
-#
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-fasttrack.repo <<\EOF
-[fasttrack]
-name=CentOS-7 - fasttrack
-mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=fasttrack&infra=$infra
-#baseurl=http://mirror.centos.org/centos/$releasever/fasttrack/$basearch/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Media.repo <<\EOF
-# CentOS-Media.repo
-#
-#  This repo can be used with mounted DVD media, verify the mount point for
-#  CentOS-7.  You can use this repo and yum to install items directly off the
-#  DVD ISO that we release.
-#
-# To use this repo, put in your DVD and use it with the other repos too:
-#  yum --enablerepo=c7-media [command]
-#  
-# or for ONLY the media repo, do this:
-#
-#  yum --disablerepo=\* --enablerepo=c7-media [command]
-
-[c7-media]
-name=CentOS-$releasever - Media
-baseurl=file:///media/CentOS/
-        file:///media/cdrom/
-        file:///media/cdrecorder/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Sources.repo <<\EOF
-# CentOS-Sources.repo
-#
-# The mirror system uses the connecting IP address of the client and the
-# update status of each mirror to pick mirrors that are updated to and
-# geographically close to the client.  You should use this for CentOS updates
-# unless you are manually picking other mirrors.
-#
-# If the mirrorlist= does not work for you, as a fall back you can try the 
-# remarked out baseurl= line instead.
-#
-#
-
-[base-source]
-name=CentOS-$releasever - Base Sources
-baseurl=http://vault.centos.org/centos/$releasever/os/Source/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-#released updates 
-[updates-source]
-name=CentOS-$releasever - Updates Sources
-baseurl=http://vault.centos.org/centos/$releasever/updates/Source/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-#additional packages that may be useful
-[extras-source]
-name=CentOS-$releasever - Extras Sources
-baseurl=http://vault.centos.org/centos/$releasever/extras/Source/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-#additional packages that extend functionality of existing packages
-[centosplus-source]
-name=CentOS-$releasever - Plus Sources
-baseurl=http://vault.centos.org/centos/$releasever/centosplus/Source/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-EOF
-        fi
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-        touch fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo
-        cat >${RedHatReposDirectory}/fedora-cisco-openh264.repo <<\EOF
-[fedora-cisco-openh264]
-name=Fedora $releasever openh264 (From Cisco) - $basearch
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-$releasever&arch=$basearch
-type=rpm
-enabled=1
-metadata_expire=14d
-repo_gpgcheck=0
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=True
-
-[fedora-cisco-openh264-debuginfo]
-name=Fedora $releasever openh264 (From Cisco) - $basearch - Debug
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-debug-$releasever&arch=$basearch
-type=rpm
-enabled=0
-metadata_expire=14d
-repo_gpgcheck=0
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=True
-EOF
-        cat >${RedHatReposDirectory}/fedora.repo <<\EOF
-[fedora]
-name=Fedora $releasever - $basearch
-#baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch
-enabled=1
-countme=1
-metadata_expire=7d
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[fedora-debuginfo]
-name=Fedora $releasever - $basearch - Debug
-#baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Everything/$basearch/debug/tree/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-debug-$releasever&arch=$basearch
-enabled=0
-metadata_expire=7d
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[fedora-source]
-name=Fedora $releasever - Source
-#baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Everything/source/tree/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-source-$releasever&arch=$basearch
-enabled=0
-metadata_expire=7d
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-EOF
-        cat >${RedHatReposDirectory}/fedora-updates.repo <<\EOF
-[updates]
-name=Fedora $releasever - $basearch - Updates
-#baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Everything/$basearch/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f$releasever&arch=$basearch
-enabled=1
-countme=1
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[updates-debuginfo]
-name=Fedora $releasever - $basearch - Updates - Debug
-#baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Everything/$basearch/debug/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-debug-f$releasever&arch=$basearch
-enabled=0
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[updates-source]
-name=Fedora $releasever - Updates Source
-#baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Everything/SRPMS/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-source-f$releasever&arch=$basearch
-enabled=0
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-EOF
-        cat >${RedHatReposDirectory}/fedora-modular.repo <<\EOF
-[fedora-modular]
-name=Fedora Modular $releasever - $basearch
-#baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Modular/$basearch/os/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-modular-$releasever&arch=$basearch
-enabled=1
-countme=1
-#metadata_expire=7d
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[fedora-modular-debuginfo]
-name=Fedora Modular $releasever - $basearch - Debug
-#baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Modular/$basearch/debug/tree/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-modular-debug-$releasever&arch=$basearch
-enabled=0
-metadata_expire=7d
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[fedora-modular-source]
-name=Fedora Modular $releasever - Source
-#baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Modular/source/tree/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-modular-source-$releasever&arch=$basearch
-enabled=0
-metadata_expire=7d
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-EOF
-        cat >${RedHatReposDirectory}/fedora-updates-modular.repo <<\EOF
-[updates-modular]
-name=Fedora Modular $releasever - $basearch - Updates
-#baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/$basearch/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-modular-f$releasever&arch=$basearch
-enabled=1
-countme=1
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[updates-modular-debuginfo]
-name=Fedora Modular $releasever - $basearch - Updates - Debug
-#baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/$basearch/debug/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-modular-debug-f$releasever&arch=$basearch
-enabled=0
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[updates-modular-source]
-name=Fedora Modular $releasever - Updates Source
-#baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/SRPMS/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-modular-source-f$releasever&arch=$basearch
-enabled=0
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-EOF
-        cat >${RedHatReposDirectory}/fedora-updates-testing.repo <<\EOF
-[updates-testing]
-name=Fedora $releasever - $basearch - Test Updates
-#baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Everything/$basearch/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-f$releasever&arch=$basearch
-enabled=0
-countme=1
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[updates-testing-debuginfo]
-name=Fedora $releasever - $basearch - Test Updates Debug
-#baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Everything/$basearch/debug/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-debug-f$releasever&arch=$basearch
-enabled=0
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[updates-testing-source]
-name=Fedora $releasever - Test Updates Source
-#baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Everything/SRPMS/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-source-f$releasever&arch=$basearch
-enabled=0
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-EOF
-        cat >${RedHatReposDirectory}/fedora-updates-testing-modular.repo <<\EOF
-[updates-testing-modular]
-name=Fedora Modular $releasever - $basearch - Test Updates
-#baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Modular/$basearch/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-modular-f$releasever&arch=$basearch
-enabled=0
-countme=1
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[updates-testing-modular-debuginfo]
-name=Fedora Modular $releasever - $basearch - Test Updates Debug
-#baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/$basearch/debug/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-modular-debug-f$releasever&arch=$basearch
-enabled=0
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-
-[updates-testing-modular-source]
-name=Fedora Modular $releasever - Test Updates Source
-#baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/SRPMS/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-modular-source-f$releasever&arch=$basearch
-enabled=0
-repo_gpgcheck=0
-type=rpm
-gpgcheck=1
-metadata_expire=6h
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
-skip_if_unavailable=False
-EOF
-    fi
+## 查看版本信息
+function ShowVersion() {
+    docker info
+    echo -e ''
+    docker compose --version
+    echo -e ''
 }
 
 CombinationFunction
