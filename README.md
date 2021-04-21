@@ -1,10 +1,9 @@
-# LinuxMirrors
+# LinuxMirrors - GNU/Linux 一键更换国内源
 <a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-1.svg" width="34" height="42"></a>
 <a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-2.svg" width="70" height="52"></a>
 ㅤ<a href="https://gitee.com/SuperManito/LinuxMirrors"><img src="./icon/gitee.svg" width="100" height="50"/></a>
 &nbsp;<a href="https://blog.csdn.net/u013246692/article/details/113124295"><img src="./icon/csdn.png" width="100" height="50"/></a>
 
-- __GNU/Linux 一键更换国内源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
 - __支持所有架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
 
@@ -12,7 +11,7 @@
 - __2021 / 04 / 21__
 ㅤ重新定义了备份原有源功能，现在可以通过检测其目录下是否存在源文件判断是否执行备份操作。
 - __2021 / 04 / 20__
-ㅤ修复了脚本关于 `Kali Linux` 的错误，适配了其最新版本。
+ㅤ修复了脚本关于 `Kali Linux` 的错误，重新适配了其最新版本。
 
 ***
 
@@ -44,6 +43,7 @@
 > 1. 复制完整命令到终端回车执行，如果执行出错，可复制源码到本地后手动执行。
 > 2. 为了适配所有环境，请使用 `Root` 用户执行脚本，切换命令为 `sudo -i`。
 > 3. 脚本自带备份功能，无需手动备份原有源，如果本地检测到已存在的备份文件则会跳过执行备份操作。
+> 4. 脚本支持在原有源配置错误或者不存在的情况下使用，并且支持重复使用。
 
 ### 一键脚本
 - `GNU/Linux` 一键更换国内更新源脚本
