@@ -8,9 +8,9 @@ Architecture=$(uname -m)
 DebianRelease=lsb_release
 RedHatRelease=/etc/redhat-release
 DebianSourceList=/etc/apt/sources.list
-DebianExtendDirectory=/etc/apt/sources.list.d
+DebianExtendListDirectory=/etc/apt/sources.list.d
 DebianSourceListBackup=/etc/apt/sources.list.bak
-DebianExtendDirectoryBackup=/etc/apt/sources.list.d.bak
+DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
 RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
 
@@ -170,10 +170,10 @@ function ChooseMirrors() {
 function MirrorsBackup() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         ## 判断 /etc/apt/sources.list.d 目录下是否存在文件
-        [ -d ${DebianExtendDirectory} ] && ls ${DebianExtendDirectory} | grep *.list -q
+        [ -d ${DebianExtendListDirectory} ] && ls ${DebianExtendListDirectory} | grep *.list -q
         VERIFICATION_FILE=$?
         ## 判断 /etc/apt/sources.list.d.bak 目录下是否存在文件
-        [ -d ${DebianExtendDirectoryBackup} ] && ls ${DebianExtendDirectoryBackup} | grep *.list -q
+        [ -d ${DebianExtendListDirectoryBackup} ] && ls ${DebianExtendListDirectoryBackup} | grep *.list -q
         VERIFICATION_BACKUPFILE=$?
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         ## 判断 /etc/yum.repos.d 目录下是否存在文件
@@ -194,13 +194,13 @@ function MirrorsBackup() {
             echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ...... \033[0m\n"
         fi
         ## /etc/apt/sources.list.d
-        if [ -d ${DebianExtendDirectory} ] && [ ${VERIFICATION_FILE} -eq 0 ]; then
-            if [ -d ${DebianExtendDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
-                echo -e "\033[32m└ 检测到 ${DebianExtendDirectoryBackup} 目录下存在已备份的 list 扩展源文件，跳过备份操作...... \033[0m\n"
+        if [ -d ${DebianExtendListDirectory} ] && [ ${VERIFICATION_FILE} -eq 0 ]; then
+            if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
+                echo -e "\033[32m└ 检测到 ${DebianExtendListDirectoryBackup} 目录下存在已备份的 list 扩展源文件，跳过备份操作...... \033[0m\n"
             else
-                [ -d ${DebianExtendDirectoryBackup} ] || mkdir -p ${DebianExtendDirectoryBackup}
-                cp -rf ${DebianExtendDirectory}/* ${DebianExtendDirectoryBackup} >/dev/null 2>&1
-                echo -e "\033[32m└ 已备份原有 list 扩展源文件至 ${DebianExtendDirectoryBackup} 目录...... \033[0m\n"
+                [ -d ${DebianExtendListDirectoryBackup} ] || mkdir -p ${DebianExtendListDirectoryBackup}
+                cp -rf ${DebianExtendListDirectory}/* ${DebianExtendListDirectoryBackup} >/dev/null 2>&1
+                echo -e "\033[32m└ 已备份原有 list 扩展源文件至 ${DebianExtendListDirectoryBackup} 目录...... \033[0m\n"
             fi
         fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
