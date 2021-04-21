@@ -70,11 +70,10 @@ clear ## 清空终端所有已显示的内容
 ## 组合各个函数模块
 function CombinationFunction() {
     EnvJudgment
-    MirrorsList
+    ChooseMirrors
     MirrorsBackup
     RemoveOldMirrors
     ChangeMirrors
-    MirrorsSync
     UpgradeSoftware
 }
 
@@ -88,7 +87,7 @@ function EnvJudgment() {
 }
 
 ## 选择国内源
-function MirrorsList() {
+function ChooseMirrors() {
     echo -e '+---------------------------------------------------+'
     echo -e '|                                                   |'
     echo -e '|   =============================================   |'
@@ -190,8 +189,9 @@ function MirrorsBackup() {
         if [ -e ${DebianSourceListBackup} ] && [ -s ${DebianSourceListBackup} ]; then
             echo -e "\n\033[32m└ 检测到已备份的 ${DebianSourceListBackup} 源文件，跳过备份操作...... \033[0m\n"
         else
+            [ -e ${DebianSourceList} ] || touch ${DebianSourceList}
             cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
-            echo -e "\n\033[32m└ 已备份原有 source.list 源文件至 ${DebianSourceListBackup} ...... \033[0m\n"
+            echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ...... \033[0m\n"
         fi
         ## /etc/apt/sources.list.d
         if [ -d ${DebianExtendDirectory} ] && [ ${VERIFICATION_FILE} -eq 0 ]; then
@@ -206,11 +206,11 @@ function MirrorsBackup() {
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         if [ ${VERIFICATION_FILE} -eq 0 ]; then
             if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
-                echo -e "\n\033[32m└ 检测到 ${RedHatReposDirectoryBackup} 目录下存在已备份的 repo 文件，跳过备份操作...... \033[0m\n"
+                echo -e "\n\033[32m└ 检测到 ${RedHatReposDirectoryBackup} 目录下存在已备份的 repo 源文件，跳过备份操作...... \033[0m\n"
             else
                 [ -d ${RedHatReposDirectoryBackup} ] || mkdir -p ${RedHatReposDirectoryBackup}
                 cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
-                echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatReposDirectoryBackup} ...... \033[0m\n"
+                echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatReposDirectoryBackup} 目录...... \033[0m\n"
             fi
         else
             [ -d ${RedHatReposDirectory} ] || mkdir -p ${RedHatReposDirectory}
@@ -223,17 +223,15 @@ function MirrorsBackup() {
 ## 删除原有源
 function RemoveOldMirrors() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        sed -i '1,$d' ${DebianSourceList}
+        [ -e ${DebianSourceList} ] && sed -i '1,$d' ${DebianSourceList}
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-        cd ${RedHatReposDirectory}
-        if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-            if [ ${CENTOS_VERSION} -eq "8" ]; then
-                rm -rf *AppStream.repo *BaseOS.repo *ContinuousRelease.repo *Debuginfo.repo *Devel.repo *Extras.repo *HighAvailability.repo *Media.repo *Plus.repo *PowerTools.repo *Sources.repo
-            elif [ ${CENTOS_VERSION} -eq "7" ]; then
-                rm -rf *Base.repo *BaseOS.repo *CR.repo *Debuginfo.repo *fasttrack.repo *Media.repo *Sources.repo *Vault.repo
+        if [ -d ${RedHatReposDirectory} ]; then
+            cd ${RedHatReposDirectory}
+            if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
+                rm -rf ${SYSTEM_CENTOS}*
+            elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
+                rm -rf ${SOURCE_BRANCH}*
             fi
-        elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-            rm -rf *cisco-openh264.repo fedora.repo *updates.repo *modular.repo *updates-modular.repo *updates-testing-modular.repo
         fi
     fi
 }
@@ -242,16 +240,9 @@ function RemoveOldMirrors() {
 function ChangeMirrors() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         DebianMirrors
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-        RedHatMirrors
-    fi
-}
-
-## 同步国内源
-function MirrorsSync() {
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         apt-get update
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+        RedHatMirrors
         yum clean all >/dev/null 2>&1
         yum makecache
     fi
