@@ -1,5 +1,5 @@
 # LinuxMirrors
-<a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-1.svg" width="33" height="42"></a>
+<a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-1.svg" width="34" height="42"></a>
 <a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-2.svg" width="70" height="52"></a>
 ㅤ<a href="https://gitee.com/SuperManito/LinuxMirrors"><img src="./icon/gitee.svg" width="100" height="50"/></a>
 &nbsp;<a href="https://blog.csdn.net/u013246692/article/details/113124295"><img src="./icon/csdn.png" width="100" height="50"/></a>
@@ -9,13 +9,15 @@
 - __支持所有架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
 
 ### 更新日志
+- __2021 / 04 / 21__
+ㅤ重新定义了备份原有源功能，现在可以通过检测其目录下是否存在源文件判断是否执行备份操作。
 - __2021 / 04 / 20__
 ㅤ修复了脚本关于 `Kali Linux` 的错误，适配了其最新版本。
 
 ***
 
 ### 已适配的 GNU/Linux 发行版 <img src="./icon/linux.svg" width="16" height="16" alt="Linux Logo"/>
-|          | <img src="./icon/ubuntu.svg" width="14" height="14"/>&nbsp;Ubuntu |  <img src="./icon/debian.svg" width="14" height="14"/>&nbsp;Debian  |  <img src="./icon/kali.svg" width="14" height="14"/>&nbsp;Kali Linux  |  <img src="./icon/fedora.svg" width="14" height="14"/>&nbsp;Fedora  |  <img src="./icon/centos.svg" width="16" height="16"/>&nbsp;CentOS  |
+|          | <a href="https://ubuntu.com"><img src="./icon/ubuntu.svg" width="14" height="14"/></a>&nbsp;Ubuntu |  <a href="https://www.debian.org"><img src="./icon/debian.svg" width="14" height="14"/></a>&nbsp;Debian  |  <a href="https://www.kali.org"><img src="./icon/kali.svg" width="14" height="14"/></a>&nbsp;Kali Linux  |  <a href="https://getfedora.org"><img src="./icon/fedora.svg" width="14" height="14"/></a>&nbsp;Fedora  |  <a href="https://www.centos.org"><img src="./icon/centos.svg" width="16" height="16"/></a>&nbsp;CentOS  |
 | :------: | :------: | :------: | :------: | :------: | :------: |
 | 支持的版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
 > 目前仅支持 Debian 与 Redhat 的部分发行版和及其衍生发行版
