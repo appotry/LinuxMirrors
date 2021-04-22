@@ -3,17 +3,17 @@
 ## License: GPL-2.0
 ## Modified: 2021-04-23
 
-## 定义目录和文件：
-DebianRelease=lsb_release
+## 定义目录和文件
 RedHatRelease=/etc/redhat-release
 DebianSourceList=/etc/apt/sources.list
-DebianExtendListDirectory=/etc/apt/sources.list.d
 DebianSourceListBackup=/etc/apt/sources.list.bak
+DebianExtendListDirectory=/etc/apt/sources.list.d
 DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
 RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
 
-## 定义变量：
+## 定义变量
+DebianRelease=lsb_release
 Architecture=$(uname -m)
 SYSTEM_DEBIAN=Debian
 SYSTEM_UBUNTU=Ubuntu
