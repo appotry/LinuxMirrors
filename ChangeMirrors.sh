@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-04-21
+## Modified: 2021-04-22
 
 ## 定义变量：
 Architecture=$(uname -m)
@@ -187,16 +187,43 @@ function MirrorsBackup() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         ## /etc/apt/sources.list
         if [ -e ${DebianSourceListBackup} ] && [ -s ${DebianSourceListBackup} ]; then
-            echo -e "\n\033[32m└ 检测到已备份的 ${DebianSourceListBackup} 源文件，跳过备份操作...... \033[0m\n"
+            CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到已备份的 ${DebianSourceListBackup} 源文件，是否覆盖 [ Y/n ]：\033[0m")
+            read -p "${CHOICE_BACKUP1}" INPUT
+            case $INPUT in
+            [Yy]*)
+                echo -e ''
+                cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
+                ;;
+            [Nn]*)
+                echo -e ''
+                ;;
+            *)
+                echo -e '\n\033[33m---------- 输入错误，默认不覆盖备份文件 ---------- \033[0m\n'
+                ;;
+            esac
         else
             [ -e ${DebianSourceList} ] || touch ${DebianSourceList}
             cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
             echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ...... \033[0m\n"
         fi
+
         ## /etc/apt/sources.list.d
         if [ -d ${DebianExtendListDirectory} ] && [ ${VERIFICATION_FILE} -eq 0 ]; then
             if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
-                echo -e "\033[32m└ 检测到 ${DebianExtendListDirectoryBackup} 目录下存在已备份的 list 扩展源文件，跳过备份操作...... \033[0m\n"
+                CHOICE_BACKUP2=$(echo -e "\n\033[32m└ 检测到 ${DebianExtendListDirectoryBackup} 目录下存在已备份的 list 扩展源文件，是否覆盖 [ Y/n ]：\033[0m")
+                read -p "${CHOICE_BACKUP2}" INPUT
+                case $INPUT in
+                [Yy]*)
+                    echo -e ''
+                    cp -rf ${DebianExtendListDirectory}/* ${DebianExtendListDirectoryBackup} >/dev/null 2>&1
+                    ;;
+                [Nn]*)
+                    echo -e ''
+                    ;;
+                *)
+                    echo -e '\n\033[33m---------- 输入错误，默认不覆盖备份文件 ---------- \033[0m\n'
+                    ;;
+                esac
             else
                 [ -d ${DebianExtendListDirectoryBackup} ] || mkdir -p ${DebianExtendListDirectoryBackup}
                 cp -rf ${DebianExtendListDirectory}/* ${DebianExtendListDirectoryBackup} >/dev/null 2>&1
@@ -206,7 +233,20 @@ function MirrorsBackup() {
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         if [ ${VERIFICATION_FILE} -eq 0 ]; then
             if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
-                echo -e "\n\033[32m└ 检测到 ${RedHatReposDirectoryBackup} 目录下存在已备份的 repo 源文件，跳过备份操作...... \033[0m\n"
+                CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到 ${RedHatReposDirectoryBackup} 目录下存在已备份的 repo 源文件，是否覆盖 [ Y/n ]：\033[0m")
+                read -p "${CHOICE_BACKUP3}" INPUT
+                case $INPUT in
+                [Yy]*)
+                    echo -e ''
+                    cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
+                    ;;
+                [Nn]*)
+                    echo -e ''
+                    ;;
+                *)
+                    echo -e '\n\033[33m---------- 输入错误，默认不覆盖备份文件 ---------- \033[0m\n'
+                    ;;
+                esac
             else
                 [ -d ${RedHatReposDirectoryBackup} ] || mkdir -p ${RedHatReposDirectoryBackup}
                 cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
