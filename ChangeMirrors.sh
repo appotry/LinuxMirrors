@@ -1,10 +1,9 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-04-22
+## Modified: 2021-04-23
 
-## 定义变量：
-Architecture=$(uname -m)
+## 定义目录和文件：
 DebianRelease=lsb_release
 RedHatRelease=/etc/redhat-release
 DebianSourceList=/etc/apt/sources.list
@@ -14,6 +13,8 @@ DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
 RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
 
+## 定义变量：
+Architecture=$(uname -m)
 SYSTEM_DEBIAN=Debian
 SYSTEM_UBUNTU=Ubuntu
 SYSTEM_KALI=Kali
@@ -21,8 +22,8 @@ SYSTEM_REDHAT=RedHat
 SYSTEM_CENTOS=CentOS
 SYSTEM_FEDORA=Fedora
 
-## 判定系统基于 Debian 还是基于 RedHat
-if [ -e ${RedHatRelease} ]; then
+## 判定当前系统基于 Debian or RedHat
+if [ -f ${RedHatRelease} ]; then
     SYSTEM=${SYSTEM_REDHAT}
 else
     SYSTEM=${SYSTEM_DEBIAN}
@@ -43,6 +44,19 @@ elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
     fi
 fi
 
+if [ ${Architecture} = "x86_64" ]; then
+    SYSTEM_ARCH=x86_64
+elif [ ${Architecture} = "aarch64" ]; then
+    SYSTEM_ARCH=arm64
+elif [ ${Architecture} = "arm*" ]; then
+    SYSTEM_ARCH=armhf
+elif [ ${Architecture} = "*i?86*" ]; then
+    SYSTEM_ARCH=x86_32
+else
+    SYSTEM_ARCH=${Architecture}
+fi
+
+## 定义更新源分支名称
 if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
     if [ ${Architecture} = "x86_64" ] || [ ${Architecture} = "*i?86*" ]; then
         SOURCE_BRANCH=${SYSTEM_NAME,,}
@@ -51,18 +65,6 @@ if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
     fi
 else
     SOURCE_BRANCH=${SYSTEM_NAME,,}
-fi
-
-if [ ${Architecture} = "x86_64" ]; then
-    SYSTEM_ARCH=x86_64
-elif [ ${Architecture} = "aarch64" ]; then
-    SYSTEM_ARCH=arm64
-elif [ ${Architecture} = "armv*" ]; then
-    SYSTEM_ARCH=armhf
-elif [ ${Architecture} = "*i?86*" ]; then
-    SYSTEM_ARCH=x86_32
-else
-    SYSTEM_ARCH=${Architecture}
 fi
 
 clear ## 清空终端所有已显示的内容
@@ -122,7 +124,7 @@ function ChooseMirrors() {
     echo -e "           系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
-    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内更新源 [ 1~11 ]：\033[0m')
+    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内源 [ 1~11 ]：\033[0m')
     read -p "${CHOICE_A}" INPUT
     case $INPUT in
     1)
@@ -186,25 +188,29 @@ function MirrorsBackup() {
 
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         ## /etc/apt/sources.list
-        if [ -e ${DebianSourceListBackup} ] && [ -s ${DebianSourceListBackup} ]; then
-            CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到已备份的 ${DebianSourceListBackup} 源文件，是否覆盖 [ Y/n ]：\033[0m")
-            read -p "${CHOICE_BACKUP1}" INPUT
-            case $INPUT in
-            [Yy]*)
-                echo -e ''
+        if [ -s ${DebianSourceList} ]; then
+            if [ -s ${DebianSourceListBackup} ]; then
+                CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到已备份的 ${DebianSourceListBackup} 源文件，是否覆盖 [ Y/n ]：\033[0m")
+                read -p "${CHOICE_BACKUP1}" INPUT
+                case $INPUT in
+                [Yy]*)
+                    echo -e ''
+                    cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
+                    ;;
+                [Nn]*)
+                    echo -e ''
+                    ;;
+                *)
+                    echo -e '\n\033[33m---------- 输入错误，默认不覆盖备份文件 ---------- \033[0m\n'
+                    ;;
+                esac
+            else
                 cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
-                ;;
-            [Nn]*)
-                echo -e ''
-                ;;
-            *)
-                echo -e '\n\033[33m---------- 输入错误，默认不覆盖备份文件 ---------- \033[0m\n'
-                ;;
-            esac
+                echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ...... \033[0m\n"
+            fi
         else
-            [ -e ${DebianSourceList} ] || touch ${DebianSourceList}
-            cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
-            echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ...... \033[0m\n"
+            [ -f ${DebianSourceList} ] || touch ${DebianSourceList}
+            echo -e ''
         fi
 
         ## /etc/apt/sources.list.d
@@ -231,6 +237,7 @@ function MirrorsBackup() {
             fi
         fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+        ## /etc/yum.repos.d
         if [ ${VERIFICATION_FILE} -eq 0 ]; then
             if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
                 CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到 ${RedHatReposDirectoryBackup} 目录下存在已备份的 repo 源文件，是否覆盖 [ Y/n ]：\033[0m")
@@ -254,7 +261,7 @@ function MirrorsBackup() {
             fi
         else
             [ -d ${RedHatReposDirectory} ] || mkdir -p ${RedHatReposDirectory}
-            echo ''
+            echo -e ''
         fi
     fi
     sleep 2s
@@ -263,7 +270,7 @@ function MirrorsBackup() {
 ## 删除原有源
 function RemoveOldMirrors() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        [ -e ${DebianSourceList} ] && sed -i '1,$d' ${DebianSourceList}
+        [ -f ${DebianSourceList} ] && sed -i '1,$d' ${DebianSourceList}
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         if [ -d ${RedHatReposDirectory} ]; then
             cd ${RedHatReposDirectory}
@@ -331,7 +338,7 @@ function UpgradeSoftware() {
     esac
 }
 
-## 更换基于 Debian 系 Linux 发行版的 source 国内源
+## 更换基于 Debian 系 Linux 发行版的国内源
 function DebianMirrors() {
     ## 修改国内源
     if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
@@ -360,9 +367,9 @@ function DebianMirrors() {
     fi
 }
 
-## 更换基于 RedHat 系 Linux 发行版的 repo 国内源
+## 更换基于 RedHat 系 Linux 发行版的国内源
 function RedHatMirrors() {
-    ## 创建官方源
+    ## 创建官方的 repo 源文件  （由于 RedHat 系 Linux 源文件各不相同且无法判断，故通过在删除原有源后重新生成官方源的方式更换国内源）
     RedHatOfficialMirrorsCreate
     ## 修改国内源
     if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
@@ -389,8 +396,9 @@ function RedHatMirrors() {
     fi
 }
 
-## 生成基于 RedHat 发行版和及其衍生发行版的官方源 repo 文件
+## 生成基于 RedHat 发行版和及其衍生发行版的官方源 repo 源文件
 function RedHatOfficialMirrorsCreate() {
+    ## CentOS
     if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
         if [ ${CENTOS_VERSION} -eq "8" ]; then
             touch CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo
@@ -818,6 +826,8 @@ enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
         fi
+
+    ## Fedora
     elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
         touch fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo
         cat >${RedHatReposDirectory}/fedora-cisco-openh264.repo <<\EOF
