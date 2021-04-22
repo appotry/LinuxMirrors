@@ -1,15 +1,13 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-04-21
+## Modified: 2021-04-23
 
-## 定义变量：
-Architecture=$(uname -m)
-DebianRelease=lsb_release
+## 定义目录和文件
 RedHatRelease=/etc/redhat-release
 DebianSourceList=/etc/apt/sources.list
-DebianExtendListDirectory=/etc/apt/sources.list.d
 DebianSourceListBackup=/etc/apt/sources.list.bak
+DebianExtendListDirectory=/etc/apt/sources.list.d
 DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
 RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
@@ -20,17 +18,20 @@ DockerDirectory=/etc/docker
 DockerConfig=${DockerDirectory}/daemon.json
 DockerConfigBackup=${DockerDirectory}/daemon.json.bak
 DockerCompose=/usr/local/bin/docker-compose
-DOCKER_COMPOSE_URL=https://get.daocloud.io/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)
 
+## 定义变量
+DebianRelease=lsb_release
+Architecture=$(uname -m)
 SYSTEM_DEBIAN=Debian
 SYSTEM_UBUNTU=Ubuntu
 SYSTEM_KALI=Kali
 SYSTEM_REDHAT=RedHat
 SYSTEM_CENTOS=CentOS
 SYSTEM_FEDORA=Fedora
+DOCKER_COMPOSE_URL=https://get.daocloud.io/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)
 
-## 判定系统基于 Debian 还是基于 RedHat
-if [ -e ${RedHatRelease} ]; then
+## 判定当前系统基于 Debian or RedHat
+if [ -f ${RedHatRelease} ]; then
     SYSTEM=${SYSTEM_REDHAT}
 else
     SYSTEM=${SYSTEM_DEBIAN}
@@ -51,8 +52,6 @@ elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
     fi
 fi
 
-SOURCE_BRANCH=${SYSTEM_NAME,,}
-
 if [ $Architecture = "x86_64" ]; then
     SYSTEM_ARCH=x86_64
     SOURCE_ARCH=amd64
@@ -70,6 +69,11 @@ else
     SYSTEM_ARCH=${Architecture}
     SOURCE_ARCH=armhf
 fi
+
+## 定义更新源分支名称
+SOURCE_BRANCH=${SYSTEM_NAME,,}
+
+clear ## 清空终端所有已显示的内容
 
 ## 组合各个函数模块
 function CombinationFunction() {
@@ -93,7 +97,6 @@ function EnvJudgment() {
         echo -e "\033[31m ----- Network connection error.Please check the network environment and try again later! ----- \033[0m"
         exit
     fi
-    clear ## 清空终端所有已显示的内容
 }
 
 ## 更换 Docker 国内源：
@@ -143,7 +146,7 @@ function ChooseMirrors() {
     echo -e "         系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
-    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的 Docker CE 源 [ 1~11 ]：\033[0m')
+    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的 Docker CE 国内源 [ 1~11 ]：\033[0m')
     read -p "${CHOICE_A}" INPUT
     case $INPUT in
     1)
@@ -188,7 +191,7 @@ function ChooseMirrors() {
     echo -e ''
 
     ## 定义镜像加速器
-    CHOICE_B=$(echo -e '\033[32m└ 请选择并输入您想使用的 Docker Hub 源 [ 1~6 ]：\033[0m')
+    CHOICE_B=$(echo -e '\033[32m└ 请选择并输入您想使用的 Docker Hub 国内源 [ 1~6 ]：\033[0m')
     read -p "${CHOICE_B}" INPUT
     case $INPUT in
     1)
