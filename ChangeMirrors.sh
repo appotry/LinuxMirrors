@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-04-23
+## Modified: 2021-04-24
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -74,7 +74,7 @@ function CombinationFunction() {
     EnvJudgment
     ChooseMirrors
     MirrorsBackup
-    RemoveOldMirrors
+    RemoveOldMirrorsFiles
     ChangeMirrors
     UpgradeSoftware
 }
@@ -173,24 +173,24 @@ function MirrorsBackup() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         ## 判断 /etc/apt/sources.list.d 目录下是否存在文件
         [ -d ${DebianExtendListDirectory} ] && ls ${DebianExtendListDirectory} | grep *.list -q
-        VERIFICATION_FILE=$?
+        VERIFICATION_FILES=$?
         ## 判断 /etc/apt/sources.list.d.bak 目录下是否存在文件
         [ -d ${DebianExtendListDirectoryBackup} ] && ls ${DebianExtendListDirectoryBackup} | grep *.list -q
-        VERIFICATION_BACKUPFILE=$?
+        VERIFICATION_BACKUPFILES=$?
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         ## 判断 /etc/yum.repos.d 目录下是否存在文件
         [ -d ${RedHatReposDirectory} ] && ls ${RedHatReposDirectory} | grep repo -q
-        VERIFICATION_FILE=$?
+        VERIFICATION_FILES=$?
         ## 判断 /etc/yum.repos.d.bak 目录下是否存在文件
         [ -d ${RedHatReposDirectoryBackup} ] && ls ${RedHatReposDirectoryBackup} | grep repo -q
-        VERIFICATION_BACKUPFILE=$?
+        VERIFICATION_BACKUPFILES=$?
     fi
 
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         ## /etc/apt/sources.list
         if [ -s ${DebianSourceList} ]; then
             if [ -s ${DebianSourceListBackup} ]; then
-                CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到已备份的 ${DebianSourceListBackup} 源文件，是否覆盖 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到 ${DebianSourceListBackup} 已备份的 list 源文件，是否覆盖 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP1}" INPUT
                 case $INPUT in
                 [Yy]*)
@@ -214,8 +214,8 @@ function MirrorsBackup() {
         fi
 
         ## /etc/apt/sources.list.d
-        if [ -d ${DebianExtendListDirectory} ] && [ ${VERIFICATION_FILE} -eq 0 ]; then
-            if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
+        if [ -d ${DebianExtendListDirectory} ] && [ ${VERIFICATION_FILES} -eq 0 ]; then
+            if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
                 CHOICE_BACKUP2=$(echo -e "\n\033[32m└ 检测到 ${DebianExtendListDirectoryBackup} 目录下存在已备份的 list 扩展源文件，是否覆盖 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP2}" INPUT
                 case $INPUT in
@@ -238,8 +238,8 @@ function MirrorsBackup() {
         fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         ## /etc/yum.repos.d
-        if [ ${VERIFICATION_FILE} -eq 0 ]; then
-            if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILE} -eq 0 ]; then
+        if [ ${VERIFICATION_FILES} -eq 0 ]; then
+            if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
                 CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到 ${RedHatReposDirectoryBackup} 目录下存在已备份的 repo 源文件，是否覆盖 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP3}" INPUT
                 case $INPUT in
@@ -268,16 +268,16 @@ function MirrorsBackup() {
 }
 
 ## 删除原有源
-function RemoveOldMirrors() {
+function RemoveOldMirrorsFiles() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         [ -f ${DebianSourceList} ] && sed -i '1,$d' ${DebianSourceList}
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         if [ -d ${RedHatReposDirectory} ]; then
             cd ${RedHatReposDirectory}
             if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-                rm -rf ${SYSTEM_CENTOS}*
+                rm -rf CentOS-*
             elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-                rm -rf ${SOURCE_BRANCH}*
+                rm -rf fedora*
             fi
         fi
     fi
@@ -370,38 +370,118 @@ function DebianMirrors() {
 ## 更换基于 RedHat 系 Linux 发行版的国内源
 function RedHatMirrors() {
     ## 创建官方的 repo 源文件  （由于 RedHat 系 Linux 源文件各不相同且无法判断，故通过在删除原有源后重新生成官方源的方式更换国内源）
-    RedHatOfficialMirrorsCreate
+    RedHatOfficialReposCreate
     ## 修改国内源
     if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-        sed -i 's|^mirrorlist=|#mirrorlist=|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*.repo
-        sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*.repo
-        sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://mirror.centos.org|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*.repo
-        sed -i "s|mirror.centos.org|${SOURCE}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*.repo
+        sed -i 's|^mirrorlist=|#mirrorlist=|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
+        sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
+        sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=https://mirror.centos.org|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
+        sed -i "s|mirror.centos.org|${SOURCE}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
+        ## 更换基于 CentOS 的 EPEL 扩展国内源
+        CentOSEPELMirrors
     elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
         sed -i 's|^metalink=|#metalink=|g' \
-            ${RedHatReposDirectory}/fedora.repo \
-            ${RedHatReposDirectory}/fedora-updates.repo \
-            ${RedHatReposDirectory}/fedora-modular.repo \
-            ${RedHatReposDirectory}/fedora-updates-modular.repo \
-            ${RedHatReposDirectory}/fedora-updates-testing.repo \
-            ${RedHatReposDirectory}/fedora-updates-testing-modular.repo
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-modular.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-modular.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing-modular.repo
         sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/*
-        sed -i "s|http://download.example/pub/fedora/linux|https://${SOURCE}/fedora|g" \
+        sed -i "s|https\?://download.example/pub/fedora/linux|https://${SOURCE}/fedora|g" \
             ${RedHatReposDirectory}/fedora.repo \
-            ${RedHatReposDirectory}/fedora-updates.repo \
-            ${RedHatReposDirectory}/fedora-modular.repo \
-            ${RedHatReposDirectory}/fedora-updates-modular.repo \
-            ${RedHatReposDirectory}/fedora-updates-testing.repo \
-            ${RedHatReposDirectory}/fedora-updates-testing-modular.repo
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-modular.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-modular.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing.repo \
+            ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing-modular.repo
     fi
 }
 
-## 生成基于 RedHat 发行版和及其衍生发行版的官方源 repo 源文件
-function RedHatOfficialMirrorsCreate() {
+## 更换基于 CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
+function CentOSEPELMirrors() {
+    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
+        ## 判断是否已安装 EPEL 软件包
+        rpm -qa | grep epel-release -q
+        VERIFICATION_EPEL=$?
+        ## 判断 /etc/yum.repos.d 目录下是否存在 epel 扩展 repo 源文件
+        [ -d ${RedHatReposDirectory} ] && ls ${RedHatReposDirectory} | grep epel -q
+        VERIFICATION_EPELFILES=$?
+        ## 判断 /etc/yum.repos.d.bak 目录下是否存在 epel 扩展 repo 源文件
+        [ -d ${RedHatReposDirectoryBackup} ] && ls ${RedHatReposDirectoryBackup} | grep epel -q
+        VERIFICATION_EPELBACKUPFILES=$?
+
+        if [ ${VERIFICATION_EPEL} -eq 0 ]; then
+            CHOICE_D=$(echo -e '\033[32m└ 检测到已安装 EPEL 扩展源，是否更换/覆盖为国内源 [ Y/n ]：\033[0m')
+            read -p "${CHOICE_D}" INPUT
+            case $INPUT in
+            [Yy]*)
+                [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDirectory}/epel*
+                [ ${VERIFICATION_EPELBACKUPFILES} -eq 0 ] && rm -rf ${RedHatReposDirectoryBackup}/epel*
+                ## 生成基于 CentOS 的 EPEL 官方扩展 repo 源文件
+                CentOSEPELReposCreate
+                ## 更换国内源
+                sed -i 's|^metalink=|#metalink=|g' ${RedHatReposDirectory}/epel*
+                sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
+                if [ ${CENTOS_VERSION} -eq "8" ]; then
+                    sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
+                elif [ ${CENTOS_VERSION} -eq "7" ]; then
+                    sed -i 's|^#baseurl=http|baseurl=https|g' ${RedHatReposDirectory}/epel*
+                fi
+                sed -i "s|download.fedoraproject.org/pub|${SOURCE}|g" ${RedHatReposDirectory}/epel*
+                rm -rf ${RedHatReposDirectory}/epel*rpmnew
+                echo -e ''
+                ;;
+            [Nn]*)
+                echo -e ''
+                ;;
+            *)
+                echo -e '\n\033[33m---------- 输入错误，默认不更换 EPEL 扩展国内源 ---------- \033[0m\n'
+                ;;
+            esac
+        else
+            CHOICE_E=$(echo -e '\033[32m└ 是否安装 EPEL 扩展源 [ Y/n ]：\033[0m')
+            read -p "${CHOICE_E}" INPUT
+            case $INPUT in
+            [Yy]*)
+                echo -e ''
+                [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDirectory}/epel*
+                [ ${VERIFICATION_EPELBACKUPFILES} -eq 0 ] && rm -rf ${RedHatReposDirectoryBackup}/epel*
+                yum makecache >/dev/null 2>&1
+                ## 生成基于 CentOS 的 EPEL 官方扩展 repo 源文件
+                CentOSEPELReposCreate
+                ## 安装 EPEL 软件包
+                yum install -y https://${SOURCE}/epel/epel-release-latest-${CENTOS_VERSION}.noarch.rpm
+                ## 更换国内源
+                sed -i 's|^metalink=|#metalink=|g' ${RedHatReposDirectory}/epel*
+                sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
+                if [ ${CENTOS_VERSION} -eq "8" ]; then
+                    sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
+                elif [ ${CENTOS_VERSION} -eq "7" ]; then
+                    sed -i 's|^#baseurl=http|baseurl=https|g' ${RedHatReposDirectory}/epel*
+                fi
+                sed -i "s|download.fedoraproject.org/pub|${SOURCE}|g" ${RedHatReposDirectory}/epel*
+                rm -rf ${RedHatReposDirectory}/epel*rpmnew
+                echo -e ''
+                ;;
+            [Nn]*)
+                echo -e ''
+                ;;
+            *)
+                echo -e '\n\033[33m---------- 输入错误，默认不安装 EPEL 扩展源 ---------- \033[0m\n'
+                ;;
+            esac
+        fi
+    fi
+}
+
+## 生成基于 RedHat 发行版和及其衍生发行版的官方 repo 源文件
+function RedHatOfficialReposCreate() {
+    cd ${RedHatReposDirectory}
     ## CentOS
     if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
         if [ ${CENTOS_VERSION} -eq "8" ]; then
-            touch CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo
+            touch {CentOS-Linux-AppStream.repo,CentOS-Linux-BaseOS.repo,CentOS-Linux-ContinuousRelease.repo,CentOS-Linux-Debuginfo.repo,CentOS-Linux-Devel.repo,CentOS-Linux-Extras.repo,CentOS-Linux-FastTrack.repo,CentOS-Linux-HighAvailability.repo,CentOS-Linux-Media.repo,CentOS-Linux-Plus.repo,CentOS-Linux-PowerTools.repo,CentOS-Linux-Sources.repo}
             cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-AppStream.repo <<\EOF
 # CentOS-Linux-AppStream.repo
 #
@@ -650,7 +730,7 @@ enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
         elif [ ${CENTOS_VERSION} -eq "7" ]; then
-            touch CentOS-Base.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo
+            touch {CentOS-BaseOS.repo,CentOS-CR.repo,CentOS-Debuginfo.repo,CentOS-fasttrack.repo,CentOS-Media.repo,CentOS-Sources.repo,CentOS-Vault.repo}
             cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-BaseOS.repo <<\EOF
 # CentOS-Base.repo
 #
@@ -829,8 +909,8 @@ EOF
 
     ## Fedora
     elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-        touch fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo
-        cat >${RedHatReposDirectory}/fedora-cisco-openh264.repo <<\EOF
+        touch {fedora-cisco-openh264.repo,fedora.repo,fedora-updates.repo,fedora-modular.repo,fedora-updates-modular.repo,fedora-updates-testing.repo,fedora-updates-testing-modular.repo}
+        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-cisco-openh264.repo <<\EOF
 [fedora-cisco-openh264]
 name=Fedora $releasever openh264 (From Cisco) - $basearch
 metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-$releasever&arch=$basearch
@@ -891,7 +971,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/fedora-updates.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates.repo <<\EOF
 [updates]
 name=Fedora $releasever - $basearch - Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Everything/$basearch/
@@ -929,7 +1009,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/fedora-modular.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-modular.repo <<\EOF
 [fedora-modular]
 name=Fedora Modular $releasever - $basearch
 #baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Modular/$basearch/os/
@@ -967,7 +1047,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/fedora-updates-modular.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-modular.repo <<\EOF
 [updates-modular]
 name=Fedora Modular $releasever - $basearch - Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/$basearch/
@@ -1005,7 +1085,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/fedora-updates-testing.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing.repo <<\EOF
 [updates-testing]
 name=Fedora $releasever - $basearch - Test Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Everything/$basearch/
@@ -1043,7 +1123,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/fedora-updates-testing-modular.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing-modular.repo <<\EOF
 [updates-testing-modular]
 name=Fedora Modular $releasever - $basearch - Test Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Modular/$basearch/
@@ -1080,6 +1160,197 @@ gpgcheck=1
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
+EOF
+    fi
+}
+
+## 生成基于 CentOS 的 EPEL 官方扩展 repo 源文件
+function CentOSEPELReposCreate() {
+    cd ${RedHatReposDirectory}
+    if [ ${CENTOS_VERSION} -eq "8" ]; then
+        touch {epel.repo,epel-modular.repo,epel-playground.repo,epel-testing.repo,epel-testing-modular.repo}
+        cat >${RedHatReposDirectory}/epel.repo <<\EOF
+[epel]
+name=Extra Packages for Enterprise Linux $releasever - $basearch
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+[epel-debuginfo]
+name=Extra Packages for Enterprise Linux $releasever - $basearch - Debug
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+
+[epel-source]
+name=Extra Packages for Enterprise Linux $releasever - $basearch - Source
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+EOF
+        cat >${RedHatReposDirectory}/epel-modular.repo <<\EOF
+[epel-modular]
+name=Extra Packages for Enterprise Linux Modular $releasever - $basearch
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-modular-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+[epel-modular-debuginfo]
+name=Extra Packages for Enterprise Linux Modular $releasever - $basearch - Debug
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-modular-debug-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+
+[epel-modular-source]
+name=Extra Packages for Enterprise Linux Modular $releasever - $basearch - Source
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-modular-source-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+EOF
+        cat >${RedHatReposDirectory}/epel-playground.repo <<\EOF
+[epel-playground]
+name=Extra Packages for Enterprise Linux $releasever - Playground - $basearch
+#baseurl=https://download.fedoraproject.org/pub/epel/playground/$releasever/Everything/$basearch/os
+metalink=https://mirrors.fedoraproject.org/metalink?repo=playground-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+[epel-playground-debuginfo]
+name=Extra Packages for Enterprise Linux $releasever - Playground - $basearch - Debug
+#baseurl=https://download.fedoraproject.org/pub/epel/playground/$releasever/Everything/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=playground-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+
+[epel-playground-source]
+name=Extra Packages for Enterprise Linux $releasever - Playground - $basearch - Source
+#baseurl=https://download.fedoraproject.org/pub/epel/playground/$releasever/Everything/source/tree/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=playground-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+EOF
+        cat >${RedHatReposDirectory}/epel-testing.repo <<\EOF
+[epel-testing]
+name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Everything/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+[epel-testing-debuginfo]
+name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Debug
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Everything/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+
+[epel-testing-source]
+name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Source
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Everything/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+EOF
+        cat >${RedHatReposDirectory}/epel-testing-modular.repo <<\EOF
+[epel-testing-modular]
+name=Extra Packages for Enterprise Linux Modular $releasever - Testing - $basearch
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Modular/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-modular-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+[epel-testing-modular-debuginfo]
+name=Extra Packages for Enterprise Linux Modular $releasever - Testing - $basearch - Debug
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Modular/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-modular-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+
+[epel-testing-modular-source]
+name=Extra Packages for Enterprise Linux Modular $releasever - Testing - $basearch - Source
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Modular/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-modular-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+EOF
+    elif [ ${CENTOS_VERSION} -eq "7" ]; then
+        touch {epel.repo,epel-testing.repo}
+        cat >${RedHatReposDirectory}/epel.repo <<\EOF
+[epel]
+name=Extra Packages for Enterprise Linux 7 - $basearch
+#baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch
+failovermethod=priority
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+
+[epel-debuginfo]
+name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
+#baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-7&arch=$basearch
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgcheck=1
+
+[epel-source]
+name=Extra Packages for Enterprise Linux 7 - $basearch - Source
+#baseurl=http://download.fedoraproject.org/pub/epel/7/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-7&arch=$basearch
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgcheck=1
+EOF
+        cat >${RedHatReposDirectory}/epel-testing.repo <<\EOF
+[epel-testing]
+name=Extra Packages for Enterprise Linux 7 - Testing - $basearch
+#baseurl=http://download.fedoraproject.org/pub/epel/testing/7/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-epel7&arch=$basearch
+failovermethod=priority
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+
+[epel-testing-debuginfo]
+name=Extra Packages for Enterprise Linux 7 - Testing - $basearch - Debug
+#baseurl=http://download.fedoraproject.org/pub/epel/testing/7/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel7&arch=$basearch
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgcheck=1
+
+[epel-testing-source]
+name=Extra Packages for Enterprise Linux 7 - Testing - $basearch - Source
+#baseurl=http://download.fedoraproject.org/pub/epel/testing/7/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-source-epel7&arch=$basearch
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgcheck=1
 EOF
     fi
 }
