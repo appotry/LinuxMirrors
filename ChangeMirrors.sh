@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-04-24
+## Modified: 2021-04-25
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -110,7 +110,7 @@ function MirrorsBackup() {
         ## /etc/apt/sources.list
         if [ -s ${DebianSourceList} ]; then
             if [ -s ${DebianSourceListBackup} ]; then
-                CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到 ${DebianSourceListBackup} 已备份的 list 源文件，是否覆盖 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP1}" INPUT
                 case $INPUT in
                 [Yy]*)
@@ -126,7 +126,7 @@ function MirrorsBackup() {
                 esac
             else
                 cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
-                echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ...... \033[0m\n"
+                echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ... \033[0m\n"
             fi
         else
             [ -f ${DebianSourceList} ] || touch ${DebianSourceList}
@@ -136,7 +136,7 @@ function MirrorsBackup() {
         ## /etc/apt/sources.list.d
         if [ -d ${DebianExtendListDirectory} ] && [ ${VERIFICATION_FILES} -eq 0 ]; then
             if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
-                CHOICE_BACKUP2=$(echo -e "\n\033[32m└ 检测到 ${DebianExtendListDirectoryBackup} 目录下存在已备份的 list 扩展源文件，是否覆盖 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP2=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 第三方源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP2}" INPUT
                 case $INPUT in
                 [Yy]*)
@@ -153,14 +153,14 @@ function MirrorsBackup() {
             else
                 [ -d ${DebianExtendListDirectoryBackup} ] || mkdir -p ${DebianExtendListDirectoryBackup}
                 cp -rf ${DebianExtendListDirectory}/* ${DebianExtendListDirectoryBackup} >/dev/null 2>&1
-                echo -e "\033[32m└ 已备份原有 list 扩展源文件至 ${DebianExtendListDirectoryBackup} 目录...... \033[0m\n"
+                echo -e "\033[32m└ 已备份原有 list 第三方源文件至 ${DebianExtendListDirectoryBackup} 目录... \033[0m\n"
             fi
         fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         ## /etc/yum.repos.d
         if [ ${VERIFICATION_FILES} -eq 0 ]; then
             if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
-                CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到 ${RedHatReposDirectoryBackup} 目录下存在已备份的 repo 源文件，是否覆盖 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 repo 源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP3}" INPUT
                 case $INPUT in
                 [Yy]*)
@@ -177,7 +177,7 @@ function MirrorsBackup() {
             else
                 [ -d ${RedHatReposDirectoryBackup} ] || mkdir -p ${RedHatReposDirectoryBackup}
                 cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
-                echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatReposDirectoryBackup} 目录...... \033[0m\n"
+                echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatReposDirectoryBackup} 目录... \033[0m\n"
             fi
         else
             [ -d ${RedHatReposDirectory} ] || mkdir -p ${RedHatReposDirectory}
@@ -208,16 +208,22 @@ function ChangeMirrors() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         DebianMirrors
         apt-get update
+        VERIFICATION_SOURCESYNC=$?
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         RedHatMirrors
         yum clean all >/dev/null 2>&1
         yum makecache
+        VERIFICATION_SOURCESYNC=$?
     fi
 }
 
 ## 更新软件包
 function UpgradeSoftware() {
-    CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包 [ Y/n ]：\033[0m')
+    if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
+        CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包 [ Y/n ]：\033[0m')
+    else
+        CHOICE_B=$(echo -e '\n\033[32m└ 检测到软件源同步失败，是否更新软件包 [ Y/n ]：\033[0m')
+    fi
     read -p "${CHOICE_B}" INPUT
     case $INPUT in
     [Yy]*)
@@ -227,7 +233,7 @@ function UpgradeSoftware() {
         elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
             yum update -y
         fi
-        CHOICE_C=$(echo -e '\n\033[32m└ 是否删除已下载的软件包 [ Y/n ]：\033[0m')
+        CHOICE_C=$(echo -e '\n\033[32m└ 是否清理已下载的软件包缓存 [ Y/n ]：\033[0m')
         read -p "${CHOICE_C}" INPUT
         case $INPUT in
         [Yy]*)
@@ -239,13 +245,13 @@ function UpgradeSoftware() {
                 yum autoremove -y >/dev/null 2>&1
                 yum clean all >/dev/null 2>&1
             fi
-            echo -e '删除完毕\n'
+            echo -e '清理完毕\n'
             ;;
         [Nn]*)
             echo -e ''
             ;;
         *)
-            echo -e '\n\033[33m---------- 输入错误，默认不删除已下载的软件包 ---------- \033[0m\n'
+            echo -e '\n\033[33m---------- 输入错误，默认不清理已下载的软件包缓存 ---------- \033[0m\n'
             ;;
         esac
         ;;
@@ -262,25 +268,31 @@ function UpgradeSoftware() {
 function DebianMirrors() {
     ## 修改国内源
     if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
+        echo "# 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
+        echo '' >>${DebianSourceList}
+        echo "# 预发布软件源，不建议启用" >>${DebianSourceList}
+        echo "# deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
     elif [ ${SYSTEM_NAME} = ${SYSTEM_DEBIAN} ]; then
+        echo "# 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
+        echo '' >>${DebianSourceList}
+        echo "# 预发布软件源，不建议启用" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
+        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
     elif [ ${SYSTEM_NAME} = ${SYSTEM_KALI} ]; then
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
         echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
@@ -332,7 +344,7 @@ function CentOSEPELMirrors() {
         VERIFICATION_EPELBACKUPFILES=$?
 
         if [ ${VERIFICATION_EPEL} -eq 0 ]; then
-            CHOICE_D=$(echo -e '\033[32m└ 检测到已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
+            CHOICE_D=$(echo -e '\033[32m└ 检测到系统已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
             read -p "${CHOICE_D}" INPUT
             case $INPUT in
             [Yy]*)
@@ -409,7 +421,7 @@ function ChooseMirrors() {
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    echo -e '            提供以下国内更新源可供选择：'
+    echo -e '            提供以下国内软件源可供选择：'
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
