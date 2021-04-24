@@ -4,7 +4,7 @@
 ㅤ<a href="https://gitee.com/SuperManito/LinuxMirrors"><img src="./icon/gitee.svg" width="100" height="50"/></a>
 &nbsp;<a href="https://blog.csdn.net/u013246692/article/details/113124295"><img src="./icon/csdn.png" width="100" height="50"/></a>
 
-- __`GNU/Linux` 一键更换国内源脚本__
+- __`GNU/Linux` 一键更换国内软件源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
 - __理论支持所有架构的环境，`x86_64` 与 `arm64` 架构已经过测试__
 
@@ -49,7 +49,7 @@
 > 4. 脚本支持在原有源配置错误或者不存在的情况下使用，并且支持重复使用。
 
 ### 一键脚本
-- `GNU/Linux` 一键更换国内源脚本
+- `GNU/Linux` 一键更换国内软件源脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
 > _注意：`RedHat` 系 Linux 发行版和及其衍生发行版配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用可将 `repo`文件中的 `enabled=0`修改成 `enabled=1`。_
@@ -59,7 +59,7 @@
 - `Docker` 国内一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，目前仅保证 Linux 发行版的最新稳定版可用，后续会加入 "手动选择安装版本" 功能，此脚本将在未来与此项目分离独立建项。_
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose` ，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，目前脚本仅保证 Linux 发行版的最新稳定版可用，后续会加入 "手动选择安装版本" 功能，此脚本将在未来与此项目分离独立建项。_
 
 ***
 
