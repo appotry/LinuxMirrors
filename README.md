@@ -52,7 +52,8 @@
 - `GNU/Linux` 一键更换国内软件源脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
-> _注意：`RedHat` 系 Linux 发行版和及其衍生发行版配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用可将 `repo`文件中的 `enabled=0`修改成 `enabled=1`。_
+> _`Debian` 系 Linux 发行版和及其衍生发行版默认注释了源码仓库和预发布软件源，若需启用将 `list`文件中的相关行取消取消注释。_\
+> _`RedHat` 系 Linux 发行版和及其衍生发行版配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用可将 `repo`文件中的 `enabled=0`修改成 `enabled=1`。_
 
 ***
 
