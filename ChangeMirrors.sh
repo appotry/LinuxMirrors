@@ -88,86 +88,6 @@ function EnvJudgment() {
     fi
 }
 
-## 选择国内源
-function ChooseMirrors() {
-    echo -e '+---------------------------------------------------+'
-    echo -e '|                                                   |'
-    echo -e '|   =============================================   |'
-    echo -e '|                                                   |'
-    echo -e '|         欢迎使用 Linux 一键更换国内源脚本         |'
-    echo -e '|                                                   |'
-    echo -e '|   =============================================   |'
-    echo -e '|                                                   |'
-    echo -e '+---------------------------------------------------+'
-    echo -e ''
-    echo -e '#####################################################'
-    echo -e ''
-    echo -e '            提供以下国内更新源可供选择：'
-    echo -e ''
-    echo -e '#####################################################'
-    echo -e ''
-    echo -e ' *  1)    阿里云'
-    echo -e ' *  2)    腾讯云'
-    echo -e ' *  3)    华为云'
-    echo -e ' *  4)    网易'
-    echo -e ' *  4)    搜狐'
-    echo -e ' *  6)    清华大学'
-    echo -e ' *  7)    浙江大学'
-    echo -e ' *  8)    重庆大学'
-    echo -e ' *  9)    兰州大学'
-    echo -e ' *  10)   上海交通大学'
-    echo -e ' *  11)   中国科学技术大学'
-    echo -e ''
-    echo -e '#####################################################'
-    echo -e ''
-    echo -e "           运行环境  ${SYSTEM_NAME} ${SYSTEM_VERSION_NUMBER} ${SYSTEM_ARCH}"
-    echo -e "           系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
-    echo -e ''
-    echo -e '#####################################################'
-    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内源 [ 1~11 ]：\033[0m')
-    read -p "${CHOICE_A}" INPUT
-    case $INPUT in
-    1)
-        SOURCE="mirrors.aliyun.com"
-        ;;
-    2)
-        SOURCE="mirrors.cloud.tencent.com"
-        ;;
-    3)
-        SOURCE="mirrors.huaweicloud.com"
-        ;;
-    4)
-        SOURCE="mirrors.163.com"
-        ;;
-    5)
-        SOURCE="mirrors.sohu.com"
-        ;;
-    6)
-        SOURCE="mirrors.tuna.tsinghua.edu.cn"
-        ;;
-    7)
-        SOURCE="mirrors.zju.edu.cn"
-        ;;
-    8)
-        SOURCE="mirrors.cqu.edu.cn"
-        ;;
-    9)
-        SOURCE="mirror.lzu.edu.cn"
-        ;;
-    10)
-        SOURCE="ftp.sjtu.edu.cn"
-        ;;
-    11)
-        SOURCE="mirrors.ustc.edu.cn"
-        ;;
-    *)
-        SOURCE="mirrors.aliyun.com"
-        echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里云 ---------- \033[0m'
-        sleep 2s
-        ;;
-    esac
-}
-
 ## 备份原有源
 function MirrorsBackup() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
@@ -275,9 +195,9 @@ function RemoveOldMirrorsFiles() {
         if [ -d ${RedHatReposDirectory} ]; then
             cd ${RedHatReposDirectory}
             if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-                rm -rf CentOS-*
+                rm -rf ${SYSTEM_CENTOS}-*
             elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-                rm -rf fedora*
+                rm -rf ${SOURCE_BRANCH}*
             fi
         fi
     fi
@@ -412,7 +332,7 @@ function CentOSEPELMirrors() {
         VERIFICATION_EPELBACKUPFILES=$?
 
         if [ ${VERIFICATION_EPEL} -eq 0 ]; then
-            CHOICE_D=$(echo -e '\033[32m└ 检测到已安装 EPEL 扩展源，是否更换/覆盖为国内源 [ Y/n ]：\033[0m')
+            CHOICE_D=$(echo -e '\033[32m└ 检测到已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
             read -p "${CHOICE_D}" INPUT
             case $INPUT in
             [Yy]*)
@@ -473,6 +393,86 @@ function CentOSEPELMirrors() {
             esac
         fi
     fi
+}
+
+## 选择国内源
+function ChooseMirrors() {
+    echo -e '+---------------------------------------------------+'
+    echo -e '|                                                   |'
+    echo -e '|   =============================================   |'
+    echo -e '|                                                   |'
+    echo -e '|         欢迎使用 Linux 一键更换国内源脚本         |'
+    echo -e '|                                                   |'
+    echo -e '|   =============================================   |'
+    echo -e '|                                                   |'
+    echo -e '+---------------------------------------------------+'
+    echo -e ''
+    echo -e '#####################################################'
+    echo -e ''
+    echo -e '            提供以下国内更新源可供选择：'
+    echo -e ''
+    echo -e '#####################################################'
+    echo -e ''
+    echo -e ' *  1)    阿里云'
+    echo -e ' *  2)    腾讯云'
+    echo -e ' *  3)    华为云'
+    echo -e ' *  4)    网易'
+    echo -e ' *  4)    搜狐'
+    echo -e ' *  6)    清华大学'
+    echo -e ' *  7)    浙江大学'
+    echo -e ' *  8)    重庆大学'
+    echo -e ' *  9)    兰州大学'
+    echo -e ' *  10)   上海交通大学'
+    echo -e ' *  11)   中国科学技术大学'
+    echo -e ''
+    echo -e '#####################################################'
+    echo -e ''
+    echo -e "           运行环境  ${SYSTEM_NAME} ${SYSTEM_VERSION_NUMBER} ${SYSTEM_ARCH}"
+    echo -e "           系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
+    echo -e ''
+    echo -e '#####################################################'
+    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内源 [ 1~11 ]：\033[0m')
+    read -p "${CHOICE_A}" INPUT
+    case $INPUT in
+    1)
+        SOURCE="mirrors.aliyun.com"
+        ;;
+    2)
+        SOURCE="mirrors.cloud.tencent.com"
+        ;;
+    3)
+        SOURCE="mirrors.huaweicloud.com"
+        ;;
+    4)
+        SOURCE="mirrors.163.com"
+        ;;
+    5)
+        SOURCE="mirrors.sohu.com"
+        ;;
+    6)
+        SOURCE="mirrors.tuna.tsinghua.edu.cn"
+        ;;
+    7)
+        SOURCE="mirrors.zju.edu.cn"
+        ;;
+    8)
+        SOURCE="mirrors.cqu.edu.cn"
+        ;;
+    9)
+        SOURCE="mirror.lzu.edu.cn"
+        ;;
+    10)
+        SOURCE="ftp.sjtu.edu.cn"
+        ;;
+    11)
+        SOURCE="mirrors.ustc.edu.cn"
+        ;;
+    *)
+        SOURCE="mirrors.aliyun.com"
+        echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里云 ---------- \033[0m'
+        sleep 2s
+        ;;
+    esac
 }
 
 ## 生成基于 RedHat 发行版和及其衍生发行版的官方 repo 源文件
