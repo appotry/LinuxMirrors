@@ -112,6 +112,7 @@ function MirrorsBackup() {
             if [ -s ${DebianSourceListBackup} ]; then
                 CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP1}" INPUT
+                [ -Z ${INPUT} ] && INPUT=Y
                 case $INPUT in
                 [Yy]*)
                     echo -e ''
@@ -138,6 +139,7 @@ function MirrorsBackup() {
             if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
                 CHOICE_BACKUP2=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 第三方源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP2}" INPUT
+                [ -Z ${INPUT} ] && INPUT=Y
                 case $INPUT in
                 [Yy]*)
                     echo -e ''
@@ -162,6 +164,7 @@ function MirrorsBackup() {
             if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
                 CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 repo 源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP3}" INPUT
+                [ -Z ${INPUT} ] && INPUT=Y
                 case $INPUT in
                 [Yy]*)
                     echo -e ''
@@ -225,6 +228,7 @@ function UpgradeSoftware() {
         CHOICE_B=$(echo -e '\n\033[32m└ 检测到软件源同步失败，是否更新软件包 [ Y/n ]：\033[0m')
     fi
     read -p "${CHOICE_B}" INPUT
+    [ -Z ${INPUT} ] && INPUT=Y
     case $INPUT in
     [Yy]*)
         echo -e ''
@@ -235,6 +239,7 @@ function UpgradeSoftware() {
         fi
         CHOICE_C=$(echo -e '\n\033[32m└ 是否清理已下载的软件包缓存 [ Y/n ]：\033[0m')
         read -p "${CHOICE_C}" INPUT
+        [ -Z ${INPUT} ] && INPUT=Y
         case $INPUT in
         [Yy]*)
             echo -e ''
@@ -346,6 +351,7 @@ function CentOSEPELMirrors() {
         if [ ${VERIFICATION_EPEL} -eq 0 ]; then
             CHOICE_D=$(echo -e '\033[32m└ 检测到系统已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
             read -p "${CHOICE_D}" INPUT
+            [ -Z ${INPUT} ] && INPUT=Y
             case $INPUT in
             [Yy]*)
                 [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDirectory}/epel*
@@ -374,6 +380,7 @@ function CentOSEPELMirrors() {
         else
             CHOICE_E=$(echo -e '\033[32m└ 是否安装 EPEL 扩展源 [ Y/n ]：\033[0m')
             read -p "${CHOICE_E}" INPUT
+            [ -Z ${INPUT} ] && INPUT=Y
             case $INPUT in
             [Yy]*)
                 echo -e ''
@@ -413,7 +420,7 @@ function ChooseMirrors() {
     echo -e '|                                                   |'
     echo -e '|   =============================================   |'
     echo -e '|                                                   |'
-    echo -e '|         欢迎使用 Linux 一键更换国内源脚本         |'
+    echo -e '|       欢迎使用 Linux 一键更换国内软件源脚本       |'
     echo -e '|                                                   |'
     echo -e '|   =============================================   |'
     echo -e '|                                                   |'
@@ -493,7 +500,10 @@ function RedHatOfficialReposCreate() {
     ## CentOS
     if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
         if [ ${CENTOS_VERSION} -eq "8" ]; then
-            touch {CentOS-Linux-AppStream.repo,CentOS-Linux-BaseOS.repo,CentOS-Linux-ContinuousRelease.repo,CentOS-Linux-Debuginfo.repo,CentOS-Linux-Devel.repo,CentOS-Linux-Extras.repo,CentOS-Linux-FastTrack.repo,CentOS-Linux-HighAvailability.repo,CentOS-Linux-Media.repo,CentOS-Linux-Plus.repo,CentOS-Linux-PowerTools.repo,CentOS-Linux-Sources.repo}
+            CentOS8_RepoFiles='CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo'
+            for TOUCH in $CentOS8_RepoFiles; do
+                touch $TOUCH
+            done
             cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-AppStream.repo <<\EOF
 # CentOS-Linux-AppStream.repo
 #
@@ -742,7 +752,10 @@ enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
         elif [ ${CENTOS_VERSION} -eq "7" ]; then
-            touch {CentOS-BaseOS.repo,CentOS-CR.repo,CentOS-Debuginfo.repo,CentOS-fasttrack.repo,CentOS-Media.repo,CentOS-Sources.repo,CentOS-Vault.repo}
+            CentOS7_RepoFiles='CentOS-BaseOS.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo'
+            for TOUCH in $CentOS7_RepoFiles; do
+                touch $TOUCH
+            done
             cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-BaseOS.repo <<\EOF
 # CentOS-Base.repo
 #
@@ -921,7 +934,10 @@ EOF
 
     ## Fedora
     elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-        touch {fedora-cisco-openh264.repo,fedora.repo,fedora-updates.repo,fedora-modular.repo,fedora-updates-modular.repo,fedora-updates-testing.repo,fedora-updates-testing-modular.repo}
+        Fedora_RepoFiles='fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo'
+        for TOUCH in $Fedora_RepoFiles; do
+            touch $TOUCH
+        done
         cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-cisco-openh264.repo <<\EOF
 [fedora-cisco-openh264]
 name=Fedora $releasever openh264 (From Cisco) - $basearch
@@ -1180,7 +1196,10 @@ EOF
 function CentOSEPELReposCreate() {
     cd ${RedHatReposDirectory}
     if [ ${CENTOS_VERSION} -eq "8" ]; then
-        touch {epel.repo,epel-modular.repo,epel-playground.repo,epel-testing.repo,epel-testing-modular.repo}
+        EPEL8_RepoFiles='epel.repo epel-modular.repo epel-playground.repo epel-testing.repo epel-testing-modular.repo'
+        for TOUCH in $EPEL8_RepoFiles; do
+            touch $TOUCH
+        done
         cat >${RedHatReposDirectory}/epel.repo <<\EOF
 [epel]
 name=Extra Packages for Enterprise Linux $releasever - $basearch
@@ -1307,7 +1326,10 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
 gpgcheck=1
 EOF
     elif [ ${CENTOS_VERSION} -eq "7" ]; then
-        touch {epel.repo,epel-testing.repo}
+        EPEL7_RepoFiles='epel.repo epel-testing.repo'
+        for TOUCH in $EPEL7_RepoFiles; do
+            touch $TOUCH
+        done
         cat >${RedHatReposDirectory}/epel.repo <<\EOF
 [epel]
 name=Extra Packages for Enterprise Linux 7 - $basearch
