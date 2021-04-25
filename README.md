@@ -13,8 +13,6 @@
 ㅤ新增基于 CentOS 的 EPEL 扩展源，修复了一些错误。
 - __2021 / 04 / 22__
 ㅤ重新定义了备份原有源功能，现在可以通过检测其目录下是否存在源文件判断是否执行备份操作。
-- __2021 / 04 / 20__
-ㅤ修复了脚本关于 `Kali Linux` 的错误，重新适配了其最新版本。
 
 ***
 
@@ -22,7 +20,7 @@
 |          | <a href="https://ubuntu.com"><img src="./icon/ubuntu.svg" width="14" height="14"/></a>&nbsp;Ubuntu |  <a href="https://www.debian.org"><img src="./icon/debian.svg" width="14" height="14"/></a>&nbsp;Debian  |  <a href="https://www.kali.org"><img src="./icon/kali.svg" width="14" height="14"/></a>&nbsp;Kali Linux  |  <a href="https://getfedora.org"><img src="./icon/fedora.svg" width="14" height="14"/></a>&nbsp;Fedora  |  <a href="https://www.centos.org"><img src="./icon/centos.svg" width="16" height="16"/></a>&nbsp;CentOS  |
 | :------: | :------: | :------: | :------: | :------: | :------: |
 | 支持的版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
-> 目前仅支持 Debian 与 Redhat 的部分发行版和及其衍生发行版
+> 目前仅支持 Debian 与 Redhat 的发行版和及其部分衍生发行版
 
 ### 脚本所使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
@@ -52,8 +50,9 @@
 - `GNU/Linux` 一键更换国内软件源脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
-> _Debian 系 Linux 默认注释了源码仓库和预发布软件源，若需启用可将 list 文件中的相关内容所在行取消注释。_\
-> _RedHat 系 Linux 配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用可将 repo 文件中的 `enabled=0`修改成 `enabled=1`。_
+> __注意：__
+> - _Debian 系 Linux 默认注释了源码仓库和预发布软件源，若需启用可将 list 源文件中的相关内容所在行 `取消注释`。_
+> - _RedHat 系 Linux 配置了所有可以配置的仓库，但有一些仓库默认没有启用，若需启用可将 repo 源文件中的 `enabled=0`修改成 `enabled=1`。_
 
 ***
 
