@@ -20,7 +20,7 @@
 |          | <a href="https://ubuntu.com"><img src="./icon/ubuntu.svg" width="14" height="14"/></a>&nbsp;Ubuntu |  <a href="https://www.debian.org"><img src="./icon/debian.svg" width="14" height="14"/></a>&nbsp;Debian  |  <a href="https://www.kali.org"><img src="./icon/kali.svg" width="14" height="14"/></a>&nbsp;Kali Linux  |  <a href="https://getfedora.org"><img src="./icon/fedora.svg" width="14" height="14"/></a>&nbsp;Fedora  |  <a href="https://www.centos.org"><img src="./icon/centos.svg" width="16" height="16"/></a>&nbsp;CentOS  |
 | :------: | :------: | :------: | :------: | :------: | :------: |
 | 支持的版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
-> 目前仅支持 Debian 与 Redhat 的发行版和及其部分衍生发行版
+> 目前仅支持基于 Debian 与 Redhat 的发行版和及其部分衍生发行版
 
 ### 脚本所使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
@@ -43,7 +43,7 @@
 ### 如何使用
 > 1. 复制完整命令到终端回车执行，如果执行出错，可复制源码到本地后手动执行。
 > 2. 为了适配所有环境，请使用 `Root` 用户执行脚本，切换命令为 `sudo -i`。
-> 3. 脚本自带备份功能，无需手动备份原有源，如果本地检测到已备份源文件会提示是否进行覆盖。
+> 3. 脚本会执行备份原有源操作，无需手动备份，执行脚本期间会在终端输出交互内容，可回车确认。
 > 4. 脚本支持在原有源配置错误或者不存在的情况下使用，并且支持重复使用。
 
 ### 一键脚本
