@@ -38,15 +38,23 @@
 | 11 | 中国科学技术大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) | √ | √ |
 > 如果使用过程中脚本不能正常输出中文内容则可对照此列表使用，顺序与脚本一致
 
+### 脚本执行流程
+- └ 选择国内源（交互）
+- └ 执行备份操作
+  - └ 检测到重复备份文件选择是否覆盖（交互）
+- └ 更换国内源
+  - └ 系统如果是 CentOS 选择是否安装/覆盖 EPEL 扩展国内源（交互）
+- └ 选择是否更新软件包（交互）
+- └ 选择是否清理已下载的软件包缓存（交互）
+
 ***
 
 ### 如何使用
-> 1. 复制完整命令到终端回车执行，如果执行出错或无法安装 `curl` 软件包，可复制源码到本地后手动执行。
+> 1. 复制下面的完整命令到终端回车执行，如果执行出错或无法安装 `curl` 软件包，请复制源码到本地后手动执行。
 > 2. 为了适配所有环境，请使用 `Root` 用户执行脚本，切换命令为 `sudo -i` 。
-> 3. 脚本会执行备份原有源操作，无需手动备份，执行脚本期间会在终端输出交互内容，可回车确认。
-> 4. 脚本支持在原有源配置错误或者不存在的情况下使用，并且支持重复使用。
+> 3. 执行脚本过程中会自动备份原有源无需手动备份，期间会在终端输出交互内容，可按回车键快速确认。
+> 4. 脚本支持在原有源配置错误或者不存在的情况下使用，并且可以重复使用。
 
-### 一键脚本
 - `GNU/Linux` 一键更换国内软件源脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
@@ -56,6 +64,7 @@
 
 ***
 
+### 其它脚本
 - `Docker` 国内一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
@@ -66,7 +75,7 @@
 ### 常见问题与帮助
 - 1. 如果提示 `Command 'curl' not found` 则说明当前未安装 `curl` 软件包，安装命令如下：
 
-      sudo apt install -y curl  或  sudo yum install -y curl
+         sudo apt install -y curl  或  sudo yum install -y curl
 
 - 2. 如果提示 `bash: /proc/self/fd/11: 没有那个文件或目录` ，请切换至 `Root` 用户执行。
 
