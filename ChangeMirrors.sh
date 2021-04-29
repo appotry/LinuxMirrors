@@ -112,7 +112,7 @@ function MirrorsBackup() {
             if [ -s ${DebianSourceListBackup} ]; then
                 CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP1}" INPUT
-                [ -Z ${INPUT} ] && INPUT=Y
+                [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
                 [Yy]*)
                     echo -e ''
@@ -139,7 +139,7 @@ function MirrorsBackup() {
             if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
                 CHOICE_BACKUP2=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 第三方源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP2}" INPUT
-                [ -Z ${INPUT} ] && INPUT=Y
+                [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
                 [Yy]*)
                     echo -e ''
@@ -164,7 +164,7 @@ function MirrorsBackup() {
             if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
                 CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 repo 源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP3}" INPUT
-                [ -Z ${INPUT} ] && INPUT=Y
+                [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
                 [Yy]*)
                     echo -e ''
@@ -228,7 +228,7 @@ function UpgradeSoftware() {
         CHOICE_B=$(echo -e '\n\033[32m└ 检测到软件源同步失败，是否更新软件包 [ Y/n ]：\033[0m')
     fi
     read -p "${CHOICE_B}" INPUT
-    [ -Z ${INPUT} ] && INPUT=Y
+    [ -z ${INPUT} ] && INPUT=Y
     case $INPUT in
     [Yy]*)
         echo -e ''
@@ -239,7 +239,7 @@ function UpgradeSoftware() {
         fi
         CHOICE_C=$(echo -e '\n\033[32m└ 是否清理已下载的软件包缓存 [ Y/n ]：\033[0m')
         read -p "${CHOICE_C}" INPUT
-        [ -Z ${INPUT} ] && INPUT=Y
+        [ -z ${INPUT} ] && INPUT=Y
         case $INPUT in
         [Yy]*)
             echo -e ''
@@ -351,7 +351,7 @@ function CentOSEPELMirrors() {
         if [ ${VERIFICATION_EPEL} -eq 0 ]; then
             CHOICE_D=$(echo -e '\033[32m└ 检测到系统已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
             read -p "${CHOICE_D}" INPUT
-            [ -Z ${INPUT} ] && INPUT=Y
+            [ -z ${INPUT} ] && INPUT=Y
             case $INPUT in
             [Yy]*)
                 [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDirectory}/epel*
@@ -380,7 +380,7 @@ function CentOSEPELMirrors() {
         else
             CHOICE_E=$(echo -e '\033[32m└ 是否安装 EPEL 扩展源 [ Y/n ]：\033[0m')
             read -p "${CHOICE_E}" INPUT
-            [ -Z ${INPUT} ] && INPUT=Y
+            [ -z ${INPUT} ] && INPUT=Y
             case $INPUT in
             [Yy]*)
                 echo -e ''
