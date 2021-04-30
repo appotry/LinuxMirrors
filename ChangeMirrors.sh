@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-04-25
+## Modified: 2021-04-30
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -248,7 +248,7 @@ function UpgradeSoftware() {
                 apt-get clean >/dev/null 2>&1
             elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
                 yum autoremove -y >/dev/null 2>&1
-                yum clean all >/dev/null 2>&1
+                yum clean packages -y >/dev/null 2>&1
             fi
             echo -e '清理完毕\n'
             ;;
@@ -273,7 +273,7 @@ function UpgradeSoftware() {
 function DebianMirrors() {
     ## 修改国内源
     if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
-        echo "# 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
+        echo "## 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
         echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
@@ -283,11 +283,11 @@ function DebianMirrors() {
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
         echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
         echo '' >>${DebianSourceList}
-        echo "# 预发布软件源，不建议启用" >>${DebianSourceList}
+        echo "## 预发布软件源，不建议启用" >>${DebianSourceList}
         echo "# deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
         echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
     elif [ ${SYSTEM_NAME} = ${SYSTEM_DEBIAN} ]; then
-        echo "# 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
+        echo "## 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
         echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
@@ -295,7 +295,7 @@ function DebianMirrors() {
         echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
         echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
         echo '' >>${DebianSourceList}
-        echo "# 预发布软件源，不建议启用" >>${DebianSourceList}
+        echo "## 预发布软件源，不建议启用" >>${DebianSourceList}
         echo "deb https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
         echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
     elif [ ${SYSTEM_NAME} = ${SYSTEM_KALI} ]; then
@@ -488,7 +488,7 @@ function ChooseMirrors() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com"
-        echo -e '\n\033[33m---------- 输入错误，更新源将默认使用阿里云 ---------- \033[0m'
+        echo -e '\n\033[33m---------- 输入错误，将默认使用阿里云作为国内源 ---------- \033[0m'
         sleep 2s
         ;;
     esac
@@ -752,11 +752,11 @@ enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
         elif [ ${CENTOS_VERSION} -eq "7" ]; then
-            CentOS7_RepoFiles='CentOS-BaseOS.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo'
+            CentOS7_RepoFiles='CentOS-Base.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo'
             for TOUCH in $CentOS7_RepoFiles; do
                 touch $TOUCH
             done
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-BaseOS.repo <<\EOF
+            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Base.repo <<\EOF
 # CentOS-Base.repo
 #
 # The mirror system uses the connecting IP address of the client and the
