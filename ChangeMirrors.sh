@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-04-30
+## Modified: 2021-5-5
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -269,6 +269,28 @@ function UpgradeSoftware() {
     esac
 }
 
+## 关闭 防火墙 和 SELINUX
+function TurnOffFirewall() {
+    CHOICE_C=$(echo -e '\033[32m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
+    read -p "${CHOICE_C}" INPUT
+    [ -z ${INPUT} ] && INPUT=Y
+    case $INPUT in
+    [Yy]*)
+        echo -e ''
+        systemctl disable --now firewalld
+        sed -i "7c SELINUX=disabled" /etc/selinux/config
+        setenforce 0
+        echo -e ''
+        ;;
+    [Nn]*)
+        echo -e ''
+        ;;
+    *)
+        echo -e '\n\033[33m---------- 输入错误，默认不关闭防火墙和 SELINUX ---------- \033[0m\n'
+        ;;
+    esac
+}
+
 ## 更换基于 Debian 系 Linux 发行版的国内源
 function DebianMirrors() {
     ## 修改国内源
@@ -333,6 +355,8 @@ function RedHatMirrors() {
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing.repo \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing-modular.repo
     fi
+    ## 关闭 防火墙 和 SELINUX
+    TurnOffFirewall
 }
 
 ## 更换基于 CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
