@@ -24,7 +24,7 @@
 | 支持的版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
 > 目前仅支持基于 Debian 与 Redhat 的发行版和及其部分衍生发行版
 
-### 脚本所使用的开源镜像站
+### 脚本当前使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
 | :------: | :------: | :------: | :------: | :------: |
 | 1 | 阿里云 | [mirrors.aliyun.com](https://developer.aliyun.com/special/mirrors/notice) | √ | √ |
@@ -85,6 +85,7 @@
 - 3. 如果您想使用 `Http 协议` 同步软件源可执行下面的命令：
 
          sed -i 's/http/https/g' /etc/apt/sources.list  或  sed -i 's/http/https/g' /etc/yum.repos.d/*
+
 ***
 
 ### 捐助作者
