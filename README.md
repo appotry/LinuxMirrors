@@ -72,7 +72,7 @@
 - `Docker` 一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，支持境外 VPS，目前脚本仅保证 Linux 发行版可用，后续会加入 "手动选择安装版本" 功能，此脚本将在未来与此项目分离独立建项。_
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，支持境外 VPS 使用，后续会加入 "手动选择安装版本" 功能，此脚本将在未来与此项目分离独立建项。_
 
 ***
 
@@ -81,7 +81,7 @@
 
          sudo apt install -y curl  或  sudo yum install -y curl
 
-- 2. 如果提示 `bash: /proc/self/fd/11: 没有那个文件或目录` ，请切换至 `Root` 用户执行。
+- 2. 如果提示 `bash: /proc/self/fd/11: No such file or directory` ，请切换至 `Root` 用户执行。
 - 3. 如果您想使用 `Http 协议` 同步软件源可执行下面的命令：
 
          sed -i 's/http/https/g' /etc/apt/sources.list  或  sed -i 's/http/https/g' /etc/yum.repos.d/*
