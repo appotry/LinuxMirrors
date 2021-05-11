@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-5-5
+## Modified: 2021-5-12
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -48,9 +48,11 @@ if [ ${Architecture} = "x86_64" ]; then
     SYSTEM_ARCH=x86_64
 elif [ ${Architecture} = "aarch64" ]; then
     SYSTEM_ARCH=arm64
+elif [ ${Architecture} = "armv7l*" ]; then
+    SYSTEM_ARCH=armv7
 elif [ ${Architecture} = "arm*" ]; then
     SYSTEM_ARCH=armhf
-elif [ ${Architecture} = "*i?86*" ]; then
+elif [ ${Architecture} = "*i686*" ]; then
     SYSTEM_ARCH=x86_32
 else
     SYSTEM_ARCH=${Architecture}
@@ -73,7 +75,7 @@ clear ## 清空终端所有已显示的内容
 function CombinationFunction() {
     EnvJudgment
     ChooseMirrors
-    MirrorsBackup
+    BackupMirrors
     RemoveOldMirrorsFiles
     ChangeMirrors
     UpgradeSoftware
@@ -89,7 +91,7 @@ function EnvJudgment() {
 }
 
 ## 备份原有源
-function MirrorsBackup() {
+function BackupMirrors() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         ## 判断 /etc/apt/sources.list.d 目录下是否存在文件
         [ -d ${DebianExtendListDirectory} ] && ls ${DebianExtendListDirectory} | grep *.list -q
@@ -470,8 +472,8 @@ function ChooseMirrors() {
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    echo -e "           运行环境  ${SYSTEM_NAME} ${SYSTEM_VERSION_NUMBER} ${SYSTEM_ARCH}"
-    echo -e "           系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
+    echo -e "            运行环境  ${SYSTEM_NAME} ${SYSTEM_VERSION_NUMBER} ${SYSTEM_ARCH}"
+    echo -e "            系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
     CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内源 [ 1~11 ]：\033[0m')
