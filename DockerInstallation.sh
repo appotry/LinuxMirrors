@@ -74,15 +74,14 @@ fi
 ## 定义更新源分支名称
 SOURCE_BRANCH=${SYSTEM_NAME,,}
 
-clear ## 清空终端所有已显示的内容
-
 ## 组合各个函数模块
 function CombinationFunction() {
     EnvJudgment
+    clear
     ChooseMirrors
     RemoveOldVersion
     DockerEngine
-    DockerCompose
+    [ ${DOCKER_COMPOSE} = "True" ] && DockerCompose
     ShowVersion
 }
 
@@ -113,10 +112,8 @@ function RemoveOldVersion() {
     ## 卸载旧版本
     systemctl disable --now docker >/dev/null 2>&1
     if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
-        systemctl disable --now docker >/dev/null 2>&1
-        apt-get remove -y docker* containerd runc >/dev/null 2>&1
+        apt-get remove -y docker* runc >/dev/null 2>&1
     elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
-        systemctl disable --now docker >/dev/null 2>&1
         yum remove -y docker* >/dev/null 2>&1
     fi
 }
@@ -141,8 +138,6 @@ function DockerEngine() {
     elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
         yum install -y yum-utils device-mapper-persistent-data lvm2
     fi
-
-    SOURCE_OFFICIAL="True"
 
     ## 配置 Docker CE 源
     if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
@@ -172,7 +167,7 @@ function DockerEngine() {
     fi
 
     ## 配置镜像加速器
-    [ ${REGISTRY_SOURCE_OFFICIAL} = "True" ] || ImageAccelerator
+    [ $REGISTRY_SOURCE_OFFICIAL == "True" ] || ImageAccelerator
 
     ## 启动 Docker Engine 服务
     systemctl stop docker >/dev/null 2>&1
@@ -198,53 +193,28 @@ function ImageAccelerator() {
     ## 配置镜像加速器
     echo -e '{\n  "registry-mirrors": ["https://SOURCE"]\n}' >${DockerConfig}
     sed -i "s/SOURCE/$REGISTRY_SOURCE/g" ${DockerConfig}
+    systemctl daemon-reload
 }
 
 ## 安装 Docker Compose
 function DockerCompose() {
-    CHOICE_C=$(echo -e '\n\033[32m└ 是否安装 Docker Compose [ Y/n ]：\033[0m')
-    read -p "${CHOICE_C}" INPUT
-    [ -z ${INPUT} ] && INPUT=Y
-    case $INPUT in
-    [Yy]*)
-        ## 卸载旧版本
-        [ -e ${DockerCompose} ] && rm -rf ${DockerCompose}
-        ## 选择下载方式
-        CHOICE_C1=$(echo -e '\n\033[32m  └ 是否使用国内代理进行下载 [ Y/n ]：\033[0m')
-        read -p "${CHOICE_C1}" INPUT
-        [ -z ${INPUT} ] && INPUT=Y
-        case $INPUT in
-        [Yy]*)
-            echo -e ''
-            curl -L ${PROXY_URL}${DOCKER_COMPOSE_URL} -o ${DockerCompose}
-            ;;
-        [Nn]*)
-            echo -e ''
-            curl -L ${DOCKER_COMPOSE_URL} -o ${DockerCompose}
-            ;;
-        *)
-            echo -e '\n\033[33m---------- 输入错误，默认不使用代理 ---------- \033[0m\n'
-            curl -L ${DOCKER_COMPOSE_URL} -o ${DockerCompose}
-            ;;
-        esac
-        chmod +x ${DockerCompose}
-        echo -e ''
-        ;;
-    [Nn]*)
-        echo -e '' 
-        ;;
-    *)
-        echo -e '\n\033[33m---------- 输入错误，默认不安装 Docker Compose ---------- \033[0m\n'
-        ;;
-    esac
+    echo -e ''
+    ## 卸载旧版本
+    [ -e ${DockerCompose} ] && rm -rf ${DockerCompose}
+    if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
+        curl -L ${PROXY_URL}${DOCKER_COMPOSE_URL} -o ${DockerCompose}
+    else
+        curl -L ${DOCKER_COMPOSE_URL} -o ${DockerCompose}
+    fi
+    chmod +x ${DockerCompose}
+    echo -e ''
 }
 
 ## 查看版本信息
 function ShowVersion() {
     docker info
-    echo -e ''
     [ -x ${DockerCompose} ] && docker-compose -v
-    echo -e ''
+    echo -e '\n\033[32m---------- 安装完成 ---------- \033[0m\n'
 }
 
 ## 选择 Docker CE & Docker Hub 源：
@@ -324,7 +294,6 @@ function ChooseMirrors() {
         ;;
     9)
         SOURCE="download.docker.com"
-        SOURCE_OFFICIAL="True"
         ;;
     *)
         SOURCE="mirrors.aliyun.com/docker-ce"
@@ -340,27 +309,35 @@ function ChooseMirrors() {
     case $INPUT in
     1)
         REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
+        REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     2)
         REGISTRY_SOURCE="mirror.ccs.tencentyun.com"
+        REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     3)
         REGISTRY_SOURCE="0bab0ef02500f24b0f31c00db79ffa00.mirror.swr.myhuaweicloud.com"
+        REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     4)
         REGISTRY_SOURCE="dockerhub.azk8s.com"
+        REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     5)
         REGISTRY_SOURCE="f1361db2.m.daocloud.io"
+        REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     6)
         REGISTRY_SOURCE="hub-mirror.c.163.com"
+        REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     7)
         REGISTRY_SOURCE="docker.mirrors.ustc.edu.cn"
+        REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     8)
         REGISTRY_SOURCE="gcr.io"
+        REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     9)
         REGISTRY_SOURCE="registry.docker-cn.com"
@@ -370,6 +347,43 @@ function ChooseMirrors() {
         REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
         echo -e '\033[33m---------- 输入错误，将默认使用阿里云镜像加速器 ---------- \033[0m'
         sleep 3s
+        ;;
+    esac
+
+    ## 选择是否安装 Docker Compose
+    if [ -x ${DockerCompose} ]; then
+        CHOICE_C=$(echo -e '\n\033[32m└ 检测到已安装 Docker Compose ，是否覆盖安装 [ Y/n ]：\033[0m')
+    else
+        CHOICE_C=$(echo -e '\n\033[32m└ 是否安装 Docker Compose [ Y/n ]：\033[0m')
+    fi
+    read -p "${CHOICE_C}" INPUT
+    [ -z ${INPUT} ] && INPUT=Y
+    case $INPUT in
+    [Yy]*)
+        DOCKER_COMPOSE="True"
+        ## 选择下载方式
+        CHOICE_C1=$(echo -e '\n\033[32m  └ 是否使用国内代理进行下载 [ Y/n ]：\033[0m')
+        read -p "${CHOICE_C1}" INPUT
+        [ -z ${INPUT} ] && INPUT=Y
+        case $INPUT in
+        [Yy]*)
+            DOCKER_COMPOSE_PROXY="True"
+            ;;
+        [Nn]*)
+            DOCKER_COMPOSE_PROXY="False"
+            ;;
+        *)
+            DOCKER_COMPOSE_PROXY="False"
+            echo -e '\n\033[33m---------- 输入错误，默认不使用代理 ---------- \033[0m\n'
+            ;;
+        esac
+        ;;
+    [Nn]*)
+        DOCKER_COMPOSE="False"
+        ;;
+    *)
+        DOCKER_COMPOSE="False"
+        echo -e '\n\033[33m---------- 输入错误，默认不安装 Docker Compose ---------- \033[0m\n'
         ;;
     esac
     echo -e ''
