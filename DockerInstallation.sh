@@ -272,8 +272,8 @@ function ChooseMirrors() {
     echo -e ' *  3)    华为云'
     echo -e ' *  4)    微软 Azure'
     echo -e ' *  5)    网易'
-    echo -e ' *  6)    搜狐'
-    echo -e ' *  7)    清华大学'
+    echo -e ' *  6)    清华大学'
+    echo -e ' *  7)    浙江大学'
     echo -e ' *  8)    中国科学技术大学'
     echo -e ' *  9)    官方（国际）'
     echo -e ''
@@ -314,10 +314,10 @@ function ChooseMirrors() {
         SOURCE="mirrors.163.com/docker-ce"
         ;;
     6)
-        SOURCE="mirrors.sohu.com/docker-ce"
+        SOURCE="mirrors.tuna.tsinghua.edu.cn/docker-ce"
         ;;
     7)
-        SOURCE="mirrors.tuna.tsinghua.edu.cn/docker-ce"
+        SOURCE="mirrors.zju.edu.cn/docker-ce"
         ;;
     8)
         SOURCE="mirrors.ustc.edu.cn/docker-ce"
