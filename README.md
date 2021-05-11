@@ -69,10 +69,10 @@
 ***
 
 ### 其它脚本
-- `Docker` 国内一键安装脚本
+- `Docker` 一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，目前脚本仅保证 Linux 发行版的最新稳定版可用，后续会加入 "手动选择安装版本" 功能，此脚本将在未来与此项目分离独立建项。_
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，支持境外 VPS，目前脚本仅保证 Linux 发行版可用，后续会加入 "手动选择安装版本" 功能，此脚本将在未来与此项目分离独立建项。_
 
 ***
 
