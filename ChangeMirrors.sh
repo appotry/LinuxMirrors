@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-5-12
+## Modified: 2021-05-14
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -85,7 +85,7 @@ function CombinationFunction() {
 function EnvJudgment() {
     ## 权限判定：
     if [ $UID -ne 0 ]; then
-        echo -e '\033[31m ------------ Permission no enough, please use user ROOT! ------------ \033[0m'
+        echo -e '\033[31m -------- Permission no enough, please use user ROOT! -------- \033[0m'
         exit
     fi
 }
@@ -124,7 +124,7 @@ function BackupMirrors() {
                     echo -e ''
                     ;;
                 *)
-                    echo -e '\n\033[33m---------- 输入错误，默认不覆盖备份文件 ---------- \033[0m\n'
+                    echo -e '\n\033[33m-------- 输入错误，默认不覆盖备份文件 -------- \033[0m\n'
                     ;;
                 esac
             else
@@ -144,14 +144,11 @@ function BackupMirrors() {
                 [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
                 [Yy]*)
-                    echo -e ''
                     cp -rf ${DebianExtendListDirectory}/* ${DebianExtendListDirectoryBackup} >/dev/null 2>&1
                     ;;
-                [Nn]*)
-                    echo -e ''
-                    ;;
+                [Nn]*) ;;
                 *)
-                    echo -e '\n\033[33m---------- 输入错误，默认不覆盖备份文件 ---------- \033[0m\n'
+                    echo -e '\n\033[33m-------- 输入错误，默认不覆盖备份文件 -------- \033[0m\n'
                     ;;
                 esac
             else
@@ -169,14 +166,14 @@ function BackupMirrors() {
                 [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
                 [Yy]*)
-                    echo -e ''
                     cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
+                    echo -e ''
                     ;;
-                [Nn]*)
+                [Nn]*) 
                     echo -e ''
                     ;;
                 *)
-                    echo -e '\n\033[33m---------- 输入错误，默认不覆盖备份文件 ---------- \033[0m\n'
+                    echo -e '\n\033[33m-------- 输入错误，默认不覆盖备份文件 -------- \033[0m\n'
                     ;;
                 esac
             else
@@ -186,7 +183,6 @@ function BackupMirrors() {
             fi
         else
             [ -d ${RedHatReposDirectory} ] || mkdir -p ${RedHatReposDirectory}
-            echo -e ''
         fi
     fi
     sleep 2s
@@ -244,7 +240,6 @@ function UpgradeSoftware() {
         [ -z ${INPUT} ] && INPUT=Y
         case $INPUT in
         [Yy]*)
-            echo -e ''
             if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
                 apt-get autoremove -y >/dev/null 2>&1
                 apt-get clean >/dev/null 2>&1
@@ -252,43 +247,39 @@ function UpgradeSoftware() {
                 yum autoremove -y >/dev/null 2>&1
                 yum clean packages -y >/dev/null 2>&1
             fi
-            echo -e '清理完毕\n'
+            echo -e '\n软件源更换完毕！\n'
             ;;
         [Nn]*)
             echo -e ''
             ;;
         *)
-            echo -e '\n\033[33m---------- 输入错误，默认不清理已下载的软件包缓存 ---------- \033[0m\n'
+            echo -e '\n\033[33m-------- 输入错误，默认不清理已下载的软件包缓存 -------- \033[0m\n'
             ;;
         esac
         ;;
     [Nn]*)
-        echo -e ''
+        echo -e '\n软件源更换完毕！\n'
         ;;
     *)
-        echo -e '\n\033[33m---------- 输入错误，默认不更新软件包 ---------- \033[0m\n'
+        echo -e '\n\033[33m-------- 输入错误，默认不更新软件包 -------- \033[0m\n'
         ;;
     esac
 }
 
 ## 关闭 防火墙 和 SELINUX
 function TurnOffFirewall() {
-    CHOICE_C=$(echo -e '\033[32m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
+    CHOICE_C=$(echo -e '\n\033[32m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
     read -p "${CHOICE_C}" INPUT
     [ -z ${INPUT} ] && INPUT=Y
     case $INPUT in
     [Yy]*)
-        echo -e ''
-        systemctl disable --now firewalld
+        systemctl disable --now firewalld >/dev/null 2>&1
         sed -i "7c SELINUX=disabled" /etc/selinux/config
-        setenforce 0
-        echo -e ''
+        setenforce 0 >/dev/null 2>&1
         ;;
-    [Nn]*)
-        echo -e ''
-        ;;
+    [Nn]*) ;;
     *)
-        echo -e '\n\033[33m---------- 输入错误，默认不关闭防火墙和 SELINUX ---------- \033[0m\n'
+        echo -e '\n\033[33m-------- 输入错误，默认不关闭防火墙和 SELINUX -------- \033[0m'
         ;;
     esac
 }
@@ -339,7 +330,7 @@ function RedHatMirrors() {
         sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=https://mirror.centos.org|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         sed -i "s|mirror.centos.org|${SOURCE}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         ## 更换基于 CentOS 的 EPEL 扩展国内源
-        CentOSEPELMirrors
+        [ ${EPEL_INSTALL} = "True" ] && CentOSEPELMirrors
     elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
         sed -i 's|^metalink=|#metalink=|g' \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}.repo \
@@ -357,87 +348,27 @@ function RedHatMirrors() {
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing.repo \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing-modular.repo
     fi
-    ## 关闭 防火墙 和 SELINUX
-    TurnOffFirewall
 }
 
 ## 更换基于 CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
 function CentOSEPELMirrors() {
-    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-        ## 判断是否已安装 EPEL 软件包
-        rpm -qa | grep epel-release -q
-        VERIFICATION_EPEL=$?
-        ## 判断 /etc/yum.repos.d 目录下是否存在 epel 扩展 repo 源文件
-        [ -d ${RedHatReposDirectory} ] && ls ${RedHatReposDirectory} | grep epel -q
-        VERIFICATION_EPELFILES=$?
-        ## 判断 /etc/yum.repos.d.bak 目录下是否存在 epel 扩展 repo 源文件
-        [ -d ${RedHatReposDirectoryBackup} ] && ls ${RedHatReposDirectoryBackup} | grep epel -q
-        VERIFICATION_EPELBACKUPFILES=$?
-
-        if [ ${VERIFICATION_EPEL} -eq 0 ]; then
-            CHOICE_D=$(echo -e '\033[32m└ 检测到系统已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
-            read -p "${CHOICE_D}" INPUT
-            [ -z ${INPUT} ] && INPUT=Y
-            case $INPUT in
-            [Yy]*)
-                [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDirectory}/epel*
-                [ ${VERIFICATION_EPELBACKUPFILES} -eq 0 ] && rm -rf ${RedHatReposDirectoryBackup}/epel*
-                ## 生成基于 CentOS 的 EPEL 官方扩展 repo 源文件
-                CentOSEPELReposCreate
-                ## 更换国内源
-                sed -i 's|^metalink=|#metalink=|g' ${RedHatReposDirectory}/epel*
-                sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
-                if [ ${CENTOS_VERSION} -eq "8" ]; then
-                    sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
-                elif [ ${CENTOS_VERSION} -eq "7" ]; then
-                    sed -i 's|^#baseurl=http|baseurl=https|g' ${RedHatReposDirectory}/epel*
-                fi
-                sed -i "s|download.fedoraproject.org/pub|${SOURCE}|g" ${RedHatReposDirectory}/epel*
-                rm -rf ${RedHatReposDirectory}/epel*rpmnew
-                echo -e ''
-                ;;
-            [Nn]*)
-                echo -e ''
-                ;;
-            *)
-                echo -e '\n\033[33m---------- 输入错误，默认不更换 EPEL 扩展国内源 ---------- \033[0m\n'
-                ;;
-            esac
-        else
-            CHOICE_E=$(echo -e '\033[32m└ 是否安装 EPEL 扩展源 [ Y/n ]：\033[0m')
-            read -p "${CHOICE_E}" INPUT
-            [ -z ${INPUT} ] && INPUT=Y
-            case $INPUT in
-            [Yy]*)
-                echo -e ''
-                [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDirectory}/epel*
-                [ ${VERIFICATION_EPELBACKUPFILES} -eq 0 ] && rm -rf ${RedHatReposDirectoryBackup}/epel*
-                yum makecache >/dev/null 2>&1
-                ## 生成基于 CentOS 的 EPEL 官方扩展 repo 源文件
-                CentOSEPELReposCreate
-                ## 安装 EPEL 软件包
-                yum install -y https://${SOURCE}/epel/epel-release-latest-${CENTOS_VERSION}.noarch.rpm
-                ## 更换国内源
-                sed -i 's|^metalink=|#metalink=|g' ${RedHatReposDirectory}/epel*
-                sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
-                if [ ${CENTOS_VERSION} -eq "8" ]; then
-                    sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
-                elif [ ${CENTOS_VERSION} -eq "7" ]; then
-                    sed -i 's|^#baseurl=http|baseurl=https|g' ${RedHatReposDirectory}/epel*
-                fi
-                sed -i "s|download.fedoraproject.org/pub|${SOURCE}|g" ${RedHatReposDirectory}/epel*
-                rm -rf ${RedHatReposDirectory}/epel*rpmnew
-                echo -e ''
-                ;;
-            [Nn]*)
-                echo -e ''
-                ;;
-            *)
-                echo -e '\n\033[33m---------- 输入错误，默认不安装 EPEL 扩展源 ---------- \033[0m\n'
-                ;;
-            esac
-        fi
+    ## 安装 EPEL 软件包
+    [ ${VERIFICATION_EPEL} -ne 0 ] && yum install -y https://mirrors.aliyun.com/epel/epel-release-latest-${CENTOS_VERSION}.noarch.rpm
+    ## 删除原有 EPEL 扩展 repo 源文件
+    [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDirectory}/epel*
+    [ ${VERIFICATION_EPELBACKUPFILES} -eq 0 ] && rm -rf ${RedHatReposDirectoryBackup}/epel*
+    ## 生成基于 CentOS 的 EPEL 官方扩展 repo 源文件
+    CentOSEPELReposCreate
+    ## 更换国内源
+    sed -i 's|^metalink=|#metalink=|g' ${RedHatReposDirectory}/epel*
+    sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
+    if [ ${CENTOS_VERSION} -eq "8" ]; then
+        sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
+    elif [ ${CENTOS_VERSION} -eq "7" ]; then
+        sed -i 's|^#baseurl=http|baseurl=https|g' ${RedHatReposDirectory}/epel*
     fi
+    sed -i "s|download.fedoraproject.org/pub|${SOURCE}|g" ${RedHatReposDirectory}/epel*
+    rm -rf ${RedHatReposDirectory}/epel*rpmnew
 }
 
 ## 选择国内源
@@ -486,7 +417,7 @@ function ChooseMirrors() {
         SOURCE="mirrors.cloud.tencent.com"
         ;;
     3)
-        SOURCE="mirrors.huaweicloud.com"
+        SOURCE="repo.huaweicloud.com"
         ;;
     4)
         SOURCE="mirrors.163.com"
@@ -514,10 +445,48 @@ function ChooseMirrors() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com"
-        echo -e '\n\033[33m---------- 输入错误，将默认使用阿里云作为国内源 ---------- \033[0m'
-        sleep 2s
+        echo -e '\n\033[33m-------- 输入错误，将默认使用阿里云作为国内源 -------- \033[0m'
+        sleep 1s
         ;;
     esac
+
+    ## 更换基于 CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
+    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
+        ## 判断是否已安装 EPEL 软件包
+        rpm -qa | grep epel-release -q
+        VERIFICATION_EPEL=$?
+        ## 判断 /etc/yum.repos.d 目录下是否存在 epel 扩展 repo 源文件
+        [ -d ${RedHatReposDirectory} ] && ls ${RedHatReposDirectory} | grep epel -q
+        VERIFICATION_EPELFILES=$?
+        ## 判断 /etc/yum.repos.d.bak 目录下是否存在 epel 扩展 repo 源文件
+        [ -d ${RedHatReposDirectoryBackup} ] && ls ${RedHatReposDirectoryBackup} | grep epel -q
+        VERIFICATION_EPELBACKUPFILES=$?
+
+        if [ ${VERIFICATION_EPEL} -eq 0 ]; then
+            CHOICE_D=$(echo -e '\n\033[32m└ 检测到系统已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
+        else
+            CHOICE_D=$(echo -e '\n\033[32m└ 是否安装 EPEL 扩展源 [ Y/n ]：\033[0m')
+        fi
+        read -p "${CHOICE_D}" INPUT
+        [ -z ${INPUT} ] && INPUT=Y
+        case $INPUT in
+        [Yy]*)
+            EPEL_INSTALL="True"
+            ;;
+        [Nn]*)
+            EPEL_INSTALL="False"
+            ;;
+        *)
+            echo -e '\n\033[33m-------- 输入错误，默认不更换 EPEL 扩展国内源 -------- \033[0m'
+            EPEL_INSTALL="False"
+            ;;
+        esac
+    fi
+
+    ## 关闭 防火墙 和 SELINUX
+    [ ${SYSTEM} = ${SYSTEM_REDHAT} ] && systemctl status firewalld | grep running -q
+    VERIFICATION_FIREWALL=$?
+    [ ${VERIFICATION_FIREWALL} -eq 0 ] && TurnOffFirewall
 }
 
 ## 生成基于 RedHat 发行版和及其衍生发行版的官方 repo 源文件
