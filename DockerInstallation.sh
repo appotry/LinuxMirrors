@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-5-12
+## Modified: 2021-5-13
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -28,7 +28,7 @@ SYSTEM_KALI=Kali
 SYSTEM_REDHAT=RedHat
 SYSTEM_CENTOS=CentOS
 SYSTEM_FEDORA=Fedora
-PROXY_URL=https://mirror.ghproxy.com/
+PROXY_URL=https://ghproxy.com/
 DOCKER_COMPOSE_URL=https://github.com/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)
 
 ## 判定当前系统基于 Debian or RedHat
@@ -95,7 +95,7 @@ function EnvJudgment() {
     ## 网络环境判定：
     ping -c 1 www.baidu.com >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo -e "\033[31m ----- Network connection error.Please check the network environment and try again later! ----- \033[0m"
+        echo -e "\033[31m ----- Network connection error, please check the network environment and try again later! ----- \033[0m"
         exit
     fi
 }
@@ -240,7 +240,7 @@ function ChooseMirrors() {
     echo -e ' *  1)    阿里云'
     echo -e ' *  2)    腾讯云'
     echo -e ' *  3)    华为云'
-    echo -e ' *  4)    微软 Azure'
+    echo -e ' *  4)    Azure'
     echo -e ' *  5)    网易'
     echo -e ' *  6)    清华大学'
     echo -e ' *  7)    浙江大学'
@@ -252,7 +252,7 @@ function ChooseMirrors() {
     echo -e ' *  1)    阿里云'
     echo -e ' *  2)    腾讯云'
     echo -e ' *  3)    华为云'
-    echo -e ' *  4)    微软 Azure'
+    echo -e ' *  4)    Azure'
     echo -e ' *  5)    DaoCloud'
     echo -e ' *  6)    网易'
     echo -e ' *  7)    中国科学技术大学'
@@ -275,7 +275,7 @@ function ChooseMirrors() {
         SOURCE="mirrors.cloud.tencent.com/docker-ce"
         ;;
     3)
-        SOURCE="mirrors.huaweicloud.com/docker-ce"
+        SOURCE="repo.huaweicloud.com/docker-ce"
         ;;
     4)
         SOURCE="mirror.azure.cn/docker-ce"
