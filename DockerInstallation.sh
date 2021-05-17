@@ -1,7 +1,7 @@
 #!/bin/env bash
 ## Author: SuperManito
 ## License: GPL-2.0
-## Modified: 2021-5-13
+## Modified: 2021-5-18
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -29,7 +29,8 @@ SYSTEM_REDHAT=RedHat
 SYSTEM_CENTOS=CentOS
 SYSTEM_FEDORA=Fedora
 PROXY_URL=https://ghproxy.com/
-DOCKER_COMPOSE_URL=https://github.com/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)
+DOCKER_COMPOSE_VERSION=1.29.2
+DOCKER_COMPOSE_URL=https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
 
 ## 判定当前系统基于 Debian or RedHat
 if [ -f ${RedHatRelease} ]; then
@@ -65,7 +66,7 @@ elif [ ${Architecture} = "armv7l*" ]; then
 elif [ $Architecture = "armv*" ]; then
     SYSTEM_ARCH=armhf
     SOURCE_ARCH=armhf
-elif [ $Architecture = "*i?86*" ]; then
+elif [ $Architecture = "*i686" ]; then
     SYSTEM_ARCH=x86_32
     echo -e '\n\033[31m---------- Docker Engine 不支持安装在 x86_32 架构的环境上 ---------- \033[0m'
     exit 1
@@ -100,7 +101,7 @@ function EnvJudgment() {
     fi
 }
 
-## 删除旧版本
+## 卸载旧版本
 function RemoveOldVersion() {
     ## 删除旧的 Docker CE 源
     if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
@@ -112,9 +113,9 @@ function RemoveOldVersion() {
     ## 卸载旧版本
     systemctl disable --now docker >/dev/null 2>&1
     if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
-        apt-get remove -y docker* runc >/dev/null 2>&1
+        apt-get remove -y docker-ce docker-ce-cli containerd.io runc >/dev/null 2>&1
     elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
-        yum remove -y docker* >/dev/null 2>&1
+        yum remove -y docker-ce docker-ce-cli containerd.io podman >/dev/null 2>&1
     fi
 }
 
@@ -124,6 +125,12 @@ function DockerEngine() {
     if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
         apt-get update
     elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+        systemctl status firewalld | grep running -q
+        if [ $? -eq 0 ]; then
+            systemctl disable --now firewalld >/dev/null 2>&1
+            sed -i "7c SELINUX=disabled" /etc/selinux/config
+            setenforce 0 >/dev/null 2>&1
+        fi
         yum makecache
     fi
     VERIFICATION_SOURCESYNC=$?
@@ -201,12 +208,27 @@ function DockerCompose() {
     echo -e ''
     ## 卸载旧版本
     [ -e ${DockerCompose} ] && rm -rf ${DockerCompose}
-    if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
-        curl -L ${PROXY_URL}${DOCKER_COMPOSE_URL} -o ${DockerCompose}
+    ## 根据环境架构选择安装方式
+    if [ $Architecture = "x86_64" ]; then
+        if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
+            curl -L ${PROXY_URL}${DOCKER_COMPOSE_URL} -o ${DockerCompose}
+        else
+            curl -L ${DOCKER_COMPOSE_URL} -o ${DockerCompose}
+        fi
+        chmod +x ${DockerCompose}
     else
-        curl -L ${DOCKER_COMPOSE_URL} -o ${DockerCompose}
+        if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+            apt-get install -y python3-pip
+        elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+            yum install -y python3-pip
+        fi
+        if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
+            pip3 install -i https://mirrors.aliyun.com/pypi/simple some-package
+        fi
+        pip3 install --upgrade pip
+        pip3 install docker-compose
+        [ $? -eq 0 ] || echo -e '\n\033[32m---------- Docker Compose 安装失败 ---------- \033[0m\n'
     fi
-    chmod +x ${DockerCompose}
     echo -e ''
 }
 
@@ -249,15 +271,16 @@ function ChooseMirrors() {
     echo -e ''
     echo -e ' Docker Hub'
     echo -e ''
-    echo -e ' *  1)    阿里云'
-    echo -e ' *  2)    腾讯云'
-    echo -e ' *  3)    华为云'
-    echo -e ' *  4)    Azure'
-    echo -e ' *  5)    DaoCloud'
-    echo -e ' *  6)    网易'
-    echo -e ' *  7)    中国科学技术大学'
-    echo -e ' *  8)    谷歌云（国际）'
-    echo -e ' *  9)    官方（国际）'
+    echo -e ' *  1)    阿里云（北京）'
+    echo -e ' *  2)    阿里云（杭州）'
+    echo -e ' *  3)    阿里云（广州）'
+    echo -e ' *  4)    腾讯云'
+    echo -e ' *  5)    华为云'
+    echo -e ' *  6)    Azure'
+    echo -e ' *  7)    DaoCloud'
+    echo -e ' *  8)    中国科学技术大学'
+    echo -e ' *  9)    谷歌云（国际）'
+    echo -e ' *  10)    官方（国际）'
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
@@ -304,48 +327,52 @@ function ChooseMirrors() {
     echo -e ''
 
     ## 定义镜像加速器
-    CHOICE_B=$(echo -e '\033[32m└ 请选择并输入您想使用的 Docker Hub 源 [ 1~9 ]：\033[0m')
+    CHOICE_B=$(echo -e '\033[32m└ 请选择并输入您想使用的 Docker Hub 源 [ 1~10 ]：\033[0m')
     read -p "${CHOICE_B}" INPUT
     case $INPUT in
     1)
-        REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
+        REGISTRY_SOURCE="registry.cn-beijing.aliyuncs.com"
         REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     2)
-        REGISTRY_SOURCE="mirror.ccs.tencentyun.com"
+        REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
         REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     3)
-        REGISTRY_SOURCE="0bab0ef02500f24b0f31c00db79ffa00.mirror.swr.myhuaweicloud.com"
+        REGISTRY_SOURCE="registry.cn-guangzhou.aliyuncs.com"
         REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     4)
-        REGISTRY_SOURCE="dockerhub.azk8s.com"
+        REGISTRY_SOURCE="mirror.ccs.tencentyun.com"
         REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     5)
-        REGISTRY_SOURCE="f1361db2.m.daocloud.io"
+        REGISTRY_SOURCE="0bab0ef02500f24b0f31c00db79ffa00.mirror.swr.myhuaweicloud.com"
         REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     6)
-        REGISTRY_SOURCE="hub-mirror.c.163.com"
+        REGISTRY_SOURCE="dockerhub.azk8s.com"
         REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     7)
-        REGISTRY_SOURCE="docker.mirrors.ustc.edu.cn"
+        REGISTRY_SOURCE="f1361db2.m.daocloud.io"
         REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     8)
-        REGISTRY_SOURCE="gcr.io"
+        REGISTRY_SOURCE="docker.mirrors.ustc.edu.cn"
         REGISTRY_SOURCE_OFFICIAL="False"
         ;;
     9)
+        REGISTRY_SOURCE="gcr.io"
+        REGISTRY_SOURCE_OFFICIAL="False"
+        ;;
+    10)
         REGISTRY_SOURCE="registry.docker-cn.com"
         REGISTRY_SOURCE_OFFICIAL="True"
         ;;
     *)
         REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
-        echo -e '\033[33m---------- 输入错误，将默认使用阿里云镜像加速器 ---------- \033[0m'
+        echo -e '\033[33m---------- 输入错误，将默认使用阿里云（杭州）镜像加速器 ---------- \033[0m'
         sleep 3s
         ;;
     esac
