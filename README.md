@@ -57,7 +57,7 @@
 > 2. 为了适配所有环境，请使用 `Root` 用户执行脚本，切换命令为 `sudo -i` ，如遇报错请查看常见问题与帮助。
 > 3. 如果您使用的环境没有安装或不支持简体中文环境，请通过 `SSH客户端工具` 使用，否则将无法正确选择交互内容。
 > 4. 执行脚本过程中会自动备份原有源无需手动备份，期间会在终端输出多个主观选择交互内容，可按回车键快速确认。
-> 5. 脚本支持在原有源配置错误或者不存在的情况下使用，并且可以重复使用；脚本变更的软件源默认使用 `Https 协议` 。
+> 5. 脚本支持在原有源配置错误或者不存在的情况下使用，并且可以重复使用；脚本变更的软件源默认使用 `Https 协议`。
 
 - `GNU/Linux` 一键更换国内软件源脚本
 
@@ -72,7 +72,7 @@
 - `Docker` 一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，支持国内外 VPS 使用，后续会加入 "手动选择安装版本" 功能，此脚本将在未来与此项目分离独立建项。_
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，支持 `VPS`环境和 `ARM`架构。_
 
 ***
 
