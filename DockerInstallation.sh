@@ -1,7 +1,26 @@
 #!/bin/env bash
 ## Author: SuperManito
+## Modified: 2021-5-19
 ## License: GPL-2.0
-## Modified: 2021-5-18
+## Repository: https://github.com/SuperManito/LinuxMirrors
+##             https://gitee.com/SuperManito/LinuxMirrors
+
+function AuthorAutograph() {
+    echo '
+             __  ___          __        ____       
+            /  |/  /___ _____/ /__     / __ )__  __
+           / /|_/ / __ `/ __  / _ \   / __  / / / /
+          / /  / / /_/ / /_/ /  __/  / /_/ / /_/ / 
+         /_/  /_/\__,_/\__,_/\___/  /_____/\__, /  
+                                          /____/   
+   _____                       __  ___            _ __      
+  / ___/__  ______  ___  _____/  |/  /___ _____  (_) /_____ 
+  \__ \/ / / / __ \/ _ \/ ___/ /|_/ / __ `/ __ \/ / __/ __ \
+ ___/ / /_/ / /_/ /  __/ /  / /  / / /_/ / / / / / /_/ /_/ /
+/____/\__,_/ .___/\___/_/  /_/  /_/\__,_/_/ /_/_/\__/\____/ 
+          /_/         
+'
+}
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -12,14 +31,7 @@ DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
 RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
 
-DockerSourceList=${DebianExtendListDirectory}/docker.list
-DockerRepo=${RedHatReposDirectory}/docker-ce.repo
-DockerDirectory=/etc/docker
-DockerConfig=${DockerDirectory}/daemon.json
-DockerConfigBackup=${DockerDirectory}/daemon.json.bak
-DockerCompose=/usr/local/bin/docker-compose
-
-## 定义变量
+## 定义系统变量
 DebianRelease=lsb_release
 Architecture=$(uname -m)
 SYSTEM_DEBIAN=Debian
@@ -28,76 +40,102 @@ SYSTEM_KALI=Kali
 SYSTEM_REDHAT=RedHat
 SYSTEM_CENTOS=CentOS
 SYSTEM_FEDORA=Fedora
+
+## 定义 Docker 相关变量
+DockerSourceList=${DebianExtendListDirectory}/docker.list
+DockerRepo=${RedHatReposDirectory}/docker-ce.repo
+DockerDirectory=/etc/docker
+DockerConfig=${DockerDirectory}/daemon.json
+DockerConfigBackup=${DockerDirectory}/daemon.json.bak
+DockerCompose=/usr/local/bin/docker-compose
 PROXY_URL=https://ghproxy.com/
 DOCKER_COMPOSE_VERSION=1.29.2
 DOCKER_COMPOSE_URL=https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
 
-## 判定当前系统基于 Debian or RedHat
-if [ -f ${RedHatRelease} ]; then
-    SYSTEM=${SYSTEM_REDHAT}
-else
-    SYSTEM=${SYSTEM_DEBIAN}
-fi
-
-## 系统判定变量（名称、版本、版本号、使用架构）
-if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-    SYSTEM_NAME=$(${DebianRelease} -is)
-    SYSTEM_VERSION=$(${DebianRelease} -cs)
-    SYSTEM_VERSION_NUMBER=$(${DebianRelease} -rs)
-elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-    SYSTEM_NAME=$(cat ${RedHatRelease} | cut -c1-6)
-    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-        SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c22-24)
-        CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c22)
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-        SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c16-18)
-    fi
-fi
-
-if [ $Architecture = "x86_64" ]; then
-    SYSTEM_ARCH=x86_64
-    SOURCE_ARCH=amd64
-elif [ $Architecture = "aarch64" ]; then
-    SYSTEM_ARCH=arm64
-    SOURCE_ARCH=arm64
-elif [ ${Architecture} = "armv7l*" ]; then
-    SYSTEM_ARCH=armv7
-    SOURCE_ARCH=armhf
-elif [ $Architecture = "armv*" ]; then
-    SYSTEM_ARCH=armhf
-    SOURCE_ARCH=armhf
-elif [ $Architecture = "*i686" ]; then
-    SYSTEM_ARCH=x86_32
-    echo -e '\n\033[31m---------- Docker Engine 不支持安装在 x86_32 架构的环境上 ---------- \033[0m'
-    exit 1
-fi
-
-## 定义更新源分支名称
-SOURCE_BRANCH=${SYSTEM_NAME,,}
-
 ## 组合各个函数模块
 function CombinationFunction() {
+    PermissionJudgment && NetWorkJudgment && clear
     EnvJudgment
-    clear
+    TurnOffFirewall
     ChooseMirrors
     RemoveOldVersion
     DockerEngine
     [ ${DOCKER_COMPOSE} = "True" ] && DockerCompose
     ShowVersion
+    AuthorAutograph
+}
+
+## 系统判定变量
+function EnvJudgment() {
+    ## 判定当前系统基于 Debian or RedHat
+    if [ -f ${RedHatRelease} ]; then
+        SYSTEM=${SYSTEM_REDHAT}
+    else
+        SYSTEM=${SYSTEM_DEBIAN}
+    fi
+    ## 判定系统名称、版本、版本号
+    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+        SYSTEM_NAME=$(${DebianRelease} -is)
+        SYSTEM_VERSION=$(${DebianRelease} -cs)
+        SYSTEM_VERSION_NUMBER=$(${DebianRelease} -rs)
+    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+        SYSTEM_NAME=$(cat ${RedHatRelease} | cut -c1-6)
+        if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c22-24)
+            CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c22)
+        elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c16-18)
+        fi
+    fi
+    ## 判定系统处理器架构
+    if [ ${Architecture} = "x86_64" ]; then
+        SYSTEM_ARCH=x86_64
+        SOURCE_ARCH=amd64
+    elif [ ${Architecture} = "aarch64" ]; then
+        SYSTEM_ARCH=arm64
+        SOURCE_ARCH=arm64
+    elif [ ${Architecture} = "armv7l" ]; then
+        SYSTEM_ARCH=armv7
+        SOURCE_ARCH=armhf
+    elif [ ${Architecture} = "armv*" ]; then
+        SYSTEM_ARCH=${Architecture}
+        SOURCE_ARCH=armhf
+    elif [ ${Architecture} = "i686" ]; then
+        SYSTEM_ARCH=x86_32
+        echo -e '\n\033[31m---------- Docker Engine 不支持安装在 x86_32 架构的环境上 ----------\033[0m'
+        exit
+    else
+        SYSTEM_ARCH=${Architecture}
+        SOURCE_ARCH=${Architecture}
+    fi
+    ## 定义更新源分支名称
+    SOURCE_BRANCH=${SYSTEM_NAME,,}
 }
 
 ## 环境判定：
-function EnvJudgment() {
+function PermissionJudgment() {
     ## 权限判定：
     if [ $UID -ne 0 ]; then
-        echo -e '\033[31m ------------ Permission no enough, please use user ROOT! ------------ \033[0m'
+        echo -e '\033[31m ---------- Permission no enough, please use user ROOT! ---------- \033[0m'
         exit
     fi
+}
+function NetWorkJudgment() {
     ## 网络环境判定：
     ping -c 1 www.baidu.com >/dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo -e "\033[31m ----- Network connection error, please check the network environment and try again later! ----- \033[0m"
         exit
+    fi
+}
+
+## 关闭 防火墙 和 SELINUX
+function TurnOffFirewall() {
+    systemctl status firewalld | grep running -q
+    if [ $? -eq 0 ]; then
+        systemctl disable --now firewalld >/dev/null 2>&1
+        sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1
+        setenforce 0 >/dev/null 2>&1
     fi
 }
 
@@ -110,12 +148,26 @@ function RemoveOldVersion() {
     elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
         rm -rf ${DockerRepo}
     fi
-    ## 卸载旧版本
-    systemctl disable --now docker >/dev/null 2>&1
+    ## 检测是否已安装旧版软件包
     if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
-        apt-get remove -y docker-ce docker-ce-cli containerd.io runc >/dev/null 2>&1
+        dpkg -l | grep docker -q
     elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
-        yum remove -y docker-ce docker-ce-cli containerd.io podman >/dev/null 2>&1
+        rpm -qa | grep docker -q
+    fi
+    if [ $? -eq 0 ]; then
+        echo -e '\033[33m[*] 检测到已安装旧版本，正在卸载......\033[0m\n'
+        ## 停止旧版本进程
+        systemctl status docker | grep running -q
+        if [ $? -eq 0 ]; then
+            systemctl disable --now docker >/dev/null 2>&1
+            sleep 3s
+        fi
+        ## 删除旧的软件包
+        if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+            apt-get remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
+        elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+            yum remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
+        fi
     fi
 }
 
@@ -135,11 +187,11 @@ function DockerEngine() {
     fi
     VERIFICATION_SOURCESYNC=$?
     if [ ${VERIFICATION_SOURCESYNC} -ne 0 ]; then
-        echo -e '\033[31m ------------ 软件源同步出错，请先确保软件包管理工具可用！ ------------ \033[0m'
+        echo -e '\033[31m ---------- 软件源同步出错，请先确保软件包管理工具可用 ---------- \033[0m'
         exit
     fi
 
-    ## 安装环境软件包
+    ## 安装环境所需的软件包
     if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
         apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
     elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
@@ -209,7 +261,7 @@ function DockerCompose() {
     ## 卸载旧版本
     [ -e ${DockerCompose} ] && rm -rf ${DockerCompose}
     ## 根据环境架构选择安装方式
-    if [ $Architecture = "x86_64" ]; then
+    if [ ${Architecture} = "x86_64" ]; then
         if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
             curl -L ${PROXY_URL}${DOCKER_COMPOSE_URL} -o ${DockerCompose}
         else
@@ -224,19 +276,29 @@ function DockerCompose() {
         fi
         if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
             pip3 install -i https://mirrors.aliyun.com/pypi/simple some-package
+            [ $? -ne 0 ] && pip3 install --upgrade pip
         fi
         pip3 install --upgrade pip
         pip3 install docker-compose
-        [ $? -eq 0 ] || echo -e '\n\033[32m---------- Docker Compose 安装失败 ---------- \033[0m\n'
+        [ $? -eq 0 ] || echo -e '\n\033[32m---------- Docker Compose 安装失败 ----------\033[0m\n'
     fi
     echo -e ''
 }
 
 ## 查看版本信息
 function ShowVersion() {
-    docker info
-    [ -x ${DockerCompose} ] && docker-compose -v
-    echo -e '\n\033[32m---------- 安装完成 ---------- \033[0m\n'
+    echo -e '\n\033[32m---------- 查看版本 ----------\033[0m\n'
+    docker -v
+    VERIFICATION_DOCKER=$?
+    if [ ${VERIFICATION_DOCKER} -eq 0 ]; then
+        [ -x ${DockerCompose} ] && docker-compose -v
+        echo -e '\n\033[32m---------- 安装成功 ----------\033[0m'
+    else
+        echo -e '\n\033[31m---------- 安装失败 ----------\033[0m'
+        exit
+    fi
+    systemctl status firewalld | grep running -q
+    [ $? -ne 0 ] && echo -e '\n\033[31m--- 检测到 Docker 进程异常，可能由于重新安装导致，请执行 systemctl start docker 命令手动启动 ---\033[0m'
 }
 
 ## 选择 Docker CE & Docker Hub 源：
@@ -280,7 +342,7 @@ function ChooseMirrors() {
     echo -e ' *  7)    DaoCloud'
     echo -e ' *  8)    中国科学技术大学'
     echo -e ' *  9)    谷歌云（国际）'
-    echo -e ' *  10)    官方（国际）'
+    echo -e ' *  10)   官方（国际）'
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
@@ -288,6 +350,7 @@ function ChooseMirrors() {
     echo -e "            系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
+    ## 定义 Docker CE 源
     CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的 Docker CE 源 [ 1~9 ]：\033[0m')
     read -p "${CHOICE_A}" INPUT
     case $INPUT in
@@ -320,13 +383,12 @@ function ChooseMirrors() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com/docker-ce"
-        echo -e '\n\033[33m---------- 输入错误，Docker CE 源将默认使用阿里云 ---------- \033[0m'
+        echo -e '\n\033[33m---------- 输入错误，Docker CE 源将默认使用阿里云 ----------\033[0m'
         sleep 2s
         ;;
     esac
     echo -e ''
-
-    ## 定义镜像加速器
+    ## 定义 Docker Hub 源（镜像加速器）
     CHOICE_B=$(echo -e '\033[32m└ 请选择并输入您想使用的 Docker Hub 源 [ 1~10 ]：\033[0m')
     read -p "${CHOICE_B}" INPUT
     case $INPUT in
@@ -372,7 +434,7 @@ function ChooseMirrors() {
         ;;
     *)
         REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
-        echo -e '\033[33m---------- 输入错误，将默认使用阿里云（杭州）镜像加速器 ---------- \033[0m'
+        echo -e '\033[33m---------- 输入错误，将默认使用阿里云（杭州）镜像加速器 ----------\033[0m'
         sleep 3s
         ;;
     esac
@@ -401,7 +463,7 @@ function ChooseMirrors() {
             ;;
         *)
             DOCKER_COMPOSE_PROXY="False"
-            echo -e '\n\033[33m---------- 输入错误，默认不使用代理 ---------- \033[0m\n'
+            echo -e '\n\033[33m---------- 输入错误，默认不使用 ----------\033[0m\n'
             ;;
         esac
         ;;
@@ -410,10 +472,13 @@ function ChooseMirrors() {
         ;;
     *)
         DOCKER_COMPOSE="False"
-        echo -e '\n\033[33m---------- 输入错误，默认不安装 Docker Compose ---------- \033[0m\n'
+        echo -e '\n\033[33m---------- 输入错误，默认不安装 ----------\033[0m\n'
         ;;
     esac
     echo -e ''
+
+    sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1
+    setenforce 0 >/dev/null 2>&1
 }
 
 CombinationFunction
