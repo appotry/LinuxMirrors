@@ -22,7 +22,8 @@
 |          | <a href="https://ubuntu.com"><img src="./icon/ubuntu.svg" width="14" height="14"/></a>&nbsp;Ubuntu |  <a href="https://www.debian.org"><img src="./icon/debian.svg" width="14" height="14"/></a>&nbsp;Debian  |  <a href="https://www.kali.org"><img src="./icon/kali.svg" width="14" height="14"/></a>&nbsp;Kali Linux  |  <a href="https://getfedora.org"><img src="./icon/fedora.svg" width="14" height="14"/></a>&nbsp;Fedora  |  <a href="https://www.centos.org"><img src="./icon/centos.svg" width="16" height="16"/></a>&nbsp;CentOS  |
 | :------: | :------: | :------: | :------: | :------: | :------: |
 | 支持的版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
-> 目前仅支持基于 Debian 与 Redhat 的发行版和及其部分衍生发行版
+> 目前仅支持上述基于 Debian 与 Redhat 系的发行版和及其部分衍生版本 \
+> 同样支持上述衍生版本的衍生发行版，例如 `Armbian` `Kbuntu` `Xbuntu`
 
 ### 脚本当前使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
@@ -42,10 +43,10 @@
 
 ### 脚本执行流程
 - └ 选择国内源 `交互`
-  - └ 系统如果是 CentOS 选择是否安装/覆盖 EPEL 扩展国内源 `交互`
-- └ 检测 防火墙 和 SELINUX 如果开启选择是否关闭 `交互`
+  - └ 检测如果是 CentOS 选择是否安装/覆盖 EPEL 扩展国内源 `交互`
+- └ 检测如果开启 防火墙 和 SELINUX 选择是否关闭 `交互`
 - └ 备份原有源
-  - └ 检测到重复的备份文件选择是否覆盖 `交互`
+  - └ 检测如果存在重复的备份文件选择是否覆盖 `交互`
 - └ 更换国内源
 - └ 选择是否更新软件包 `交互`
   - └ 选择是否清理已下载的软件包缓存 `交互`
@@ -72,7 +73,7 @@
 - `Docker` 一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，支持 `VPS`环境和 `ARM`架构。_
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`镜像加速器，支持国内外云服务器和 `ARM`架构处理器环境使用。_
 
 ***
 
