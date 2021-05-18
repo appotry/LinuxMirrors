@@ -84,7 +84,7 @@ function EnvJudgment() {
         SYSTEM_ARCH=armv7
     elif [ ${Architecture} = "arm*" ]; then
         SYSTEM_ARCH=armhf
-    elif [ ${Architecture} = "*i686*" ]; then
+    elif [ ${Architecture} = "i686" ]; then
         SYSTEM_ARCH=x86_32
     else
         SYSTEM_ARCH=${Architecture}
@@ -118,7 +118,7 @@ function TurnOffFirewall() {
     case $INPUT in
     [Yy]*)
         systemctl disable --now firewalld >/dev/null 2>&1
-        sed -i "7c SELINUX=disabled" /etc/selinux/config
+        sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1
         setenforce 0 >/dev/null 2>&1
         ;;
     [Nn]*) ;;
