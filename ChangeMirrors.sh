@@ -1,7 +1,25 @@
 #!/bin/env bash
 ## Author: SuperManito
+## Modified: 2021-5-19
 ## License: GPL-2.0
-## Modified: 2021-05-14
+## Repository: https://github.com/SuperManito/LinuxMirrors
+
+function AuthorAutograph() {
+    echo '
+             __  ___          __        ____       
+            /  |/  /___ _____/ /__     / __ )__  __
+           / /|_/ / __ `/ __  / _ \   / __  / / / /
+          / /  / / /_/ / /_/ /  __/  / /_/ / /_/ / 
+         /_/  /_/\__,_/\__,_/\___/  /_____/\__, /  
+                                          /____/   
+   _____                       __  ___            _ __      
+  / ___/__  ______  ___  _____/  |/  /___ _____  (_) /_____ 
+  \__ \/ / / / __ \/ _ \/ ___/ /|_/ / __ `/ __ \/ / __/ __ \
+ ___/ / /_/ / /_/ /  __/ /  / /  / / /_/ / / / / / /_/ /_/ /
+/____/\__,_/ .___/\___/_/  /_/  /_/\__,_/_/ /_/_/\__/\____/ 
+          /_/         
+'
+}
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -12,7 +30,7 @@ DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
 RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
 
-## 定义变量
+## 定义系统变量
 DebianRelease=lsb_release
 Architecture=$(uname -m)
 SYSTEM_DEBIAN=Debian
@@ -22,70 +40,71 @@ SYSTEM_REDHAT=RedHat
 SYSTEM_CENTOS=CentOS
 SYSTEM_FEDORA=Fedora
 
-## 判定当前系统基于 Debian or RedHat
-if [ -f ${RedHatRelease} ]; then
-    SYSTEM=${SYSTEM_REDHAT}
-else
-    SYSTEM=${SYSTEM_DEBIAN}
-fi
-
-## 系统判定变量（名称、版本、版本号、使用架构）
-if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-    SYSTEM_NAME=$(${DebianRelease} -is)
-    SYSTEM_VERSION=$(${DebianRelease} -cs)
-    SYSTEM_VERSION_NUMBER=$(${DebianRelease} -rs)
-elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-    SYSTEM_NAME=$(cat ${RedHatRelease} | cut -c1-6)
-    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-        SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c22-24)
-        CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c22)
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-        SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c16-18)
-    fi
-fi
-
-if [ ${Architecture} = "x86_64" ]; then
-    SYSTEM_ARCH=x86_64
-elif [ ${Architecture} = "aarch64" ]; then
-    SYSTEM_ARCH=arm64
-elif [ ${Architecture} = "armv7l*" ]; then
-    SYSTEM_ARCH=armv7
-elif [ ${Architecture} = "arm*" ]; then
-    SYSTEM_ARCH=armhf
-elif [ ${Architecture} = "*i686*" ]; then
-    SYSTEM_ARCH=x86_32
-else
-    SYSTEM_ARCH=${Architecture}
-fi
-
-## 定义更新源分支名称
-if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
-    if [ ${Architecture} = "x86_64" ] || [ ${Architecture} = "*i?86*" ]; then
-        SOURCE_BRANCH=${SYSTEM_NAME,,}
-    else
-        SOURCE_BRANCH=ubuntu-ports
-    fi
-else
-    SOURCE_BRANCH=${SYSTEM_NAME,,}
-fi
-
-clear ## 清空终端所有已显示的内容
-
-## 组合各个函数模块
+## 组合函数
 function CombinationFunction() {
+    PermissionJudgment && clear
     EnvJudgment
     ChooseMirrors
     BackupMirrors
     RemoveOldMirrorsFiles
     ChangeMirrors
     UpgradeSoftware
+    AuthorAutograph
+}
+
+## 系统判定变量
+function EnvJudgment() {
+    ## 判定当前系统基于 Debian or RedHat
+    if [ -f ${RedHatRelease} ]; then
+        SYSTEM=${SYSTEM_REDHAT}
+    else
+        SYSTEM=${SYSTEM_DEBIAN}
+    fi
+    ## 判定系统名称、版本、版本号
+    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+        SYSTEM_NAME=$(${DebianRelease} -is)
+        SYSTEM_VERSION=$(${DebianRelease} -cs)
+        SYSTEM_VERSION_NUMBER=$(${DebianRelease} -rs)
+    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+        SYSTEM_NAME=$(cat ${RedHatRelease} | cut -c1-6)
+        if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c22-24)
+            CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c22)
+        elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c16-18)
+        fi
+    fi
+    ## 判定系统处理器架构
+    if [ ${Architecture} = "x86_64" ]; then
+        SYSTEM_ARCH=x86_64
+    elif [ ${Architecture} = "aarch64" ]; then
+        SYSTEM_ARCH=arm64
+    elif [ ${Architecture} = "armv7l" ]; then
+        SYSTEM_ARCH=armv7
+    elif [ ${Architecture} = "arm*" ]; then
+        SYSTEM_ARCH=armhf
+    elif [ ${Architecture} = "*i686*" ]; then
+        SYSTEM_ARCH=x86_32
+    else
+        SYSTEM_ARCH=${Architecture}
+    fi
+    ## 定义更新源分支名称
+    if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
+        if [ ${Architecture} = "x86_64" ] || [ ${Architecture} = "*i?86*" ]; then
+            SOURCE_BRANCH=${SYSTEM_NAME,,}
+        else
+            SOURCE_BRANCH=ubuntu-ports
+        fi
+    else
+        SOURCE_BRANCH=${SYSTEM_NAME,,}
+    fi
 }
 
 ## 环境判定：
-function EnvJudgment() {
+function PermissionJudgment() {
     ## 权限判定：
     if [ $UID -ne 0 ]; then
-        echo -e '\033[31m -------- Permission no enough, please use user ROOT! -------- \033[0m'
+        echo -e '\033[31m -------- Permission no enough, please use user ROOT! ------------ \033[0m'
         exit
     fi
 }
@@ -112,7 +131,7 @@ function BackupMirrors() {
         ## /etc/apt/sources.list
         if [ -s ${DebianSourceList} ]; then
             if [ -s ${DebianSourceListBackup} ]; then
-                CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP1=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 源文件，是否覆盖备份 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP1}" INPUT
                 [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
@@ -124,12 +143,13 @@ function BackupMirrors() {
                     echo -e ''
                     ;;
                 *)
-                    echo -e '\n\033[33m-------- 输入错误，默认不覆盖备份文件 -------- \033[0m\n'
+                    echo -e '\n\033[33m------------ 输入错误，默认不覆盖 ------------\033[0m\n'
                     ;;
                 esac
             else
                 cp -rf ${DebianSourceList} ${DebianSourceListBackup} >/dev/null 2>&1
                 echo -e "\n\033[32m└ 已备份原有 list 源文件至 ${DebianSourceListBackup} ... \033[0m\n"
+                sleep 1s
             fi
         else
             [ -f ${DebianSourceList} ] || touch ${DebianSourceList}
@@ -139,7 +159,7 @@ function BackupMirrors() {
         ## /etc/apt/sources.list.d
         if [ -d ${DebianExtendListDirectory} ] && [ ${VERIFICATION_FILES} -eq 0 ]; then
             if [ -d ${DebianExtendListDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
-                CHOICE_BACKUP2=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 第三方源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP2=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 list 第三方源文件，是否覆盖备份 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP2}" INPUT
                 [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
@@ -148,20 +168,21 @@ function BackupMirrors() {
                     ;;
                 [Nn]*) ;;
                 *)
-                    echo -e '\n\033[33m-------- 输入错误，默认不覆盖备份文件 -------- \033[0m\n'
+                    echo -e '\n\033[33m------------ 输入错误，默认不覆盖 ------------\033[0m\n'
                     ;;
                 esac
             else
                 [ -d ${DebianExtendListDirectoryBackup} ] || mkdir -p ${DebianExtendListDirectoryBackup}
                 cp -rf ${DebianExtendListDirectory}/* ${DebianExtendListDirectoryBackup} >/dev/null 2>&1
                 echo -e "\033[32m└ 已备份原有 list 第三方源文件至 ${DebianExtendListDirectoryBackup} 目录... \033[0m\n"
+                sleep 1s
             fi
         fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         ## /etc/yum.repos.d
         if [ ${VERIFICATION_FILES} -eq 0 ]; then
             if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
-                CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 repo 源文件，是否覆盖备份文件 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP3=$(echo -e "\n\033[32m└ 检测到系统存在已备份的 repo 源文件，是否覆盖备份 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP3}" INPUT
                 [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
@@ -169,23 +190,24 @@ function BackupMirrors() {
                     cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
                     echo -e ''
                     ;;
-                [Nn]*) 
+                [Nn]*)
                     echo -e ''
                     ;;
                 *)
-                    echo -e '\n\033[33m-------- 输入错误，默认不覆盖备份文件 -------- \033[0m\n'
+                    echo -e '\n\033[33m------------ 输入错误，默认不覆盖 ------------\033[0m\n'
                     ;;
                 esac
             else
                 [ -d ${RedHatReposDirectoryBackup} ] || mkdir -p ${RedHatReposDirectoryBackup}
                 cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
                 echo -e "\n\033[32m└ 已备份原有 repo 源文件至 ${RedHatReposDirectoryBackup} 目录... \033[0m\n"
+                sleep 1s
             fi
         else
             [ -d ${RedHatReposDirectory} ] || mkdir -p ${RedHatReposDirectory}
         fi
     fi
-    sleep 2s
+    echo -e ''
 }
 
 ## 删除原有源
@@ -208,23 +230,39 @@ function RemoveOldMirrorsFiles() {
 function ChangeMirrors() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         DebianMirrors
+        echo -e '\033[32m------------ 开始更新软件源 ------------\033[0m\n'
         apt-get update
         VERIFICATION_SOURCESYNC=$?
+        if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
+            echo -e '\n\033[32m------------ 更新软件源结束 ------------\033[0m'
+        else
+            echo -e '\n\033[31m------------ 更新软件源失败，请重新执行脚本 ------------\033[0m\n'
+            echo -e '如果仍然更新失败那么可能由以下原因导致'
+            echo -e '1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等'
+            echo -e '2. 软件源问题：国内部分小众镜像站可能不支持您的操作系统，可访问其官网验证\n'
+            exit
+        fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         RedHatMirrors
         yum clean all >/dev/null 2>&1
+        echo -e '\033[32m------------ 开始同步软件源 ------------\033[0m\n'
         yum makecache
         VERIFICATION_SOURCESYNC=$?
+        if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
+            echo -e '\n\033[32m------------ 同步软件源结束 ------------\033[0m'
+        else
+            echo -e '\n\033[31m------------ 同步软件源失败，请重新执行脚本 ------------\033[0m\n'
+            echo -e '如果仍然同步失败那么可能由以下原因导致'
+            echo -e '1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等'
+            echo -e '2. 软件源问题：国内部分小众镜像站可能不支持您的操作系统，可访问其官网验证\n'
+            exit
+        fi
     fi
 }
 
 ## 更新软件包
 function UpgradeSoftware() {
-    if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
-        CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包 [ Y/n ]：\033[0m')
-    else
-        CHOICE_B=$(echo -e '\n\033[32m└ 检测到软件源同步失败，是否更新软件包 [ Y/n ]：\033[0m')
-    fi
+    CHOICE_B=$(echo -e '\n\033[32m└ 是否更新软件包 [ Y/n ]：\033[0m')
     read -p "${CHOICE_B}" INPUT
     [ -z ${INPUT} ] && INPUT=Y
     case $INPUT in
@@ -247,23 +285,22 @@ function UpgradeSoftware() {
                 yum autoremove -y >/dev/null 2>&1
                 yum clean packages -y >/dev/null 2>&1
             fi
-            echo -e '\n软件源更换完毕！\n'
+
             ;;
         [Nn]*)
             echo -e ''
             ;;
         *)
-            echo -e '\n\033[33m-------- 输入错误，默认不清理已下载的软件包缓存 -------- \033[0m\n'
+            echo -e '\n\033[33m------------ 输入错误，默认不清理 ------------\033[0m'
             ;;
         esac
         ;;
-    [Nn]*)
-        echo -e '\n软件源更换完毕！\n'
-        ;;
+    [Nn]*) ;;
     *)
-        echo -e '\n\033[33m-------- 输入错误，默认不更新软件包 -------- \033[0m\n'
+        echo -e '\n\033[33m------------ 输入错误，默认不更新 ------------\033[0m'
         ;;
     esac
+    echo -e '\n\033[32m------------ 软件源更换成功 ------------\033[0m\n'
 }
 
 ## 关闭 防火墙 和 SELINUX
@@ -279,7 +316,7 @@ function TurnOffFirewall() {
         ;;
     [Nn]*) ;;
     *)
-        echo -e '\n\033[33m-------- 输入错误，默认不关闭防火墙和 SELINUX -------- \033[0m'
+        echo -e '\n\033[33m------------ 输入错误，默认不关闭 ------------\033[0m'
         ;;
     esac
 }
@@ -445,7 +482,7 @@ function ChooseMirrors() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com"
-        echo -e '\n\033[33m-------- 输入错误，将默认使用阿里云作为国内源 -------- \033[0m'
+        echo -e '\n\033[33m------------ 输入错误，将默认使用阿里云作为国内源 ------------\033[0m'
         sleep 1s
         ;;
     esac
@@ -477,7 +514,7 @@ function ChooseMirrors() {
             EPEL_INSTALL="False"
             ;;
         *)
-            echo -e '\n\033[33m-------- 输入错误，默认不更换 EPEL 扩展国内源 -------- \033[0m'
+            echo -e '\n\033[33m------------ 输入错误，默认不更换 ------------\033[0m'
             EPEL_INSTALL="False"
             ;;
         esac
@@ -496,8 +533,8 @@ function RedHatOfficialReposCreate() {
     if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
         if [ ${CENTOS_VERSION} -eq "8" ]; then
             CentOS8_RepoFiles='CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo'
-            for TOUCH in $CentOS8_RepoFiles; do
-                touch $TOUCH
+            for REPOS in $CentOS8_RepoFiles; do
+                touch $REPOS
             done
             cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-AppStream.repo <<\EOF
 # CentOS-Linux-AppStream.repo
@@ -748,8 +785,8 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
         elif [ ${CENTOS_VERSION} -eq "7" ]; then
             CentOS7_RepoFiles='CentOS-Base.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo'
-            for TOUCH in $CentOS7_RepoFiles; do
-                touch $TOUCH
+            for REPOS in $CentOS7_RepoFiles; do
+                touch $REPOS
             done
             cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Base.repo <<\EOF
 # CentOS-Base.repo
@@ -930,8 +967,8 @@ EOF
     ## Fedora
     elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
         Fedora_RepoFiles='fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo'
-        for TOUCH in $Fedora_RepoFiles; do
-            touch $TOUCH
+        for REPOS in $Fedora_RepoFiles; do
+            touch $REPOS
         done
         cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-cisco-openh264.repo <<\EOF
 [fedora-cisco-openh264]
@@ -1192,8 +1229,8 @@ function CentOSEPELReposCreate() {
     cd ${RedHatReposDirectory}
     if [ ${CENTOS_VERSION} -eq "8" ]; then
         EPEL8_RepoFiles='epel.repo epel-modular.repo epel-playground.repo epel-testing.repo epel-testing-modular.repo'
-        for TOUCH in $EPEL8_RepoFiles; do
-            touch $TOUCH
+        for REPOS in $EPEL8_RepoFiles; do
+            touch $REPOS
         done
         cat >${RedHatReposDirectory}/epel.repo <<\EOF
 [epel]
@@ -1322,8 +1359,8 @@ gpgcheck=1
 EOF
     elif [ ${CENTOS_VERSION} -eq "7" ]; then
         EPEL7_RepoFiles='epel.repo epel-testing.repo'
-        for TOUCH in $EPEL7_RepoFiles; do
-            touch $TOUCH
+        for REPOS in $EPEL7_RepoFiles; do
+            touch $REPOS
         done
         cat >${RedHatReposDirectory}/epel.repo <<\EOF
 [epel]
