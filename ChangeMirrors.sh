@@ -3,6 +3,7 @@
 ## Modified: 2021-5-19
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
+##             https://gitee.com/SuperManito/LinuxMirrors
 
 function AuthorAutograph() {
     echo '
@@ -107,6 +108,24 @@ function PermissionJudgment() {
         echo -e '\033[31m -------- Permission no enough, please use user ROOT! ------------ \033[0m'
         exit
     fi
+}
+
+## 关闭 防火墙 和 SELINUX
+function TurnOffFirewall() {
+    CHOICE_C=$(echo -e '\n\033[32m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
+    read -p "${CHOICE_C}" INPUT
+    [ -z ${INPUT} ] && INPUT=Y
+    case $INPUT in
+    [Yy]*)
+        systemctl disable --now firewalld >/dev/null 2>&1
+        sed -i "7c SELINUX=disabled" /etc/selinux/config
+        setenforce 0 >/dev/null 2>&1
+        ;;
+    [Nn]*) ;;
+    *)
+        echo -e '\n\033[33m------------ 输入错误，默认不关闭 ------------\033[0m'
+        ;;
+    esac
 }
 
 ## 备份原有源
@@ -236,10 +255,10 @@ function ChangeMirrors() {
         if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
             echo -e '\n\033[32m------------ 更新软件源结束 ------------\033[0m'
         else
-            echo -e '\n\033[31m------------ 更新软件源失败，请重新执行脚本 ------------\033[0m\n'
+            echo -e '\n\033[31m------------ 软件源更新失败，请重新执行脚本 ------------\033[0m\n'
             echo -e '如果仍然更新失败那么可能由以下原因导致'
             echo -e '1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等'
-            echo -e '2. 软件源问题：国内部分小众镜像站可能不支持您的操作系统，可访问其官网验证\n'
+            echo -e '2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n'
             exit
         fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
@@ -251,10 +270,10 @@ function ChangeMirrors() {
         if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
             echo -e '\n\033[32m------------ 同步软件源结束 ------------\033[0m'
         else
-            echo -e '\n\033[31m------------ 同步软件源失败，请重新执行脚本 ------------\033[0m\n'
+            echo -e '\n\033[31m------------ 软件源同步失败，请重新执行脚本 ------------\033[0m\n'
             echo -e '如果仍然同步失败那么可能由以下原因导致'
             echo -e '1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等'
-            echo -e '2. 软件源问题：国内部分小众镜像站可能不支持您的操作系统，可访问其官网验证\n'
+            echo -e '2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n'
             exit
         fi
     fi
@@ -285,11 +304,9 @@ function UpgradeSoftware() {
                 yum autoremove -y >/dev/null 2>&1
                 yum clean packages -y >/dev/null 2>&1
             fi
-
+            echo -e '\n清理完毕!'
             ;;
-        [Nn]*)
-            echo -e ''
-            ;;
+        [Nn]*) ;;
         *)
             echo -e '\n\033[33m------------ 输入错误，默认不清理 ------------\033[0m'
             ;;
@@ -300,25 +317,7 @@ function UpgradeSoftware() {
         echo -e '\n\033[33m------------ 输入错误，默认不更新 ------------\033[0m'
         ;;
     esac
-    echo -e '\n\033[32m------------ 软件源更换成功 ------------\033[0m\n'
-}
-
-## 关闭 防火墙 和 SELINUX
-function TurnOffFirewall() {
-    CHOICE_C=$(echo -e '\n\033[32m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
-    read -p "${CHOICE_C}" INPUT
-    [ -z ${INPUT} ] && INPUT=Y
-    case $INPUT in
-    [Yy]*)
-        systemctl disable --now firewalld >/dev/null 2>&1
-        sed -i "7c SELINUX=disabled" /etc/selinux/config
-        setenforce 0 >/dev/null 2>&1
-        ;;
-    [Nn]*) ;;
-    *)
-        echo -e '\n\033[33m------------ 输入错误，默认不关闭 ------------\033[0m'
-        ;;
-    esac
+    echo -e '\n\033[32m------------ 软件源更换成功 ------------\033[0m'
 }
 
 ## 更换基于 Debian 系 Linux 发行版的国内源
