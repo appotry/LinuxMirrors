@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-5-19
+## Modified: 2021-5-20
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -89,7 +89,7 @@ function EnvJudgment() {
     else
         SYSTEM_ARCH=${Architecture}
     fi
-    ## 定义更新源分支名称
+    ## 定义软件源分支名称
     if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
         if [ ${Architecture} = "x86_64" ] || [ ${Architecture} = "*i?86*" ]; then
             SOURCE_BRANCH=${SYSTEM_NAME,,}
@@ -255,10 +255,7 @@ function ChangeMirrors() {
         if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
             echo -e '\n\033[32m------------ 更新软件源结束 ------------\033[0m'
         else
-            echo -e '\n\033[31m------------ 软件源更新失败，请重新执行脚本 ------------\033[0m\n'
-            echo -e '如果仍然更新失败那么可能由以下原因导致'
-            echo -e '1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等'
-            echo -e '2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n'
+            echo -e '\n\033[31m------------ 软件源更新失败，请重新执行脚本 ------------\033[0m\n\n如果仍然更新失败那么可能由以下原因导致\n1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等\n2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n'
             exit
         fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
@@ -270,10 +267,7 @@ function ChangeMirrors() {
         if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
             echo -e '\n\033[32m------------ 同步软件源结束 ------------\033[0m'
         else
-            echo -e '\n\033[31m------------ 软件源同步失败，请重新执行脚本 ------------\033[0m\n'
-            echo -e '如果仍然同步失败那么可能由以下原因导致'
-            echo -e '1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等'
-            echo -e '2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n'
+            echo -e '\n\033[31m------------ 软件源同步失败，请重新执行脚本 ------------\033[0m\n\n如果仍然同步失败那么可能由以下原因导致\n1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等\n2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n'
             exit
         fi
     fi
@@ -365,8 +359,8 @@ function RedHatMirrors() {
         sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=https://mirror.centos.org|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         sed -i "s|mirror.centos.org|${SOURCE}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
-        ## 更换基于 CentOS 的 EPEL 扩展国内源
-        [ ${EPEL_INSTALL} = "True" ] && CentOSEPELMirrors
+        ## 安装/更换基于 CentOS 的 EPEL 扩展国内源
+        [ ${EPEL_INSTALL} = "True" ] && EPELMirrors
     elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
         sed -i 's|^metalink=|#metalink=|g' \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}.repo \
@@ -386,8 +380,8 @@ function RedHatMirrors() {
     fi
 }
 
-## 更换基于 CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
-function CentOSEPELMirrors() {
+## 安装/更换基于 CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
+function EPELMirrors() {
     ## 安装 EPEL 软件包
     [ ${VERIFICATION_EPEL} -ne 0 ] && yum install -y https://mirrors.aliyun.com/epel/epel-release-latest-${CENTOS_VERSION}.noarch.rpm
     ## 删除原有 EPEL 扩展 repo 源文件
