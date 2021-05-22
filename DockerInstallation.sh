@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-5-19
+## Modified: 2021-5-23
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -274,12 +274,13 @@ function DockerCompose() {
         elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
             yum install -y python3-pip
         fi
-        if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
-            pip3 install -i https://mirrors.aliyun.com/pypi/simple some-package
-            [ $? -ne 0 ] && pip3 install --upgrade pip
-        fi
         pip3 install --upgrade pip
-        pip3 install docker-compose
+        if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
+            pip3 install -i https://mirrors.aliyun.com/pypi/simple docker-compose
+        else
+            pip3 install docker-compose
+        fi
+        
         [ $? -eq 0 ] || echo -e '\n\033[32m---------- Docker Compose 安装失败 ----------\033[0m\n'
     fi
     echo -e ''
@@ -298,7 +299,7 @@ function ShowVersion() {
         exit
     fi
     systemctl status firewalld | grep running -q
-    [ $? -ne 0 ] && echo -e '\n\033[31m--- 检测到 Docker 进程异常，可能由于重新安装导致，请执行 systemctl start docker 命令手动启动 ---\033[0m'
+    [ $? -ne 0 ] && echo -e '\n\033[31m [ERROR] 检测到 Docker 服务启动异常，可能由于重复安装导致\033[0m' && echo -e '\n\033[34m 请执行 systemctl start docker 或 service docker start 命令尝试手动启动......\033[0m'
 }
 
 ## 选择 Docker CE & Docker Hub 源：
