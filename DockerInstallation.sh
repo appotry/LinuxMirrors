@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-5-23
+## Modified: 2021-5-25
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -260,7 +260,7 @@ function DockerCompose() {
     echo -e ''
     ## 卸载旧版本
     [ -e ${DockerCompose} ] && rm -rf ${DockerCompose}
-    ## 根据环境架构选择安装方式
+    ## 根据处理器架构选择安装方式
     if [ ${Architecture} = "x86_64" ]; then
         if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
             curl -L ${PROXY_URL}${DOCKER_COMPOSE_URL} -o ${DockerCompose}
@@ -298,8 +298,8 @@ function ShowVersion() {
         echo -e '\n\033[31m---------- 安装失败 ----------\033[0m'
         exit
     fi
-    systemctl status firewalld | grep running -q
-    [ $? -ne 0 ] && echo -e '\n\033[31m [ERROR] 检测到 Docker 服务启动异常，可能由于重复安装导致\033[0m' && echo -e '\n\033[34m 请执行 systemctl start docker 或 service docker start 命令尝试手动启动......\033[0m'
+    systemctl status docker | grep running -q
+    [ $? -ne 0 ] && echo -e '\n\033[31m [ERROR] 检测到 Docker 服务启动异常，可能由于重复安装导致\033[0m' && echo -e '\n\033[34m 请执行 systemctl start docker 或 service docker start 命令尝试启动......\033[0m'
 }
 
 ## 选择 Docker CE & Docker Hub 源：
@@ -478,8 +478,8 @@ function ChooseMirrors() {
     esac
     echo -e ''
 
-    sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1
-    setenforce 0 >/dev/null 2>&1
+    systemctl disable --now firewalld >/dev/null 2>&1
+    [ -s /etc/selinux/config ] && sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1 && setenforce 0 >/dev/null 2>&1
 }
 
 CombinationFunction
