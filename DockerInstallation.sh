@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-5-25
+## Modified: 2021-5-26
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -288,12 +288,12 @@ function DockerCompose() {
 
 ## 查看版本信息
 function ShowVersion() {
-    echo -e '\n\033[32m---------- 查看版本 ----------\033[0m\n'
+    echo -e '\033[32m---------- 查看版本 ----------\033[0m\n'
     docker -v
     VERIFICATION_DOCKER=$?
     if [ ${VERIFICATION_DOCKER} -eq 0 ]; then
-        [ -x ${DockerCompose} ] && docker-compose -v
-        echo -e '\n\033[32m---------- 安装成功 ----------\033[0m'
+        [ ${DOCKER_COMPOSE} = "True" ] && docker-compose -v
+        echo -e '\n\033[32m---------- 安装完成 ----------\033[0m'
     else
         echo -e '\n\033[31m---------- 安装失败 ----------\033[0m'
         exit
