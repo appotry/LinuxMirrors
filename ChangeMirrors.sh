@@ -120,20 +120,22 @@ function PermissionJudgment() {
 
 ## 关闭 防火墙 和 SELINUX
 function TurnOffFirewall() {
-    CHOICE_C=$(echo -e '\n\033[32m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
-    read -p "${CHOICE_C}" INPUT
-    [ -z ${INPUT} ] && INPUT=Y
-    case $INPUT in
-    [Yy]*)
-        systemctl disable --now firewalld >/dev/null 2>&1
-        sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1
-        setenforce 0 >/dev/null 2>&1
-        ;;
-    [Nn]*) ;;
-    *)
-        echo -e '\n\033[33m------------ 输入错误，默认不关闭 ------------\033[0m'
-        ;;
-    esac
+    systemctl status firewalld | grep running -q
+    if [ $? -eq 0 ]; then
+        CHOICE_C=$(echo -e '\n\033[32m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
+        read -p "${CHOICE_C}" INPUT
+        [ -z ${INPUT} ] && INPUT=Y
+        case $INPUT in
+        [Yy]*)
+            systemctl disable --now firewalld >/dev/null 2>&1
+            [ -s /etc/selinux/config ] && sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1 && setenforce 0 >/dev/null 2>&1
+            ;;
+        [Nn]*) ;;
+        *)
+            echo -e '\n\033[33m------------ 输入错误，默认不关闭 ------------\033[0m'
+            ;;
+        esac
+    fi
 }
 
 ## 备份原有源
@@ -531,9 +533,7 @@ function ChooseMirrors() {
     esac
 
     ## 关闭 防火墙 和 SELINUX
-    [ ${SYSTEM} = ${SYSTEM_REDHAT} ] && systemctl status firewalld | grep running -q
-    VERIFICATION_FIREWALL=$?
-    [ ${VERIFICATION_FIREWALL} -eq 0 ] && TurnOffFirewall
+    [ ${SYSTEM} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
 }
 
 ## 生成基于 RedHat 发行版和及其衍生发行版的官方 repo 源文件
