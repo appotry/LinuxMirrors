@@ -1,25 +1,27 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-5-25
+## Modified: 2021-5-30
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
 
 function AuthorAutograph() {
-    echo '
-             __  ___          __        ____       
-            /  |/  /___ _____/ /__     / __ )__  __
-           / /|_/ / __ `/ __  / _ \   / __  / / / /
-          / /  / / /_/ / /_/ /  __/  / /_/ / /_/ / 
-         /_/  /_/\__,_/\__,_/\___/  /_____/\__, /  
-                                          /____/   
-   _____                       __  ___            _ __      
-  / ___/__  ______  ___  _____/  |/  /___ _____  (_) /_____ 
-  \__ \/ / / / __ \/ _ \/ ___/ /|_/ / __ `/ __ \/ / __/ __ \
- ___/ / /_/ / /_/ /  __/ /  / /  / / /_/ / / / / / /_/ /_/ /
-/____/\__,_/ .___/\___/_/  /_/  /_/\__,_/_/ /_/_/\__/\____/ 
-          /_/         
-'
+    echo -e '\033[34m
+ +--------------------------------------------------------------------+
+ |                 __  ___          __        ____                    |
+ |                /  |/  /___ _____/ /__     / __ )__  __             |
+ |               / /|_/ / __ `/ __  / _ \   / __  / / / /             |
+ |              / /  / / /_/ / /_/ /  __/  / /_/ / /_/ /              |
+ |             /_/  /_/\__,_/\__,_/\___/  /_____/\__, /               |
+ |                                              /____/                |
+ |       _____                       __  ___            _ __          |
+ |      / ___/__  ______  ___  _____/  |/  /___ _____  (_) /_____     |
+ |      \__ \/ / / / __ \/ _ \/ ___/ /|_/ / __ `/ __ \/ / __/ __ \    |
+ |     ___/ / /_/ / /_/ /  __/ /  / /  / / /_/ / / / / / /_/ /_/ /    |
+ |    /____/\__,_/ .___/\___/_/  /_/  /_/\__,_/_/ /_/_/\__/\____/     |
+ |              /_/                                                   |
+ +--------------------------------------------------------------------+
+\033[0m'
 }
 
 ## 定义目录和文件
@@ -98,6 +100,12 @@ function EnvJudgment() {
         fi
     else
         SOURCE_BRANCH=${SYSTEM_NAME,,}
+    fi
+    ## 定义软件源同步/更新文字
+    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+        SYNC_TXT="更新"
+    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+        SYNC_TXT="同步"
     fi
 }
 
@@ -209,9 +217,7 @@ function BackupMirrors() {
                     cp -rf ${RedHatReposDirectory}/* ${RedHatReposDirectoryBackup} >/dev/null 2>&1
                     echo -e ''
                     ;;
-                [Nn]*)
-                    echo -e ''
-                    ;;
+                [Nn]*) ;;
                 *)
                     echo -e '\n\033[33m------------ 输入错误，默认不覆盖 ------------\033[0m\n'
                     ;;
@@ -226,7 +232,6 @@ function BackupMirrors() {
             [ -d ${RedHatReposDirectory} ] || mkdir -p ${RedHatReposDirectory}
         fi
     fi
-    echo -e ''
 }
 
 ## 删除原有源
@@ -249,27 +254,22 @@ function RemoveOldMirrorsFiles() {
 function ChangeMirrors() {
     if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
         DebianMirrors
-        echo -e '\033[32m------------ 开始更新软件源 ------------\033[0m\n'
-        apt-get update
-        VERIFICATION_SOURCESYNC=$?
-        if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
-            echo -e '\n\033[32m------------ 更新软件源结束 ------------\033[0m'
-        else
-            echo -e '\n\033[31m------------ 软件源更新失败，请重新执行脚本 ------------\033[0m\n\n如果仍然更新失败那么可能由以下原因导致\n1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等\n2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n'
-            exit
-        fi
     elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         RedHatMirrors
         yum clean all >/dev/null 2>&1
-        echo -e '\033[32m------------ 开始同步软件源 ------------\033[0m\n'
+    fi
+    echo -e "\033[32m------------ 开始${SYNC_TXT}软件源 ------------\033[0m\n"
+    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+        apt-get update
+    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
         yum makecache
-        VERIFICATION_SOURCESYNC=$?
-        if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
-            echo -e '\n\033[32m------------ 同步软件源结束 ------------\033[0m'
-        else
-            echo -e '\n\033[31m------------ 软件源同步失败，请重新执行脚本 ------------\033[0m\n\n如果仍然同步失败那么可能由以下原因导致\n1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等\n2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n'
-            exit
-        fi
+    fi
+    VERIFICATION_SOURCESYNC=$?
+    if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
+        echo -e "\n\033[32m------------ ${SYNC_TXT}软件源结束 ------------\033[0m"
+    else
+        echo -e "\n\033[31m------------ 软件源${SYNC_TXT}失败，请重新执行脚本 ------------\033[0m\n\n如果仍然${SYNC_TXT}失败那么可能由以下原因导致\n1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等\n2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n"
+        exit
     fi
 }
 
@@ -311,7 +311,7 @@ function UpgradeSoftware() {
         echo -e '\n\033[33m------------ 输入错误，默认不更新 ------------\033[0m'
         ;;
     esac
-    echo -e '\n\033[32m------------ 软件源更换成功 ------------\033[0m'
+    echo -e '\n\033[32m------------ 软件源更换完毕 ------------\033[0m'
 }
 
 ## 更换基于 Debian 系 Linux 发行版的国内源
@@ -319,33 +319,33 @@ function DebianMirrors() {
     ## 修改国内源
     if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
         echo "## 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
+        echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
+        echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-security main restricted universe multiverse" >>${DebianSourceList}
+        echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main restricted universe multiverse" >>${DebianSourceList}
+        echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main restricted universe multiverse" >>${DebianSourceList}
         echo '' >>${DebianSourceList}
         echo "## 预发布软件源，不建议启用" >>${DebianSourceList}
-        echo "# deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
     elif [ ${SYSTEM_NAME} = ${SYSTEM_DEBIAN} ]; then
         echo "## 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
+        echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
+        echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-updates main contrib non-free" >>${DebianSourceList}
+        echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-backports main contrib non-free" >>${DebianSourceList}
         echo '' >>${DebianSourceList}
         echo "## 预发布软件源，不建议启用" >>${DebianSourceList}
-        echo "# deb https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
-        echo "# deb-src https://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
+        echo "# deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
+        echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
     elif [ ${SYSTEM_NAME} = ${SYSTEM_KALI} ]; then
-        echo "deb https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
-        echo "deb-src https://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
+        echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
+        echo "deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
     fi
 }
 
@@ -356,8 +356,8 @@ function RedHatMirrors() {
     ## 修改国内源
     if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
         sed -i 's|^mirrorlist=|#mirrorlist=|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
-        sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=https://mirror.centos.org/centos|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
-        sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=https://mirror.centos.org|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
+        [ ${CENTOS_VERSION} -eq "8" ] && sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=http://mirror.centos.org/centos|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
+        sed -i "s|^#baseurl=http|baseurl=${WEB_PROTOCOL}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         sed -i "s|mirror.centos.org|${SOURCE}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         ## 安装/更换基于 CentOS 的 EPEL 扩展国内源
         [ ${EPEL_INSTALL} = "True" ] && EPELMirrors
@@ -369,8 +369,8 @@ function RedHatMirrors() {
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-modular.repo \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing.repo \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing-modular.repo
-        sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/*
-        sed -i "s|https\?://download.example/pub/fedora/linux|https://${SOURCE}/fedora|g" \
+        sed -i "s|^#baseurl=http|baseurl=${WEB_PROTOCOL}|g" ${RedHatReposDirectory}/fedora*
+        sed -i "s|download.example/pub/fedora/linux|${SOURCE}/fedora|g" \
             ${RedHatReposDirectory}/fedora.repo \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates.repo \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-modular.repo \
@@ -391,14 +391,14 @@ function EPELMirrors() {
     CentOSEPELReposCreate
     ## 更换国内源
     sed -i 's|^metalink=|#metalink=|g' ${RedHatReposDirectory}/epel*
-    sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
     if [ ${CENTOS_VERSION} -eq "8" ]; then
-        sed -i 's|^#baseurl=|baseurl=|g' ${RedHatReposDirectory}/epel*
+        sed -i "s|^#baseurl=https|baseurl=${WEB_PROTOCOL}|g" ${RedHatReposDirectory}/epel*
     elif [ ${CENTOS_VERSION} -eq "7" ]; then
-        sed -i 's|^#baseurl=http|baseurl=https|g' ${RedHatReposDirectory}/epel*
+        sed -i "s|^#baseurl=http|baseurl=${WEB_PROTOCOL}|g" ${RedHatReposDirectory}/epel*
     fi
     sed -i "s|download.fedoraproject.org/pub|${SOURCE}|g" ${RedHatReposDirectory}/epel*
     rm -rf ${RedHatReposDirectory}/epel*rpmnew
+    echo ''
 }
 
 ## 选择国内源
@@ -437,7 +437,7 @@ function ChooseMirrors() {
     echo -e "            系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
-    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内源 [ 1~11 ]：\033[0m')
+    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内源 [ 1-11 ]：\033[0m')
     read -p "${CHOICE_A}" INPUT
     case $INPUT in
     1)
@@ -512,6 +512,23 @@ function ChooseMirrors() {
             ;;
         esac
     fi
+
+    ## 选择同步软件源所使用的 WEB 协议（ HTTP：占用 80 端口，HTTPS：占用 443 端口）
+    CHOICE_E=$(echo -e "\n\033[32m└ 软件源是否使用 HTTPS 协议 [ Y/n ]：\033[0m")
+    read -p "${CHOICE_E}" INPUT
+    [ -z ${INPUT} ] && INPUT=Y
+    case $INPUT in
+    [Yy]*)
+        WEB_PROTOCOL=https
+        ;;
+    [Nn]*)
+        WEB_PROTOCOL=http
+        ;;
+    *)
+        echo -e "\n\033[33m------------ 输入错误，默认使用 HTTP 协议 ------------\033[0m"
+        WEB_PROTOCOL=http
+        ;;
+    esac
 
     ## 关闭 防火墙 和 SELINUX
     [ ${SYSTEM} = ${SYSTEM_REDHAT} ] && systemctl status firewalld | grep running -q
@@ -986,7 +1003,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=True
 EOF
-        cat >${RedHatReposDirectory}/fedora.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}.repo <<\EOF
 [fedora]
 name=Fedora $releasever - $basearch
 #baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/
