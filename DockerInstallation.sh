@@ -32,6 +32,7 @@ DebianExtendListDirectory=/etc/apt/sources.list.d
 DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
 RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
+SelinuxConfig=/etc/selinux/config
 
 ## 定义系统变量
 DebianRelease=lsb_release
@@ -137,7 +138,7 @@ function TurnOffFirewall() {
     systemctl status firewalld | grep running -q
     if [ $? -eq 0 ]; then
         systemctl disable --now firewalld >/dev/null 2>&1
-        [ -s /etc/selinux/config ] && sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1 && setenforce 0 >/dev/null 2>&1
+        [ -s ${SelinuxConfig} ] && sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" ${SelinuxConfig} && setenforce 0 >/dev/null 2>&1
     fi
 }
 
