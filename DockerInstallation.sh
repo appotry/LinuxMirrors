@@ -1,25 +1,27 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-5-26
+## Modified: 2021-5-30
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
 
 function AuthorAutograph() {
-    echo '
-             __  ___          __        ____       
-            /  |/  /___ _____/ /__     / __ )__  __
-           / /|_/ / __ `/ __  / _ \   / __  / / / /
-          / /  / / /_/ / /_/ /  __/  / /_/ / /_/ / 
-         /_/  /_/\__,_/\__,_/\___/  /_____/\__, /  
-                                          /____/   
-   _____                       __  ___            _ __      
-  / ___/__  ______  ___  _____/  |/  /___ _____  (_) /_____ 
-  \__ \/ / / / __ \/ _ \/ ___/ /|_/ / __ `/ __ \/ / __/ __ \
- ___/ / /_/ / /_/ /  __/ /  / /  / / /_/ / / / / / /_/ /_/ /
-/____/\__,_/ .___/\___/_/  /_/  /_/\__,_/_/ /_/_/\__/\____/ 
-          /_/         
-'
+    echo -e '\033[34m
+ +--------------------------------------------------------------------+
+ |                 __  ___          __        ____                    |
+ |                /  |/  /___ _____/ /__     / __ )__  __             |
+ |               / /|_/ / __ `/ __  / _ \   / __  / / / /             |
+ |              / /  / / /_/ / /_/ /  __/  / /_/ / /_/ /              |
+ |             /_/  /_/\__,_/\__,_/\___/  /_____/\__, /               |
+ |                                              /____/                |
+ |       _____                       __  ___            _ __          |
+ |      / ___/__  ______  ___  _____/  |/  /___ _____  (_) /_____     |
+ |      \__ \/ / / / __ \/ _ \/ ___/ /|_/ / __ `/ __ \/ / __/ __ \    |
+ |     ___/ / /_/ / /_/ /  __/ /  / /  / / /_/ / / / / / /_/ /_/ /    |
+ |    /____/\__,_/ .___/\___/_/  /_/  /_/\__,_/_/ /_/_/\__/\____/     |
+ |              /_/                                                   |
+ +--------------------------------------------------------------------+
+\033[0m'
 }
 
 ## 定义目录和文件
@@ -54,7 +56,8 @@ DOCKER_COMPOSE_URL=https://github.com/docker/compose/releases/download/${DOCKER_
 
 ## 组合各个函数模块
 function CombinationFunction() {
-    PermissionJudgment && NetWorkJudgment && clear
+    PermissionJudgment
+    NetWorkJudgment && clear
     EnvJudgment
     TurnOffFirewall
     ChooseMirrors
@@ -134,8 +137,7 @@ function TurnOffFirewall() {
     systemctl status firewalld | grep running -q
     if [ $? -eq 0 ]; then
         systemctl disable --now firewalld >/dev/null 2>&1
-        sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1
-        setenforce 0 >/dev/null 2>&1
+        [ -s /etc/selinux/config ] && sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1 && setenforce 0 >/dev/null 2>&1
     fi
 }
 
@@ -280,7 +282,7 @@ function DockerCompose() {
         else
             pip3 install docker-compose
         fi
-        
+
         [ $? -eq 0 ] || echo -e '\n\033[32m---------- Docker Compose 安装失败 ----------\033[0m\n'
     fi
     echo -e ''
@@ -435,7 +437,7 @@ function ChooseMirrors() {
         ;;
     *)
         REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
-        echo -e '\033[33m---------- 输入错误，将默认使用阿里云（杭州）镜像加速器 ----------\033[0m'
+        echo -e '\033[33m---------- 输入错误，镜像加速器将默认使用阿里云（杭州） ----------\033[0m'
         sleep 3s
         ;;
     esac
@@ -478,8 +480,8 @@ function ChooseMirrors() {
     esac
     echo -e ''
 
-    systemctl disable --now firewalld >/dev/null 2>&1
-    [ -s /etc/selinux/config ] && sed -i "7c SELINUX=disabled" /etc/selinux/config >/dev/null 2>&1 && setenforce 0 >/dev/null 2>&1
+    ## 关闭 防火墙 和 SELINUX
+    [ ${SYSTEM} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
 }
 
 CombinationFunction
