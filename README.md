@@ -3,10 +3,10 @@
 <a href="https://github.com/SuperManito/LinuxMirrors"><img src="./icon/github-2.svg" width="70" height="52"></a>
 ㅤ<a href="https://gitee.com/SuperManito/LinuxMirrors"><img src="./icon/gitee.svg" width="100" height="50"/></a>
 &nbsp;<a href="https://blog.csdn.net/u013246692/article/details/113124295"><img src="./icon/csdn.png" width="100" height="50"/></a>
-
 - __`GNU/Linux` 一键更换国内软件源脚本__
 - __本项目旨在为从事计算机相关行业的朋友们提供便利__
-- __理论支持所有架构的环境，`arm64` 架构已经过测试__
+- __理论支持所有架构的环境，`arm64` 环境已经过测试__
+> 🏷️点击上方图片可快速跳转至本项目所发布在的其它仓库或博客
 
 ### 更新日志
 - __2021 / 05 / 30__
@@ -25,7 +25,7 @@
 | :------: | :------: | :------: | :------: | :------: | :------: |
 | 支持的版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
 > 目前仅支持上述基于 Debian 与 Redhat 系的发行版和及其部分衍生版本 \
-> 同样支持上述版本的衍生版，例如 [`Armbian`](https://www.armbian.com) [`Kbuntu`](https://kubuntu.org) [`Xbuntu`](https://xubuntu.org)
+> 同样支持上述版本中拥有相同底层核心的其它发行版，例如 [`Armbian`](https://www.armbian.com) [`Kubuntu`](https://kubuntu.org) 等
 
 ### 脚本当前使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
@@ -58,7 +58,7 @@
 
 ### 如何使用
 > 1. 完整复制下面的命令到终端按回车键即可执行，若无法安装 `curl` 软件包可复制源码到本地后手动执行。
-> 2. 为了适配所有环境，请使用 `Root` 用户执行脚本，切换命令为 `sudo -i` ，如遇报错请查看常见问题与帮助。
+> 2. 为了适配所有环境，建议使用 `Root` 用户执行脚本，切换命令为 `sudo -i` ，如遇报错请查看常见问题与帮助。
 > 3. 如果您使用的环境没有安装或不支持简体中文环境，请通过 `SSH客户端工具` 使用，否则将无法正确选择交互内容。
 > 4. 执行脚本过程中会自动备份原有源无需手动备份，期间会在终端输出多个主观选择交互内容，可按回车键快速确认。
 > 5. 脚本支持在原有源配置错误或者不存在的情况下使用，并且可以重复使用；脚本变更的软件源默认使用 `Https 协议`。
@@ -76,7 +76,7 @@
 - `Docker` 一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`源（镜像加速器），支持国内外云服务器和 `ARM`架构处理器环境使用。_
+> _注意：脚本集成安装最新版的 `Docker Engine`与 `Docker Compose`，可手动选择 `Docker CE`源与 `Docker Hub`源（镜像加速器），支持国内外服务器环境和 `ARM`架构处理器环境使用。_
 
 ***
 
