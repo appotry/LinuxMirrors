@@ -85,19 +85,20 @@ function EnvJudgment() {
         SYSTEM_VERSION_NUMBER=$(${DebianRelease} -rs)
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         SYSTEM_JUDGMENT=$(cat ${RedHatRelease} | sed 's/ //g' | cut -c1-6)
-        if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} ]; then
-            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c22-24)
-            CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c22)
+        if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} -o ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | grep -o "[0-9]\.[0-9]")
+            CENTOS_VERSION=$(echo ${SYSTEM_VERSION_NUMBER} | cut -c1)
         elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_FEDORA} ]; then
-            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c16-17)
-        elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
-            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c34-36)
-            CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c34)
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | grep -o "[0-9][0-9]")
         fi
     fi
     ## 定义系统名称
     if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
-        SYSTEM_NAME="Red Hat Enterprise Linux"
+        if [ -f /etc/oracle-release ]; then
+            SYSTEM_NAME="Oracle Linux"
+        else
+            SYSTEM_NAME="Red Hat Enterprise Linux"
+        fi
     else
         SYSTEM_NAME=${SYSTEM_JUDGMENT}
     fi
@@ -170,14 +171,6 @@ function RemoveOldVersion() {
         rm -rf ${DockerSourceList}
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         rm -rf docker
-    fi
-    ## 判定基于 Debian 的系统是否安装 LSB 软件包
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-        dpkg -l | grep lsb_release -q
-        if [ $? -ne 0 ]; then
-            echo -e '\033[31m -------- 检测到当前未安装 LSB 软件包, 请执行 apt-get install -y lsb-release 命令安装软件包后重新运行此脚本! ------------ \033[0m'
-            exit
-        fi
     fi
     ## 检测是否已安装旧版软件包
     if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
