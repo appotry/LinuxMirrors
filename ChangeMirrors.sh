@@ -81,7 +81,11 @@ function EnvJudgment() {
     fi
     ## 定义系统名称
     if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
-        SYSTEM_NAME="Red Hat Enterprise Linux"
+        if [ -f /etc/oracle-release ]; then
+            SYSTEM_NAME="Oracle Linux"
+        else
+            SYSTEM_NAME="Red Hat Enterprise Linux"
+        fi
     else
         SYSTEM_NAME=${SYSTEM_JUDGMENT}
     fi
@@ -253,7 +257,7 @@ function RemoveOldMirrorsFiles() {
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         if [ -d ${RedHatReposDirectory} ]; then
             cd ${RedHatReposDirectory}
-            rm -rf ${SYSTEM_CENTOS}-*
+            rm -rf *
         fi
     fi
 }
@@ -547,7 +551,6 @@ function ChooseMirrors() {
 ## 生成基于 RedHat 发行版和及其衍生发行版的官方 repo 源文件
 function RedHatOfficialReposCreate() {
     cd ${RedHatReposDirectory}
-    ## RHEL/CentOS
     if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} ]; then
         CentOSReposCreate
     elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
@@ -557,6 +560,7 @@ function RedHatOfficialReposCreate() {
     fi
 }
 
+## 创建生成 CentOS 官方 repo 源文件
 function CentOSReposCreate() {
     if [ ${CENTOS_VERSION} -eq "8" ]; then
         CentOS8_RepoFiles='CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo'
@@ -992,6 +996,7 @@ EOF
     fi
 }
 
+## 创建生成 Fedora 官方 repo 源文件
 function FedoraReposCreate() {
     Fedora_RepoFiles='fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo'
     for REPOS in $Fedora_RepoFiles; do
