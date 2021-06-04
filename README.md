@@ -9,6 +9,8 @@
 > 🏷️点击上方图片可快速跳转至本项目所发布在的其它仓库或博客
 
 ### 更新日志
+- __2021 / 06 / 05__
+ㅤ新增对于 Red Hat Enterprise Linux 的适配。
 - __2021 / 05 / 30__
 ㅤ新增选择软件源的 WEB 协议功能，修复了一些错误。
 - __2021 / 05 / 05__
@@ -21,11 +23,11 @@
 ***
 
 ### 已适配的 GNU/Linux 发行版 <img src="./icon/linux.svg" width="16" height="16" alt="Linux Logo"/>
-|          | <a href="https://ubuntu.com"><img src="./icon/ubuntu.svg" width="14" height="14"/></a>&nbsp;Ubuntu |  <a href="https://www.debian.org"><img src="./icon/debian.svg" width="14" height="14"/></a>&nbsp;Debian  |  <a href="https://www.kali.org"><img src="./icon/kali.svg" width="14" height="14"/></a>&nbsp;Kali Linux  |  <a href="https://getfedora.org"><img src="./icon/fedora.svg" width="14" height="14"/></a>&nbsp;Fedora  |  <a href="https://www.centos.org"><img src="./icon/centos.svg" width="16" height="16"/></a>&nbsp;CentOS  |
-| :------: | :------: | :------: | :------: | :------: | :------: |
-| 支持的版本 | 14.04 ~ 21.04 | 8.0 ~ 10.9 | 2.0 ~ 2021.1 | 28 ~ 34 | 7.0 ~ 8.3 |
+|          |  <a href="https://www.debian.org"><img src="./icon/debian.svg" width="14" height="14"/></a>&nbsp;Debian  |  <a href="https://cn.ubuntu.com"><img src="./icon/ubuntu.svg" width="14" height="14"/></a>&nbsp;Ubuntu  |  <a href="https://www.kali.org"><img src="./icon/kali.svg" width="16" height="16"/></a>&nbsp;Kali Linux  |  <a href="https://www.redhat.com/zhtechnologies/linux-platforms/enterprise-linux"><img src="./icon/redhat.svg" width="16" height="16"/></a>&nbsp;RHEL  |  <a href="https://www.centos.org"><img src="./icon/centos.svg" width="16" height="16"/></a>&nbsp;CentOS  |  <a href="https://getfedora.org/zh_Hans_CN"><img src="./icon/fedora.ico" width="14" height="14"/></a>&nbsp;Fedora  |
+| :------: | :------: | :------: | :------: | :------: | :------: | :------: |
+| 支持版本 | 8.0 ~ 10.9 | 14.04 ~ 21.04 | 2.0 ~ 2021.2 | 7.0 ~ 8.4 | 7.0 ~ 8.4 | 28 ~ 34 |
 > 目前仅支持上述基于 Debian 与 Redhat 系的发行版和及其部分衍生版本 \
-> 同样支持上述版本中拥有相同底层核心的其它发行版，例如 [`Armbian`](https://www.armbian.com) [`Kubuntu`](https://kubuntu.org) 等
+> 同样支持上述版本中拥有相同底层核心的其它发行版，例如 [`Armbian`](https://www.armbian.com) [`Kubuntu`](https://kubuntu.org) [`Oracle Linux`](https://www.oracle.com/cn/technical-resources/) 等
 
 ### 脚本当前使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
