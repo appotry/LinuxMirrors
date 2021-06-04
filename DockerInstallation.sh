@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-5-30
+## Modified: 2021-06-04
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -34,19 +34,20 @@ RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
 SelinuxConfig=/etc/selinux/config
 
-## 定义系统变量
+## 定义系统判定变量
 DebianRelease=lsb_release
 Architecture=$(uname -m)
-SYSTEM_DEBIAN=Debian
-SYSTEM_UBUNTU=Ubuntu
-SYSTEM_KALI=Kali
-SYSTEM_REDHAT=RedHat
-SYSTEM_CENTOS=CentOS
-SYSTEM_FEDORA=Fedora
+SYSTEM_DEBIAN="Debian"
+SYSTEM_UBUNTU="Ubuntu"
+SYSTEM_KALI="Kali"
+SYSTEM_REDHAT="RedHat"
+SYSTEM_RHEL="RedHat"
+SYSTEM_CENTOS="CentOS"
+SYSTEM_FEDORA="Fedora"
 
 ## 定义 Docker 相关变量
 DockerSourceList=${DebianExtendListDirectory}/docker.list
-DockerRepo=${RedHatReposDirectory}/docker-ce.repo
+DockerRepo=${RedHatReposDirectory}/download.docker.com_linux_*.repo
 DockerDirectory=/etc/docker
 DockerConfig=${DockerDirectory}/daemon.json
 DockerConfigBackup=${DockerDirectory}/daemon.json.bak
@@ -55,7 +56,7 @@ PROXY_URL=https://ghproxy.com/
 DOCKER_COMPOSE_VERSION=1.29.2
 DOCKER_COMPOSE_URL=https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
 
-## 组合各个函数模块
+## 组合函数
 function CombinationFunction() {
     PermissionJudgment
     NetWorkJudgment && clear
@@ -73,23 +74,40 @@ function CombinationFunction() {
 function EnvJudgment() {
     ## 判定当前系统基于 Debian or RedHat
     if [ -f ${RedHatRelease} ]; then
-        SYSTEM=${SYSTEM_REDHAT}
+        SYSTEM_FACTION=${SYSTEM_REDHAT}
     else
-        SYSTEM=${SYSTEM_DEBIAN}
+        SYSTEM_FACTION=${SYSTEM_DEBIAN}
+    fi
+    ## 判定基于 Debian 的系统是否安装 LSB 软件包
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        dpkg -l | grep lsb-release -q
+        if [ $? -ne 0 ]; then
+            echo -e "\n\033[31m------------ 检测到当前系统未安装 LSB 软件包，受此软件包依赖脚本将无法正常使用！ ------------\033[0m\n\n请执行 apt-get install -y lsb-release 命令安装后重新执行此脚本\n"
+            exit
+        fi
     fi
     ## 判定系统名称、版本、版本号
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        SYSTEM_NAME=$(${DebianRelease} -is)
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        SYSTEM_JUDGMENT=$(${DebianRelease} -is)
         SYSTEM_VERSION=$(${DebianRelease} -cs)
         SYSTEM_VERSION_NUMBER=$(${DebianRelease} -rs)
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-        SYSTEM_NAME=$(cat ${RedHatRelease} | cut -c1-6)
-        if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        SYSTEM_JUDGMENT=$(cat ${RedHatRelease} | sed 's/ //g' | cut -c1-6)
+        if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} ]; then
             SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c22-24)
             CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c22)
-        elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c16-18)
+        elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_FEDORA} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c16-17)
+        elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c34-36)
+            CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c34)
         fi
+    fi
+    ## 定义系统名称
+    if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+        SYSTEM_NAME="Red Hat Enterprise Linux"
+    else
+        SYSTEM_NAME=${SYSTEM_JUDGMENT}
     fi
     ## 判定系统处理器架构
     if [ ${Architecture} = "x86_64" ]; then
@@ -113,7 +131,11 @@ function EnvJudgment() {
         SOURCE_ARCH=${Architecture}
     fi
     ## 定义更新源分支名称
-    SOURCE_BRANCH=${SYSTEM_NAME,,}
+    if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+        SOURCE_BRANCH="centos"
+    else
+        SOURCE_BRANCH=${SYSTEM_JUDGMENT,,}
+    fi
 }
 
 ## 环境判定：
@@ -145,16 +167,24 @@ function TurnOffFirewall() {
 ## 卸载旧版本
 function RemoveOldVersion() {
     ## 删除旧的 Docker CE 源
-    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         sed -i '/docker-ce/d' ${DebianSourceList}
         rm -rf ${DockerSourceList}
-    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
-        rm -rf ${DockerRepo}
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        rm -rf docker
+    fi
+    ## 判定基于 Debian 的系统是否安装 LSB 软件包
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        dpkg -l | grep lsb_release -q
+        if [ $? -ne 0 ]; then
+            echo -e '\033[31m -------- 检测到当前未安装 LSB 软件包, 请执行 apt-get install -y lsb-release 命令安装软件包后重新运行此脚本! ------------ \033[0m'
+            exit
+        fi
     fi
     ## 检测是否已安装旧版软件包
-    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         dpkg -l | grep docker -q
-    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         rpm -qa | grep docker -q
     fi
     if [ $? -eq 0 ]; then
@@ -166,9 +196,9 @@ function RemoveOldVersion() {
             sleep 3s
         fi
         ## 删除旧的软件包
-        if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+        if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
             apt-get remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
-        elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+        elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
             yum remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
         fi
     fi
@@ -177,9 +207,9 @@ function RemoveOldVersion() {
 ## 安装 Docker Engine
 function DockerEngine() {
     ## 安装前环境检测
-    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         apt-get update
-    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         systemctl status firewalld | grep running -q
         if [ $? -eq 0 ]; then
             systemctl disable --now firewalld >/dev/null 2>&1
@@ -195,15 +225,15 @@ function DockerEngine() {
     fi
 
     ## 安装环境所需的软件包
-    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         yum install -y yum-utils device-mapper-persistent-data lvm2
     fi
 
     ## 配置 Docker CE 源
-    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
-        if [ $SYSTEM_NAME = ${SYSTEM_KALI} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_KALI} ]; then
             curl -fsSL https://${SOURCE}/linux/debian/gpg | apt-key add -
         else
             curl -fsSL https://${SOURCE}/linux/${SOURCE_BRANCH}/gpg | apt-key add -
@@ -211,25 +241,25 @@ function DockerEngine() {
 
         echo "deb [arch=${SOURCE_ARCH}] https://${SOURCE}/linux/${SOURCE_BRANCH} $SYSTEM_VERSION stable" | tee ${DockerSourceList} >/dev/null 2>&1
 
-        if [ $SYSTEM_NAME = ${SYSTEM_KALI} ]; then
+        if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_KALI} ]; then
             sed -i "s/${SYSTEM_VERSION}/buster/g" ${DockerSourceList}
             sed -i "s/${SOURCE_BRANCH}/debian/g" ${DockerSourceList}
         fi
-    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         yum-config-manager -y --add-repo https://${SOURCE}/linux/${SOURCE_BRANCH}/docker-ce.repo
     fi
 
     ## 安装 Docker Engine 软件包
-    if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         apt-get update
         apt-get install -y docker-ce docker-ce-cli containerd.io
-    elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         yum makecache
         yum install -y docker-ce docker-ce-cli containerd.io
     fi
 
     ## 配置镜像加速器
-    [ $REGISTRY_SOURCE_OFFICIAL == "True" ] || ImageAccelerator
+    [ ${REGISTRY_SOURCE_OFFICIAL} == "True" ] || ImageAccelerator
 
     ## 启动 Docker Engine 服务
     systemctl stop docker >/dev/null 2>&1
@@ -272,9 +302,9 @@ function DockerCompose() {
         fi
         chmod +x ${DockerCompose}
     else
-        if [ $SYSTEM = ${SYSTEM_DEBIAN} ]; then
+        if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
             apt-get install -y python3-pip
-        elif [ $SYSTEM = ${SYSTEM_REDHAT} ]; then
+        elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
             yum install -y python3-pip
         fi
         pip3 install --upgrade pip
@@ -284,7 +314,7 @@ function DockerCompose() {
             pip3 install docker-compose
         fi
 
-        [ $? -eq 0 ] || echo -e '\n\033[32m---------- Docker Compose 安装失败 ----------\033[0m\n'
+        [ $? -eq 0 ] || echo -e '\n\033[31m---------- Docker Compose 安装失败 ----------\033[0m\n'
     fi
     echo -e ''
 }
@@ -482,7 +512,7 @@ function ChooseMirrors() {
     echo -e ''
 
     ## 关闭 防火墙 和 SELINUX
-    [ ${SYSTEM} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
+    [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
 }
 
 CombinationFunction
