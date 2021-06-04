@@ -10,7 +10,7 @@
 
 ### 更新日志
 - __2021 / 06 / 05__
-ㅤ新增对于 Red Hat Enterprise Linux 的适配。
+ㅤ新增对于 Red Hat Enterprise Linux 的全面适配。
 - __2021 / 05 / 30__
 ㅤ新增选择软件源的 WEB 协议功能，修复了一些错误。
 - __2021 / 05 / 05__
@@ -23,11 +23,11 @@
 ***
 
 ### 已适配的 GNU/Linux 发行版 <img src="./icon/linux.svg" width="16" height="16" alt="Linux Logo"/>
-|          |  <a href="https://www.debian.org"><img src="./icon/debian.svg" width="14" height="14"/></a>&nbsp;Debian  |  <a href="https://cn.ubuntu.com"><img src="./icon/ubuntu.svg" width="14" height="14"/></a>&nbsp;Ubuntu  |  <a href="https://www.kali.org"><img src="./icon/kali.svg" width="16" height="16"/></a>&nbsp;Kali Linux  |  <a href="https://www.redhat.com/zhtechnologies/linux-platforms/enterprise-linux"><img src="./icon/redhat.svg" width="16" height="16"/></a>&nbsp;RHEL  |  <a href="https://www.centos.org"><img src="./icon/centos.svg" width="16" height="16"/></a>&nbsp;CentOS  |  <a href="https://getfedora.org/zh_Hans_CN"><img src="./icon/fedora.ico" width="14" height="14"/></a>&nbsp;Fedora  |
+|          |  <a href="https://www.debian.org"><img src="./icon/debian.svg" width="16" height="16"/></a>&nbsp;Debian  |  <a href="https://cn.ubuntu.com"><img src="./icon/ubuntu.svg" width="16" height="16"/></a>&nbsp;Ubuntu  |  <a href="https://www.kali.org"><img src="./icon/kali.svg" width="16" height="16"/></a>&nbsp;Kali Linux  |  <a href="https://www.redhat.com/zhtechnologies/linux-platforms/enterprise-linux"><img src="./icon/redhat.svg" width="16" height="16"/></a>&nbsp;RHEL  |  <a href="https://www.centos.org"><img src="./icon/centos.svg" width="16" height="16"/></a>&nbsp;CentOS  |  <a href="https://getfedora.org/zh_Hans_CN"><img src="./icon/fedora.ico" width="16" height="16"/></a>&nbsp;Fedora  |
 | :------: | :------: | :------: | :------: | :------: | :------: | :------: |
-| 支持版本 | 8.0 ~ 10.9 | 14.04 ~ 21.04 | 2.0 ~ 2021.2 | 7.0 ~ 8.4 | 7.0 ~ 8.4 | 28 ~ 34 |
+| 支持版本 | 8.0 ~ 10.9 | 16.04 ~ 21.04 | 2.0 ~ 2021.2 | 7.0 ~ 8.4 | 7.0 ~ 8.4 | 28 ~ 34 |
 > 目前仅支持上述基于 Debian 与 Redhat 系的发行版和及其部分衍生版本 \
-> 同样支持上述版本中拥有相同底层核心的其它发行版，例如 [`Armbian`](https://www.armbian.com) [`Kubuntu`](https://kubuntu.org) [`Oracle Linux`](https://www.oracle.com/cn/technical-resources/) 等
+> 同样支持上述版本中拥有相同底层核心的其它发行版，例如 [`Armbian`](https://www.armbian.com) [`Kubuntu`](https://kubuntu.org) [`Oracle Linux`](https://www.oracle.com/cn/technical-resources) 等
 
 ### 脚本当前使用的开源镜像站
 | | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 |
@@ -47,7 +47,7 @@
 
 ### 脚本执行流程
 - └ 选择国内源 `交互`
-  - └ 检测如果是 CentOS 选择是否安装/覆盖 EPEL 扩展国内源 `交互`
+  - └ 检测如果是 RHEL/CentOS 选择是否安装/覆盖 EPEL 扩展国内源 `交互`
 - └ 选择软件源使用的 WEB 协议 `交互`
 - └ 检测 防火墙 和 SELINUX 如果开启选择是否关闭 `交互`
 - └ 备份原有源
