@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-5-30
+## Modified: 2021-06-05
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -34,15 +34,16 @@ RedHatReposDirectory=/etc/yum.repos.d
 RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
 SelinuxConfig=/etc/selinux/config
 
-## 定义系统变量
+## 定义系统判定变量
 DebianRelease=lsb_release
 Architecture=$(uname -m)
-SYSTEM_DEBIAN=Debian
-SYSTEM_UBUNTU=Ubuntu
-SYSTEM_KALI=Kali
-SYSTEM_REDHAT=RedHat
-SYSTEM_CENTOS=CentOS
-SYSTEM_FEDORA=Fedora
+SYSTEM_DEBIAN="Debian"
+SYSTEM_UBUNTU="Ubuntu"
+SYSTEM_KALI="Kali"
+SYSTEM_REDHAT="RedHat"
+SYSTEM_RHEL="RedHat"
+SYSTEM_CENTOS="CentOS"
+SYSTEM_FEDORA="Fedora"
 
 ## 组合函数
 function CombinationFunction() {
@@ -60,23 +61,29 @@ function CombinationFunction() {
 function EnvJudgment() {
     ## 判定当前系统基于 Debian or RedHat
     if [ -f ${RedHatRelease} ]; then
-        SYSTEM=${SYSTEM_REDHAT}
+        SYSTEM_FACTION=${SYSTEM_REDHAT}
     else
-        SYSTEM=${SYSTEM_DEBIAN}
+        SYSTEM_FACTION=${SYSTEM_DEBIAN}
     fi
     ## 判定系统名称、版本、版本号
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
-        SYSTEM_NAME=$(${DebianRelease} -is)
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        SYSTEM_JUDGMENT=$(${DebianRelease} -is)
         SYSTEM_VERSION=$(${DebianRelease} -cs)
         SYSTEM_VERSION_NUMBER=$(${DebianRelease} -rs)
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
-        SYSTEM_NAME=$(cat ${RedHatRelease} | cut -c1-6)
-        if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c22-24)
-            CENTOS_VERSION=$(cat ${RedHatRelease} | cut -c22)
-        elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | cut -c16-18)
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        SYSTEM_JUDGMENT=$(cat ${RedHatRelease} | sed 's/ //g' | cut -c1-6)
+        if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} -o ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | grep -o "[0-9]\.[0-9]")
+            CENTOS_VERSION=$(echo ${SYSTEM_VERSION_NUMBER} | cut -c1)
+        elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_FEDORA} ]; then
+            SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | grep -o "[0-9][0-9]")
         fi
+    fi
+    ## 定义系统名称
+    if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+        SYSTEM_NAME="Red Hat Enterprise Linux"
+    else
+        SYSTEM_NAME=${SYSTEM_JUDGMENT}
     fi
     ## 判定系统处理器架构
     if [ ${Architecture} = "x86_64" ]; then
@@ -93,19 +100,21 @@ function EnvJudgment() {
         SYSTEM_ARCH=${Architecture}
     fi
     ## 定义软件源分支名称
-    if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
+    if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_UBUNTU} ]; then
         if [ ${Architecture} = "x86_64" ] || [ ${Architecture} = "*i?86*" ]; then
-            SOURCE_BRANCH=${SYSTEM_NAME,,}
+            SOURCE_BRANCH=${SYSTEM_JUDGMENT,,}
         else
             SOURCE_BRANCH=ubuntu-ports
         fi
+    elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+        SOURCE_BRANCH="centos"
     else
-        SOURCE_BRANCH=${SYSTEM_NAME,,}
+        SOURCE_BRANCH=${SYSTEM_JUDGMENT,,}
     fi
     ## 定义软件源同步/更新文字
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         SYNC_TXT="更新"
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         SYNC_TXT="同步"
     fi
 }
@@ -141,14 +150,14 @@ function TurnOffFirewall() {
 
 ## 备份原有源
 function BackupMirrors() {
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         ## 判断 /etc/apt/sources.list.d 目录下是否存在文件
         [ -d ${DebianExtendListDirectory} ] && ls ${DebianExtendListDirectory} | grep *.list -q
         VERIFICATION_FILES=$?
         ## 判断 /etc/apt/sources.list.d.bak 目录下是否存在文件
         [ -d ${DebianExtendListDirectoryBackup} ] && ls ${DebianExtendListDirectoryBackup} | grep *.list -q
         VERIFICATION_BACKUPFILES=$?
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         ## 判断 /etc/yum.repos.d 目录下是否存在文件
         [ -d ${RedHatReposDirectory} ] && ls ${RedHatReposDirectory} | grep repo -q
         VERIFICATION_FILES=$?
@@ -157,7 +166,7 @@ function BackupMirrors() {
         VERIFICATION_BACKUPFILES=$?
     fi
 
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         ## /etc/apt/sources.list
         if [ -s ${DebianSourceList} ]; then
             if [ -s ${DebianSourceListBackup} ]; then
@@ -208,7 +217,7 @@ function BackupMirrors() {
                 sleep 1s
             fi
         fi
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         ## /etc/yum.repos.d
         if [ ${VERIFICATION_FILES} -eq 0 ]; then
             if [ -d ${RedHatReposDirectoryBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
@@ -239,32 +248,28 @@ function BackupMirrors() {
 
 ## 删除原有源
 function RemoveOldMirrorsFiles() {
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         [ -f ${DebianSourceList} ] && sed -i '1,$d' ${DebianSourceList}
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         if [ -d ${RedHatReposDirectory} ]; then
             cd ${RedHatReposDirectory}
-            if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-                rm -rf ${SYSTEM_CENTOS}-*
-            elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-                rm -rf ${SOURCE_BRANCH}*
-            fi
+            rm -rf ${SYSTEM_CENTOS}-*
         fi
     fi
 }
 
 ## 更换国内源
 function ChangeMirrors() {
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         DebianMirrors
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         RedHatMirrors
         yum clean all >/dev/null 2>&1
     fi
     echo -e "\033[32m------------ 开始${SYNC_TXT}软件源 ------------\033[0m\n"
-    if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         apt-get update
-    elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         yum makecache
     fi
     VERIFICATION_SOURCESYNC=$?
@@ -284,9 +289,9 @@ function UpgradeSoftware() {
     case $INPUT in
     [Yy]*)
         echo -e ''
-        if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+        if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
             apt-get upgrade -y
-        elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+        elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
             yum update -y
         fi
         CHOICE_C=$(echo -e '\n\033[32m└ 是否清理已下载的软件包缓存 [ Y/n ]：\033[0m')
@@ -294,10 +299,10 @@ function UpgradeSoftware() {
         [ -z ${INPUT} ] && INPUT=Y
         case $INPUT in
         [Yy]*)
-            if [ ${SYSTEM} = ${SYSTEM_DEBIAN} ]; then
+            if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
                 apt-get autoremove -y >/dev/null 2>&1
                 apt-get clean >/dev/null 2>&1
-            elif [ ${SYSTEM} = ${SYSTEM_REDHAT} ]; then
+            elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
                 yum autoremove -y >/dev/null 2>&1
                 yum clean packages -y >/dev/null 2>&1
             fi
@@ -320,7 +325,7 @@ function UpgradeSoftware() {
 ## 更换基于 Debian 系 Linux 发行版的国内源
 function DebianMirrors() {
     ## 修改国内源
-    if [ ${SYSTEM_NAME} = ${SYSTEM_UBUNTU} ]; then
+    if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_UBUNTU} ]; then
         echo "## 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
         echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
         echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main restricted universe multiverse" >>${DebianSourceList}
@@ -334,7 +339,7 @@ function DebianMirrors() {
         echo "## 预发布软件源，不建议启用" >>${DebianSourceList}
         echo "# deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
         echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION}-proposed main restricted universe multiverse" >>${DebianSourceList}
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_DEBIAN} ]; then
+    elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_DEBIAN} ]; then
         echo "## 默认注释了源码仓库，如有需要可自行取消注释" >>${DebianSourceList}
         echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
         echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main contrib non-free" >>${DebianSourceList}
@@ -346,7 +351,7 @@ function DebianMirrors() {
         echo "## 预发布软件源，不建议启用" >>${DebianSourceList}
         echo "# deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
         echo "# deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH}-security ${SYSTEM_VERSION}/updates main contrib non-free" >>${DebianSourceList}
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_KALI} ]; then
+    elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_KALI} ]; then
         echo "deb ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
         echo "deb-src ${WEB_PROTOCOL}://${SOURCE}/${SOURCE_BRANCH} ${SYSTEM_VERSION} main non-free contrib" >>${DebianSourceList}
     fi
@@ -354,17 +359,19 @@ function DebianMirrors() {
 
 ## 更换基于 RedHat 系 Linux 发行版的国内源
 function RedHatMirrors() {
-    ## 创建官方的 repo 源文件  （由于 RedHat 系 Linux 源文件各不相同且无法判断，故通过在删除原有源后重新生成官方源的方式更换国内源）
+    ## 创建官方的 repo 源文件 （由于 RedHat 系 Linux 源文件各不相同且无法判断，故通过在删除原有源后重新生成官方源的方式更换国内源）
     RedHatOfficialReposCreate
     ## 修改国内源
-    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
+    if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} -o ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
         sed -i 's|^mirrorlist=|#mirrorlist=|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         [ ${CENTOS_VERSION} -eq "8" ] && sed -i 's|^#baseurl=http://mirror.centos.org/$contentdir|baseurl=http://mirror.centos.org/centos|g' ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         sed -i "s|^#baseurl=http|baseurl=${WEB_PROTOCOL}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
         sed -i "s|mirror.centos.org|${SOURCE}|g" ${RedHatReposDirectory}/${SYSTEM_CENTOS}-*
+        ## Red Hat Enterprise Linux 修改版本号
+        [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ] && sed -i "s/\$releasever/${CENTOS_VERSION}/g" ${SYSTEM_CENTOS}-*
         ## 安装/更换基于 CentOS 的 EPEL 扩展国内源
         [ ${EPEL_INSTALL} = "True" ] && EPELMirrors
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
+    elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_FEDORA} ]; then
         sed -i 's|^metalink=|#metalink=|g' \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}.repo \
             ${RedHatReposDirectory}/${SOURCE_BRANCH}-updates.repo \
@@ -383,15 +390,15 @@ function RedHatMirrors() {
     fi
 }
 
-## 安装/更换基于 CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
+## 安装/更换基于 RHEL/CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
 function EPELMirrors() {
     ## 安装 EPEL 软件包
     [ ${VERIFICATION_EPEL} -ne 0 ] && yum install -y https://mirrors.aliyun.com/epel/epel-release-latest-${CENTOS_VERSION}.noarch.rpm
     ## 删除原有 EPEL 扩展 repo 源文件
     [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDirectory}/epel*
     [ ${VERIFICATION_EPELBACKUPFILES} -eq 0 ] && rm -rf ${RedHatReposDirectoryBackup}/epel*
-    ## 生成基于 CentOS 的 EPEL 官方扩展 repo 源文件
-    CentOSEPELReposCreate
+    ## 生成官方 EPEL 扩展 repo 源文件
+    EPELReposCreate
     ## 更换国内源
     sed -i 's|^metalink=|#metalink=|g' ${RedHatReposDirectory}/epel*
     if [ ${CENTOS_VERSION} -eq "8" ]; then
@@ -483,8 +490,8 @@ function ChooseMirrors() {
         ;;
     esac
 
-    ## 更换基于 CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
-    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
+    ## 更换基于 RHEL/CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
+    if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} -o ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
         ## 判断是否已安装 EPEL 软件包
         rpm -qa | grep epel-release -q
         VERIFICATION_EPEL=$?
@@ -534,20 +541,29 @@ function ChooseMirrors() {
     esac
 
     ## 关闭 防火墙 和 SELINUX
-    [ ${SYSTEM} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
+    [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
 }
 
 ## 生成基于 RedHat 发行版和及其衍生发行版的官方 repo 源文件
 function RedHatOfficialReposCreate() {
     cd ${RedHatReposDirectory}
-    ## CentOS
-    if [ ${SYSTEM_NAME} = ${SYSTEM_CENTOS} ]; then
-        if [ ${CENTOS_VERSION} -eq "8" ]; then
-            CentOS8_RepoFiles='CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo'
-            for REPOS in $CentOS8_RepoFiles; do
-                touch $REPOS
-            done
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-AppStream.repo <<\EOF
+    ## RHEL/CentOS
+    if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} ]; then
+        CentOSReposCreate
+    elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+        CentOSReposCreate
+    elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_FEDORA} ]; then
+        FedoraReposCreate
+    fi
+}
+
+function CentOSReposCreate() {
+    if [ ${CENTOS_VERSION} -eq "8" ]; then
+        CentOS8_RepoFiles='CentOS-Linux-AppStream.repo CentOS-Linux-BaseOS.repo CentOS-Linux-ContinuousRelease.repo CentOS-Linux-Debuginfo.repo CentOS-Linux-Devel.repo CentOS-Linux-Extras.repo CentOS-Linux-FastTrack.repo CentOS-Linux-HighAvailability.repo CentOS-Linux-Media.repo CentOS-Linux-Plus.repo CentOS-Linux-PowerTools.repo CentOS-Linux-Sources.repo'
+        for REPOS in $CentOS8_RepoFiles; do
+            touch $REPOS
+        done
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-AppStream.repo <<\EOF
 # CentOS-Linux-AppStream.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -566,7 +582,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-BaseOS.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-BaseOS.repo <<\EOF
 # CentOS-Linux-BaseOS.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -585,7 +601,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-ContinuousRelease.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-ContinuousRelease.repo <<\EOF
 # CentOS-Linux-ContinuousRelease.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -611,7 +627,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Debuginfo.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Debuginfo.repo <<\EOF
 # CentOS-Linux-Debuginfo.repo
 #
 # All debug packages are merged into a single repo, split by basearch, and are
@@ -624,7 +640,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Devel.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Devel.repo <<\EOF
 # CentOS-Linux-Devel.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -643,7 +659,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Extras.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Extras.repo <<\EOF
 # CentOS-Linux-Extras.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -662,7 +678,7 @@ gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-FastTrack.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-FastTrack.repo <<\EOF
 # CentOS-Linux-FastTrack.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -681,7 +697,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-HighAvailability.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-HighAvailability.repo <<\EOF
 # CentOS-Linux-HighAvailability.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -700,7 +716,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Media.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Media.repo <<\EOF
 # CentOS-Linux-Media.repo
 #
 # You can use this repo to install items directly off the installation media.
@@ -724,7 +740,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Plus.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Plus.repo <<\EOF
 # CentOS-Linux-Plus.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -743,7 +759,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-PowerTools.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-PowerTools.repo <<\EOF
 # CentOS-Linux-PowerTools.repo
 #
 # The mirrorlist system uses the connecting IP address of the client and the
@@ -762,7 +778,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Sources.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Linux-Sources.repo <<\EOF
 # CentOS-Linux-Sources.repo
 
 
@@ -794,12 +810,12 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
-        elif [ ${CENTOS_VERSION} -eq "7" ]; then
-            CentOS7_RepoFiles='CentOS-Base.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo'
-            for REPOS in $CentOS7_RepoFiles; do
-                touch $REPOS
-            done
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Base.repo <<\EOF
+    elif [ ${CENTOS_VERSION} -eq "7" ]; then
+        CentOS7_RepoFiles='CentOS-Base.repo CentOS-CR.repo CentOS-Debuginfo.repo CentOS-fasttrack.repo CentOS-Media.repo CentOS-Sources.repo CentOS-Vault.repo'
+        for REPOS in $CentOS7_RepoFiles; do
+            touch $REPOS
+        done
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Base.repo <<\EOF
 # CentOS-Base.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -844,7 +860,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-CR.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-CR.repo <<\EOF
 # CentOS-CR.repo
 #
 # The Continuous Release ( CR )  repository contains rpms that are due in the next
@@ -874,7 +890,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 enabled=0
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Debuginfo.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Debuginfo.repo <<\EOF
 # CentOS-Debug.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -897,7 +913,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-Debug-7
 enabled=0
 #
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-fasttrack.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-fasttrack.repo <<\EOF
 [fasttrack]
 name=CentOS-7 - fasttrack
 mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=fasttrack&infra=$infra
@@ -906,7 +922,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Media.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Media.repo <<\EOF
 # CentOS-Media.repo
 #
 #  This repo can be used with mounted DVD media, verify the mount point for
@@ -929,7 +945,7 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-            cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Sources.repo <<\EOF
+        cat >${RedHatReposDirectory}/${SYSTEM_CENTOS}-Sources.repo <<\EOF
 # CentOS-Sources.repo
 #
 # The mirror system uses the connecting IP address of the client and the
@@ -973,15 +989,15 @@ gpgcheck=1
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
-        fi
+    fi
+}
 
-    ## Fedora
-    elif [ ${SYSTEM_NAME} = ${SYSTEM_FEDORA} ]; then
-        Fedora_RepoFiles='fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo'
-        for REPOS in $Fedora_RepoFiles; do
-            touch $REPOS
-        done
-        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-cisco-openh264.repo <<\EOF
+function FedoraReposCreate() {
+    Fedora_RepoFiles='fedora-cisco-openh264.repo fedora.repo fedora-updates.repo fedora-modular.repo fedora-updates-modular.repo fedora-updates-testing.repo fedora-updates-testing-modular.repo'
+    for REPOS in $Fedora_RepoFiles; do
+        touch $REPOS
+    done
+    cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-cisco-openh264.repo <<\EOF
 [fedora-cisco-openh264]
 name=Fedora $releasever openh264 (From Cisco) - $basearch
 metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-$releasever&arch=$basearch
@@ -1004,7 +1020,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=True
 EOF
-        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}.repo <<\EOF
+    cat >${RedHatReposDirectory}/${SOURCE_BRANCH}.repo <<\EOF
 [fedora]
 name=Fedora $releasever - $basearch
 #baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/
@@ -1042,7 +1058,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates.repo <<\EOF
+    cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates.repo <<\EOF
 [updates]
 name=Fedora $releasever - $basearch - Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Everything/$basearch/
@@ -1080,7 +1096,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-modular.repo <<\EOF
+    cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-modular.repo <<\EOF
 [fedora-modular]
 name=Fedora Modular $releasever - $basearch
 #baseurl=http://download.example/pub/fedora/linux/releases/$releasever/Modular/$basearch/os/
@@ -1118,7 +1134,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-modular.repo <<\EOF
+    cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-modular.repo <<\EOF
 [updates-modular]
 name=Fedora Modular $releasever - $basearch - Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/$releasever/Modular/$basearch/
@@ -1156,7 +1172,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing.repo <<\EOF
+    cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing.repo <<\EOF
 [updates-testing]
 name=Fedora $releasever - $basearch - Test Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Everything/$basearch/
@@ -1194,7 +1210,7 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-        cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing-modular.repo <<\EOF
+    cat >${RedHatReposDirectory}/${SOURCE_BRANCH}-updates-testing-modular.repo <<\EOF
 [updates-testing-modular]
 name=Fedora Modular $releasever - $basearch - Test Updates
 #baseurl=http://download.example/pub/fedora/linux/updates/testing/$releasever/Modular/$basearch/
@@ -1232,11 +1248,10 @@ metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 skip_if_unavailable=False
 EOF
-    fi
 }
 
-## 生成基于 CentOS 的 EPEL 官方扩展 repo 源文件
-function CentOSEPELReposCreate() {
+## 生成官方 EPEL 扩展 repo 源文件
+function EPELReposCreate() {
     cd ${RedHatReposDirectory}
     if [ ${CENTOS_VERSION} -eq "8" ]; then
         EPEL8_RepoFiles='epel.repo epel-modular.repo epel-playground.repo epel-testing.repo epel-testing-modular.repo'
