@@ -78,14 +78,6 @@ function EnvJudgment() {
     else
         SYSTEM_FACTION=${SYSTEM_DEBIAN}
     fi
-    ## 判定基于 Debian 的系统是否安装 LSB 软件包
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-        dpkg -l | grep lsb-release -q
-        if [ $? -ne 0 ]; then
-            echo -e "\n\033[31m------------ 检测到当前系统未安装 LSB 软件包，受此软件包依赖脚本将无法正常使用！ ------------\033[0m\n\n请执行 apt-get install -y lsb-release 命令安装后重新执行此脚本\n"
-            exit
-        fi
-    fi
     ## 判定系统名称、版本、版本号
     if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         SYSTEM_JUDGMENT=$(${DebianRelease} -is)
@@ -135,6 +127,12 @@ function EnvJudgment() {
         SOURCE_BRANCH="centos"
     else
         SOURCE_BRANCH=${SYSTEM_JUDGMENT,,}
+    fi
+    ## 定义软件源同步/更新文字
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        SYNC_TXT="更新"
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        SYNC_TXT="同步"
     fi
 }
 
@@ -195,12 +193,12 @@ function RemoveOldVersion() {
             systemctl disable --now docker >/dev/null 2>&1
             sleep 3s
         fi
-        ## 删除旧的软件包
-        if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-            apt-get remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
-        elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-            yum remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
-        fi
+    fi
+    ## 删除旧的软件包
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        apt-get remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        yum remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
     fi
 }
 
@@ -220,7 +218,7 @@ function DockerEngine() {
     fi
     VERIFICATION_SOURCESYNC=$?
     if [ ${VERIFICATION_SOURCESYNC} -ne 0 ]; then
-        echo -e '\033[31m ---------- 软件源同步出错，请先确保软件包管理工具可用 ---------- \033[0m'
+        echo -e "\033[31m ---------- 软件源${SYNC_TXT}出错，请先确保软件包管理工具可用 ---------- \033[0m"
         exit
     fi
 
