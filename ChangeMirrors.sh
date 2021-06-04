@@ -209,7 +209,9 @@ function BackupMirrors() {
                 [Yy]*)
                     cp -rf ${DebianExtendListDirectory}/* ${DebianExtendListDirectoryBackup} >/dev/null 2>&1
                     ;;
-                [Nn]*) ;;
+                [Nn]*) 
+                    echo ''
+                    ;;
                 *)
                     echo -e '\n\033[33m------------ 输入错误，默认不覆盖 ------------\033[0m\n'
                     ;;
