@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-06-04
+## Modified: 2021-06-16
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -54,18 +54,18 @@ DockerConfigBackup=${DockerDirectory}/daemon.json.bak
 DockerCompose=/usr/local/bin/docker-compose
 PROXY_URL=https://ghproxy.com/
 DOCKER_COMPOSE_VERSION=1.29.2
-DOCKER_COMPOSE_URL=https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
+DOCKER_COMPOSE_DOWNLOAD_URL=https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
 
 ## 组合函数
 function CombinationFunction() {
     PermissionJudgment
     NetWorkJudgment && clear
     EnvJudgment
-    TurnOffFirewall
     ChooseMirrors
-    RemoveOldVersion
+    InstallationEnvironment
+    ConfigureDockerCEMirror
     DockerEngine
-    [ ${DOCKER_COMPOSE} = "True" ] && DockerCompose
+    DockerCompose
     ShowVersion
     AuthorAutograph
 }
@@ -163,50 +163,19 @@ function TurnOffFirewall() {
     fi
 }
 
-## 卸载旧版本
-function RemoveOldVersion() {
+## 环境准备
+function InstallationEnvironment() {
     ## 删除旧的 Docker CE 源
     if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         sed -i '/docker-ce/d' ${DebianSourceList}
         rm -rf ${DockerSourceList}
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-        rm -rf docker
+        rm -rf ${DockerRepo}
     fi
-    ## 检测是否已安装旧版软件包
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-        dpkg -l | grep docker -q
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-        rpm -qa | grep docker -q
-    fi
-    if [ $? -eq 0 ]; then
-        echo -e '\033[33m[*] 检测到已安装旧版本，正在卸载......\033[0m\n'
-        ## 停止旧版本进程
-        systemctl status docker | grep running -q
-        if [ $? -eq 0 ]; then
-            systemctl disable --now docker >/dev/null 2>&1
-            sleep 3s
-        fi
-    fi
-    ## 删除旧的软件包
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-        apt-get remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-        yum remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
-    fi
-}
-
-## 安装 Docker Engine
-function DockerEngine() {
     ## 安装前环境检测
     if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         apt-get update
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-        systemctl status firewalld | grep running -q
-        if [ $? -eq 0 ]; then
-            systemctl disable --now firewalld >/dev/null 2>&1
-            sed -i "7c SELINUX=disabled" /etc/selinux/config
-            setenforce 0 >/dev/null 2>&1
-        fi
         yum makecache
     fi
     VERIFICATION_SOURCESYNC=$?
@@ -214,100 +183,246 @@ function DockerEngine() {
         echo -e "\033[31m ---------- 软件源${SYNC_TXT}出错，请先确保软件包管理工具可用 ---------- \033[0m"
         exit
     fi
-
     ## 安装环境所需的软件包
     if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         yum install -y yum-utils device-mapper-persistent-data lvm2
     fi
+}
 
-    ## 配置 Docker CE 源
+## Docker Engine 可安装版本列表
+function DockerEngineVersionList() {
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        apt-cache madison docker-ce | awk '{print $3}' | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}" | grep -v "18.06" >docker-version.txt
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        yum list docker-ce --showduplicates | sort -r | awk '{print $2}' | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}" >docker-version.txt
+    fi
+}
+
+## 卸载旧版本
+function RemoveOldVersion() {
+    ## 停止旧版本进程
+    systemctl disable --now docker >/dev/null 2>&1
+    ## 删除旧的软件包
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        apt-get remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
+        apt-get autoremove -y >/dev/null 2>&1
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        yum remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
+        yum autoremove -y >/dev/null 2>&1
+    fi
+}
+
+## 配置 Docker CE 源
+function ConfigureDockerCEMirror() {
+    if [ ${DOCKER_VERSION_INSTALL_LATEST} == "True" ]; then
+        SOURCE_JUDGMENT=${SOURCE}
+    else
+        SOURCE_JUDGMENT="download.docker.com"
+    fi
     if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
         if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_KALI} ]; then
-            curl -fsSL https://${SOURCE}/linux/debian/gpg | apt-key add -
+            curl -fsSL https://${SOURCE_JUDGMENT}/linux/debian/gpg | apt-key add - >/dev/null 2>&1
         else
-            curl -fsSL https://${SOURCE}/linux/${SOURCE_BRANCH}/gpg | apt-key add -
+            curl -fsSL https://${SOURCE_JUDGMENT}/linux/${SOURCE_BRANCH}/gpg | apt-key add - >/dev/null 2>&1
         fi
-
-        echo "deb [arch=${SOURCE_ARCH}] https://${SOURCE}/linux/${SOURCE_BRANCH} $SYSTEM_VERSION stable" | tee ${DockerSourceList} >/dev/null 2>&1
-
+        echo "deb [arch=${SOURCE_ARCH}] https://${SOURCE_JUDGMENT}/linux/${SOURCE_BRANCH} ${SYSTEM_VERSION} stable" | tee ${DockerSourceList} >/dev/null 2>&1
+        ## 适配 KALI
         if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_KALI} ]; then
             sed -i "s/${SYSTEM_VERSION}/buster/g" ${DockerSourceList}
             sed -i "s/${SOURCE_BRANCH}/debian/g" ${DockerSourceList}
         fi
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-        yum-config-manager -y --add-repo https://${SOURCE}/linux/${SOURCE_BRANCH}/docker-ce.repo
+        yum-config-manager -y --add-repo https://${SOURCE_JUDGMENT}/linux/${SOURCE_BRANCH}/docker-ce.repo
     fi
 
-    ## 安装 Docker Engine 软件包
     if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-        apt-get update
-        apt-get install -y docker-ce docker-ce-cli containerd.io
+        apt-get update >/dev/null 2>&1
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-        yum makecache
-        yum install -y docker-ce docker-ce-cli containerd.io
+        yum makecache >/dev/null 2>&1
     fi
-
-    ## 配置镜像加速器
-    [ ${REGISTRY_SOURCE_OFFICIAL} == "True" ] || ImageAccelerator
-
-    ## 启动 Docker Engine 服务
-    systemctl stop docker >/dev/null 2>&1
-    systemctl enable --now docker
 }
 
-## 镜像加速器
-function ImageAccelerator() {
-    ## 创建目录和文件
-    if [ -d ${DockerDirectory} ] && [ -e ${DockerConfig} ]; then
-        if [ -e ${DockerConfigBackup} ]; then
-            echo -e "\n\033[32m└ 检测到已备份的 Docker 配置文件，跳过备份操作 ...... \033[0m\n"
-        else
-            cp -rf ${DockerConfig} ${DockerConfigBackup}
-            echo -e "\n\033[32m└ 已备份原有 Docker 配置文件至 ${DockerConfigBackup} ...... \033[0m\n"
-        fi
-        sleep 2s
-    else
-        mkdir -p ${DockerDirectory} >/dev/null 2>&1
-        touch ${DockerConfig}
+## 配置 Docker Engine
+function DockerEngine() {
+    ## 检测是否已安装 Docker Engine 软件包
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        dpkg -l | grep docker-ce-cli -q
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        rpm -qa | grep docker-ce-cli -q
     fi
+    if [ $? -eq 0 ]; then
+        DockerEngineVersionList
+        DOCKER_INSTALLED_VERSION=$(docker -v | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}")
+        DOCKER_VERSION_LATEST=$(cat docker-version.txt | head -n 1)
+        if [[ ${DOCKER_INSTALLED_VERSION} == ${DOCKER_VERSION_LATEST} ]]; then
+            if [ ${DOCKER_VERSION_INSTALL_LATEST} = "True" ]; then
+                echo -e '\n\033[32m---------- 检测到已安装最新版本的 Docker Engine，跳过安装 ----------\033[0m'
+                ## 配置镜像加速器
+                ConfigureImageAccelerator
+                ## 启动 Docker Engine 服务
+                systemctl status docker | grep running -q
+                if [ $? -eq 0 ]; then
+                    systemctl restart docker
+                fi
+                echo ''
+                systemctl enable --now docker >/dev/null 2>&1
+                ## 安装 Docker Compose
+                DockerCompose
+                ## 查看版本
+                ShowVersion
+                AuthorAutograph
+                exit
+            else
+                CHOICE_E=$(echo -e '\n\033[32m└ 检测到已安装最新版本的 Docker Engine，请确认是否覆盖安装 [ Y/n ]：\033[0m')
+            fi
+        else
+            if [ ${DOCKER_VERSION_INSTALL_LATEST} = "True" ]; then
+                CHOICE_E=$(echo -e '\n\033[32m└ 检测到已安装旧版本的 Docker Engine，是否更新 [ Y/n ]：\033[0m')
+            else
+                CHOICE_E=$(echo -e '\n\033[32m└ 检测到已安装旧版本的 Docker Engine，是否覆盖安装 [ Y/n ]：\033[0m')
+            fi
+        fi
+        read -p "${CHOICE_E}" INPUT
+        [ -z ${INPUT} ] && INPUT=Y
+        case $INPUT in
+        [Yy]*)
+            ## 卸载旧版本
+            echo -e '\n[*] 正在卸载之前的版本 ......'
+            RemoveOldVersion
+            echo -e '\n[OK] 卸载完毕'
+            ## 安装 Docker Engine 软件包
+            DockerEngineInstall
+            ;;
+        [Nn]*) ;;
+        *)
+            echo -e '\n\033[33m---------- 输入错误，默认不覆盖安装 ----------\033[0m\n'
+            ;;
+        esac
+        rm -rf docker-version.txt
+    else
+        ## 安装 Docker Engine 软件包
+        DockerEngineInstall
+        ## 卸载旧版本（防止遗漏）
+        RemoveOldVersion
+    fi
+    ## 配置 Docker Hub 源（镜像加速器）
+    ConfigureImageAccelerator
+    ## 启动 Docker Engine 服务
+    systemctl stop docker >/dev/null 2>&1
+    systemctl enable --now docker >/dev/null 2>&1
+}
 
-    ## 配置镜像加速器
-    echo -e '{\n  "registry-mirrors": ["https://SOURCE"]\n}' >${DockerConfig}
-    sed -i "s/SOURCE/$REGISTRY_SOURCE/g" ${DockerConfig}
-    systemctl daemon-reload
+## 安装 Docker Engine 软件包
+function DockerEngineInstall() {
+    if [ ${DOCKER_VERSION_INSTALL_LATEST} == "True" ]; then
+        ## 安装最新版本
+        if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+            apt-get install -y docker-ce docker-ce-cli containerd.io
+        elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+            yum install -y docker-ce docker-ce-cli containerd.io
+        fi
+    else
+        ## 手动选择安装版本
+        DockerEngineVersionList
+        echo -e '\n\033[32m --------- 请选择你要安装的版本，如：19.03.15 ---------- \033[0m\n'
+        cat docker-version.txt
+        echo -e '\n以上可选择的安装版本由官方提供，若系统过新则无法安装较旧的版本'
+        while true; do
+            CHOICE_F=$(echo -e '\n\033[32m└ 请输入你想要安装的具体版本号：\033[0m\n')
+            read -p "${CHOICE_F} " DOCKER_VERSION
+            echo ''
+            ## 搜索匹配字符
+            cat docker-version.txt | grep -Ew "${DOCKER_VERSION}" >/dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                ## 确认输入格式
+                echo ${DOCKER_VERSION} | grep -Ew '[1,2][0,8,9].[0,1][0-9].[0-9]{1,2}' >/dev/null 2>&1
+                if [ $? -eq 0 ]; then
+                    rm -rf docker-version.txt
+                    break # 跳出循环
+                else
+                    echo -e '\033[33m ---------- 请输入正确的版本号 ---------- \033[0m'
+                fi
+            else
+                echo -e '\033[33m ---------- 输入错误请重新输入 ---------- \033[0m'
+            fi
+        done
+        if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+            apt-get install -y docker-ce=5:${DOCKER_VERSION}* docker-ce-cli=5:${DOCKER_VERSION}* containerd.io
+        elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+            yum install -y docker-ce-${DOCKER_VERSION} docker-ce-cli-${DOCKER_VERSION} containerd.io
+        fi
+    fi
+}
+
+## 配置 Docker Hub 源（镜像加速器）
+function ConfigureImageAccelerator() {
+    if [ ${REGISTRY_SOURCE_OFFICIAL} = "False" ]; then
+        ## 创建目录和文件
+        if [ -d ${DockerDirectory} ] && [ -e ${DockerConfig} ]; then
+            if [ -e ${DockerConfigBackup} ]; then
+                CHOICE_BACKUP=$(echo -e "\n\033[32m└ 检测到已备份的 Docker 配置文件，是否覆盖备份 [ Y/n ]：\033[0m")
+                read -p "${CHOICE_BACKUP}" INPUT
+                [ -z ${INPUT} ] && INPUT=Y
+                case $INPUT in
+                [Yy]*)
+                    cp -rf ${DockerConfig} ${DockerConfigBackup} >/dev/null 2>&1
+                    ;;
+                [Nn]*) ;;
+                *)
+                    echo -e '\n\033[33m------------ 输入错误，默认不覆盖 ------------\033[0m '
+                    ;;
+                esac
+            else
+                cp -rf ${DockerConfig} ${DockerConfigBackup} >/dev/null 2>&1
+                echo -e "\n\033[32m└ 已备份原有 Docker 配置文件至 ${DockerConfigBackup} ...... \033[0m"
+            fi
+            sleep 2s
+        else
+            mkdir -p ${DockerDirectory} >/dev/null 2>&1
+            touch ${DockerConfig}
+        fi
+        ## 配置镜像加速器
+        echo -e '{\n  "registry-mirrors": ["https://SOURCE"]\n}' >${DockerConfig}
+        sed -i "s/SOURCE/$REGISTRY_SOURCE/g" ${DockerConfig}
+        systemctl daemon-reload
+    fi
 }
 
 ## 安装 Docker Compose
 function DockerCompose() {
-    echo -e ''
-    ## 卸载旧版本
-    [ -e ${DockerCompose} ] && rm -rf ${DockerCompose}
-    ## 根据处理器架构选择安装方式
-    if [ ${Architecture} = "x86_64" ]; then
-        if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
-            curl -L ${PROXY_URL}${DOCKER_COMPOSE_URL} -o ${DockerCompose}
+    if [ ${DOCKER_COMPOSE} == "True" ]; then
+        ## 卸载旧版本
+        [ -e ${DockerCompose} ] && rm -rf ${DockerCompose}
+        ## 根据处理器架构选择安装方式
+        if [ ${Architecture} = "x86_64" ]; then
+            echo -e ''
+            if [ ${DOCKER_COMPOSE_DOWNLOAD_PROXY} = "True" ]; then
+                curl -L ${PROXY_URL}${DOCKER_COMPOSE_DOWNLOAD_URL} -o ${DockerCompose}
+            else
+                curl -L ${DOCKER_COMPOSE_DOWNLOAD_URL} -o ${DockerCompose}
+            fi
+            chmod +x ${DockerCompose}
         else
-            curl -L ${DOCKER_COMPOSE_URL} -o ${DockerCompose}
+            echo -e '\n[*] 正在通过 pip 安装 Docker Compose ......\n'
+            if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+                apt-get install -y python3-pip python3-dev gcc libffi-dev openssl >/dev/null 2>&1
+            elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+                yum install -y python3-pip python3-devel gcc libffi-devel openssl-devel >/dev/null 2>&1
+            fi
+            pip3 install --upgrade pip
+            if [ ${DOCKER_COMPOSE_DOWNLOAD_PROXY} = "True" ]; then
+                pip3 install -i https://mirrors.aliyun.com/pypi/simple docker-compose
+            else
+                pip3 install docker-compose
+            fi
+            [ $? -ne 0 ] && echo -e "\n\033[31m---------- Docker Compose 安装失败，检测到当前处理器为 ${Architecture} 架构无法保证 100% 安装成功，自行查看 pip 报错原因 ----------\033[0m\n"
         fi
-        chmod +x ${DockerCompose}
+        echo -e ''
     else
-        if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-            apt-get install -y python3-pip
-        elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-            yum install -y python3-pip
-        fi
-        pip3 install --upgrade pip
-        if [ ${DOCKER_COMPOSE_PROXY} = "True" ]; then
-            pip3 install -i https://mirrors.aliyun.com/pypi/simple docker-compose
-        else
-            pip3 install docker-compose
-        fi
-
-        [ $? -eq 0 ] || echo -e '\n\033[31m---------- Docker Compose 安装失败 ----------\033[0m\n'
+        echo -e ''
     fi
-    echo -e ''
 }
 
 ## 查看版本信息
@@ -323,7 +438,8 @@ function ShowVersion() {
         exit
     fi
     systemctl status docker | grep running -q
-    [ $? -ne 0 ] && echo -e '\n\033[31m [ERROR] 检测到 Docker 服务启动异常，可能由于重复安装导致\033[0m' && echo -e '\n\033[34m 请执行 systemctl start docker 或 service docker start 命令尝试启动......\033[0m'
+    [ $? -ne 0 ] && echo -e '\n\033[31m [ERROR] 检测到 Docker 服务启动异常，可能由于重复安装相同版本导致\033[0m' && echo -e '\n\033[31m 请执行 systemctl start docker 或 service docker start 命令尝试启动\033[0m' && echo -e '\n\033[31m 官方安装文档：https://docs.docker.com/engine/install\033[0m'
+
 }
 
 ## 选择 Docker CE & Docker Hub 源：
@@ -376,7 +492,7 @@ function ChooseMirrors() {
     echo -e ''
     echo -e '#####################################################'
     ## 定义 Docker CE 源
-    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的 Docker CE 源 [ 1~9 ]：\033[0m')
+    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入你想使用的 Docker CE 源 [ 1~9 ]：\033[0m')
     read -p "${CHOICE_A}" INPUT
     case $INPUT in
     1)
@@ -408,13 +524,31 @@ function ChooseMirrors() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com/docker-ce"
-        echo -e '\n\033[33m---------- 输入错误，Docker CE 源将默认使用阿里云 ----------\033[0m'
-        sleep 2s
+        echo -e '\n\033[33m---------- 输入错误，将默认使用阿里云 ----------\033[0m'
+        sleep 1s
         ;;
     esac
-    echo -e ''
+    ## 是否手动选择安装版本
+    CHOICE_C=$(echo -e '\n\033[32m  └ 是否安装最新版本的 Docker Engine [ Y/n ]：\033[0m')
+    read -p "${CHOICE_C}" INPUT
+    [ -z ${INPUT} ] && INPUT=Y
+    case $INPUT in
+    [Yy]*)
+        DOCKER_VERSION_INSTALL_LATEST="True"
+        ;;
+    [Nn]*)
+        DOCKER_VERSION_INSTALL_LATEST="False"
+        if [ ${SOURCE} != "download.docker.com" ]; then
+            echo -e "\n\033[33m ---------- Docker CE 源已替换成官方源 ---------- \033[0m"
+        fi
+        ;;
+    *)
+        DOCKER_VERSION_INSTALL_LATEST="True"
+        echo -e '\n\033[33m---------- 输入错误，默认安装最新版本 ----------\033[0m'
+        ;;
+    esac
     ## 定义 Docker Hub 源（镜像加速器）
-    CHOICE_B=$(echo -e '\033[32m└ 请选择并输入您想使用的 Docker Hub 源 [ 1~10 ]：\033[0m')
+    CHOICE_B=$(echo -e '\n\033[32m└ 请选择并输入你想使用的 Docker Hub 源 [ 1~10 ]：\033[0m')
     read -p "${CHOICE_B}" INPUT
     case $INPUT in
     1)
@@ -459,35 +593,35 @@ function ChooseMirrors() {
         ;;
     *)
         REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
-        echo -e '\033[33m---------- 输入错误，镜像加速器将默认使用阿里云（杭州） ----------\033[0m'
-        sleep 3s
+        REGISTRY_SOURCE_OFFICIAL="False"
+        echo -e '\n\033[33m---------- 输入错误，将默认使用阿里云（杭州） ----------\033[0m'
+        sleep 1s
         ;;
     esac
-
     ## 选择是否安装 Docker Compose
     if [ -x ${DockerCompose} ]; then
-        CHOICE_C=$(echo -e '\n\033[32m└ 检测到已安装 Docker Compose ，是否覆盖安装 [ Y/n ]：\033[0m')
+        CHOICE_D=$(echo -e '\n\033[32m└ 检测到已安装 Docker Compose ，是否覆盖安装 [ Y/n ]：\033[0m')
     else
-        CHOICE_C=$(echo -e '\n\033[32m└ 是否安装 Docker Compose [ Y/n ]：\033[0m')
+        CHOICE_D=$(echo -e '\n\033[32m└ 是否安装 Docker Compose [ Y/n ]：\033[0m')
     fi
-    read -p "${CHOICE_C}" INPUT
+    read -p "${CHOICE_D}" INPUT
     [ -z ${INPUT} ] && INPUT=Y
     case $INPUT in
     [Yy]*)
         DOCKER_COMPOSE="True"
         ## 选择下载方式
-        CHOICE_C1=$(echo -e '\n\033[32m  └ 是否使用国内代理进行下载 [ Y/n ]：\033[0m')
-        read -p "${CHOICE_C1}" INPUT
+        CHOICE_D1=$(echo -e '\n\033[32m  └ 是否使用国内代理进行下载 [ Y/n ]：\033[0m')
+        read -p "${CHOICE_D1}" INPUT
         [ -z ${INPUT} ] && INPUT=Y
         case $INPUT in
         [Yy]*)
-            DOCKER_COMPOSE_PROXY="True"
+            DOCKER_COMPOSE_DOWNLOAD_PROXY="True"
             ;;
         [Nn]*)
-            DOCKER_COMPOSE_PROXY="False"
+            DOCKER_COMPOSE_DOWNLOAD_PROXY="False"
             ;;
         *)
-            DOCKER_COMPOSE_PROXY="False"
+            DOCKER_COMPOSE_DOWNLOAD_PROXY="False"
             echo -e '\n\033[33m---------- 输入错误，默认不使用 ----------\033[0m\n'
             ;;
         esac
@@ -503,7 +637,7 @@ function ChooseMirrors() {
     echo -e ''
 
     ## 关闭 防火墙 和 SELINUX
-    [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
+    [ ${SYSTEM_FACTION} == ${SYSTEM_REDHAT} ] && TurnOffFirewall
 }
 
 CombinationFunction
