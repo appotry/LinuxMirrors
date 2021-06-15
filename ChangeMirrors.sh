@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-06-05
+## Modified: 2021-06-16
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -282,7 +282,7 @@ function ChangeMirrors() {
     if [ ${VERIFICATION_SOURCESYNC} -eq 0 ]; then
         echo -e "\n\033[32m------------ ${SYNC_TXT}软件源结束 ------------\033[0m"
     else
-        echo -e "\n\033[31m------------ 软件源${SYNC_TXT}失败，请重新执行脚本 ------------\033[0m\n\n如果仍然${SYNC_TXT}失败那么可能由以下原因导致\n1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等\n2. 软件源问题：所选镜像站正在维护或者不支持您的操作系统\n"
+        echo -e "\n\033[31m------------ 软件源${SYNC_TXT}失败，请重新执行脚本 ------------\033[0m\n\n如果仍然${SYNC_TXT}失败那么可能由以下原因导致\n1. 网络问题：例如网络异常、网络间歇式中断、由地区影响的网络因素等\n2. 软件源问题：所选镜像站正在维护或者不支持你的操作系统\n"
         exit
     fi
 }
@@ -312,7 +312,8 @@ function UpgradeSoftware() {
                 yum autoremove -y >/dev/null 2>&1
                 yum clean packages -y >/dev/null 2>&1
             fi
-            echo -e '\n清理完毕!'
+            
+            echo -e '\n清理完毕 [OK]'
             ;;
         [Nn]*) ;;
         *)
@@ -453,7 +454,7 @@ function ChooseMirrors() {
     echo -e "            系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
     echo -e ''
     echo -e '#####################################################'
-    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入您想使用的国内源 [ 1-11 ]：\033[0m')
+    CHOICE_A=$(echo -e '\n\033[32m└ 请选择并输入你想使用的国内源 [ 1-11 ]：\033[0m')
     read -p "${CHOICE_A}" INPUT
     case $INPUT in
     1)
