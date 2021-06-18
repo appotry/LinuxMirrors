@@ -57,19 +57,19 @@
 > 同样支持上述版本中拥有相同底层核心的其它发行版，例如 [`Armbian`](https://www.armbian.com) [`Kubuntu`](https://kubuntu.org) [`Oracle Linux`](https://www.oracle.com/cn/technical-resources) 等
 
 ### 脚本当前使用的开源镜像站
-| | 镜像站名称 | 镜像站地址 | IPv4 | IPv6 | Kali Linux | Fedora | EPEL |
-| :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: |
-| 1 | 阿里云 | [mirrors.aliyun.com](https://developer.aliyun.com/special/mirrors/notice) | √ | √ | √ | √ | √ |
-| 2 | 腾讯云 | [mirrors.cloud.tencent.com](https://mirrors.cloud.tencent.com) | √ | √ | √ | √ | √ |
-| 3 | 华为云 | [mirrors.huaweicloud.com](https://mirrors.huaweicloud.com) | √ | √ | √ | √ | √ |
-| 4 | 网易 | [mirrors.163.com](https://mirrors.163.com) | √ |  |  | √ |  |
-| 5 | 搜狐 | [mirrors.sohu.com](https://mirrors.sohu.com) | √ |  |  |  |  |
-| 6 | 清华大学 | [mirrors.tuna.tsinghua.edu.cn](https://mirrors.tuna.tsinghua.edu.cn) | √ | √ | √ | √ | √ |
-| 7 | 浙江大学 | [mirrors.zju.edu.cn](https://mirrors.zju.edu.cn) | √ |  | √ | √ | √ |
-| 8 | 重庆大学 | [mirrors.cqu.edu.cn](https://mirrors.cqu.edu.cn) | √ |  | √ | √ | √ |
-| 9 | 兰州大学 | [mirror.lzu.edu.cn](https://mirror.lzu.edu.cn) | √ | √ |  | √ | √ |
-| 10 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) | √ | √ |  | √ |  |
-| 11 | 中国科学技术大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) | √ | √ | √ | √ | √ |
+| | 镜像站名称 | 镜像站地址 | IPv6 | Kali Linux | Fedora | EPEL |
+| :------: | :------: | :------: | :------: | :------: | :------: | :------: |
+| 1 | 阿里云 | [mirrors.aliyun.com](https://developer.aliyun.com/special/mirrors/notice) | √ | √ | √ | √ |
+| 2 | 腾讯云 | [mirrors.cloud.tencent.com](https://mirrors.cloud.tencent.com) | √ | √ | √ | √ |
+| 3 | 华为云 | [mirrors.huaweicloud.com](https://mirrors.huaweicloud.com) | √ | √ | √ | √ |
+| 4 | 网易 | [mirrors.163.com](https://mirrors.163.com) |  |  | √ |  |
+| 5 | 搜狐 | [mirrors.sohu.com](https://mirrors.sohu.com) |  |  |  |  |
+| 6 | 清华大学 | [mirrors.tuna.tsinghua.edu.cn](https://mirrors.tuna.tsinghua.edu.cn) | √ | √ | √ | √ |
+| 7 | 浙江大学 | [mirrors.zju.edu.cn](https://mirrors.zju.edu.cn) |  | √ | √ | √ |
+| 8 | 重庆大学 | [mirrors.cqu.edu.cn](https://mirrors.cqu.edu.cn) |  | √ | √ | √ |
+| 9 | 兰州大学 | [mirror.lzu.edu.cn](https://mirror.lzu.edu.cn) | √ |  | √ | √ |
+| 10 | 上海交通大学 | [ftp.sjtu.edu.cn](https://ftp.sjtu.edu.cn) | √ |  | √ |  |
+| 11 | 中国科学技术大学 | [mirrors.ustc.edu.cn](https://mirrors.ustc.edu.cn) | √ | √ | √ | √ |
 > 所有镜像站均支持 `Debian` `Ubuntu` `CentOS` 软件源，建议优先选择由企业提供的软件源\
 > 如果使用过程中脚本不能正常输出中文内容则可对照此列表使用，顺序与脚本一致
 
@@ -106,7 +106,7 @@
 - `Docker` 一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装 `Docker Engine`与 `Docker Compose`，可手动选择安装版本和下载源，还可手动选择 `Docker Hub`源（镜像加速器），支持国内外服务器环境和 `ARM`架构处理器环境使用，这是有史以来最棒的版本。_
+> _注意：脚本集成安装 `Docker Engine`与 `Docker Compose`，可手动选择安装版本和下载源，还可手动选择 `Docker Hub`源（镜像加速器），支持国内外服务器环境和 `ARM`架构处理器环境使用。_
 
 ***
 
@@ -116,9 +116,6 @@
          sudo apt install -y curl  或  sudo yum install -y curl
 
 - 2. 如果提示 `bash: /proc/self/fd/11: No such file or directory`，请切换至 `Root` 用户执行。
-- 3. 如果您想使用 `Http 协议` 同步软件源可执行下面的命令：
-
-         sed -i 's/http/https/g' /etc/apt/sources.list  或  sed -i 's/http/https/g' /etc/yum.repos.d/*
 
 ***
 
@@ -126,6 +123,9 @@
 <img src="./icon/thanks.jpg" width="250" height="250" alt="微信赞赏码"/><br/>
 
 ***
+
+### License
+> [GPL-2.0](https://github.com/SuperManito/LinuxMirrors/blob/main/LICENSE)
 
 > 项目已设立开源许可协议，传播时需在显著位置标注来源和作者，请尊重本人的知识成果\
 > 建议通过命令直接调用脚本，如有意见与建议您可以提交至 __Issues__，谢谢
