@@ -29,7 +29,7 @@
 </tr>
 <tr>
     <td><a href="https://www.debian.org"><img src="./icon/debian.svg" width="16" height="16"/></a>&nbsp;Debian</td>
-    <td align="center">8.0 ~ 10.9</td>
+    <td align="center">8.0 ~ 10.10</td>
 </tr>
 <tr>
     <td><a href="https://cn.ubuntu.com"><img src="./icon/ubuntu.svg" width="16" height="16"/></a>&nbsp;Ubuntu</td>
@@ -106,7 +106,10 @@
 - `Docker` 一键安装脚本
 
       bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-> _注意：脚本集成安装 `Docker Engine`与 `Docker Compose`，可手动选择安装版本和下载源，还可手动选择 `Docker Hub`源（镜像加速器），支持国内外服务器环境和 `ARM`架构处理器环境使用。_
+> `Docker CE`：Docker Community Edition 镜像仓库，用于下载并安装 Docker 相关软件包。\
+> `Docker Hub`：Docker Hub 镜像仓库，默认为官方提供的公共库，用于切换下载镜像时的来源仓库，简称镜像加速器。
+
+> _注意：脚本集成安装 `Docker Engine`与 `Docker Compose`，可手动选择安装版本和下载源，还可手动选择镜像加速器，支持国内外服务器环境和 `ARM`架构处理器环境使用。_
 
 ***
 
