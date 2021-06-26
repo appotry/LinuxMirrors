@@ -1,6 +1,6 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-06-16
+## Modified: 2021-06-26
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
@@ -28,10 +28,10 @@ function AuthorAutograph() {
 RedHatRelease=/etc/redhat-release
 DebianSourceList=/etc/apt/sources.list
 DebianSourceListBackup=/etc/apt/sources.list.bak
-DebianExtendListDirectory=/etc/apt/sources.list.d
-DebianExtendListDirectoryBackup=/etc/apt/sources.list.d.bak
-RedHatReposDirectory=/etc/yum.repos.d
-RedHatReposDirectoryBackup=/etc/yum.repos.d.bak
+DebianExtendListDir=/etc/apt/sources.list.d
+DebianExtendListDirBackup=/etc/apt/sources.list.d.bak
+RedHatReposDir=/etc/yum.repos.d
+RedHatReposDirBackup=/etc/yum.repos.d.bak
 SelinuxConfig=/etc/selinux/config
 
 ## 定义系统判定变量
@@ -46,11 +46,11 @@ SYSTEM_CENTOS="CentOS"
 SYSTEM_FEDORA="Fedora"
 
 ## 定义 Docker 相关变量
-DockerSourceList=${DebianExtendListDirectory}/docker.list
-DockerRepo=${RedHatReposDirectory}/download.docker.com_linux_*.repo
-DockerDirectory=/etc/docker
-DockerConfig=${DockerDirectory}/daemon.json
-DockerConfigBackup=${DockerDirectory}/daemon.json.bak
+DockerSourceList=${DebianExtendListDir}/docker.list
+DockerRepo=${RedHatReposDir}/download.docker.com_linux_*.repo
+DockerDir=/etc/docker
+DockerConfig=${DockerDir}/daemon.json
+DockerConfigBackup=${DockerDir}/daemon.json.bak
 DockerCompose=/usr/local/bin/docker-compose
 PROXY_URL=https://ghproxy.com/
 DOCKER_COMPOSE_VERSION=1.29.2
@@ -137,16 +137,16 @@ function EnvJudgment() {
     fi
 }
 
-## 环境判定：
+## 环境判定
 function PermissionJudgment() {
-    ## 权限判定：
+    ## 权限判定
     if [ $UID -ne 0 ]; then
         echo -e '\033[31m ---------- Permission no enough, please use user ROOT! ---------- \033[0m'
         exit
     fi
 }
 function NetWorkJudgment() {
-    ## 网络环境判定：
+    ## 网络环境判定
     ping -c 1 www.baidu.com >/dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo -e "\033[31m ----- Network connection error, please check the network environment and try again later! ----- \033[0m"
@@ -191,26 +191,33 @@ function InstallationEnvironment() {
     fi
 }
 
-## Docker Engine 可安装版本列表
-function DockerEngineVersionList() {
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-        apt-cache madison docker-ce | awk '{print $3}' | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}" | grep -v "18.06" >docker-version.txt
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
-        yum list docker-ce --showduplicates | sort -r | awk '{print $2}' | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}" >docker-version.txt
-    fi
-}
-
 ## 卸载旧版本
 function RemoveOldVersion() {
     ## 停止旧版本进程
     systemctl disable --now docker >/dev/null 2>&1
+    sleep 2s
     ## 删除旧的软件包
     if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-        apt-get remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
+        apt-get remove -y docker-ce docker-ce-cli containerd.io runc >/dev/null 2>&1
         apt-get autoremove -y >/dev/null 2>&1
     elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
         yum remove -y docker-ce docker-ce-cli containerd.io podman* runc >/dev/null 2>&1
         yum autoremove -y >/dev/null 2>&1
+    fi
+}
+
+## Docker Engine 可安装版本列表
+function DockerEngineVersionList() {
+    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        apt-cache madison docker-ce | awk '{print $3}' | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}" >docker-ce-version.txt
+        apt-cache madison docker-ce-cli | awk '{print $3}' | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}" >docker-ce-cli-version.txt
+        grep -wf docker-ce-version.txt docker-ce-cli-version.txt >docker-version.txt
+        rm -rf docker-ce-version.txt docker-ce-cli-version.txt
+    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        yum list docker-ce --showduplicates | sort -r | awk '{print $2}' | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}" >docker-ce-version.txt
+        yum list docker-ce-cli --showduplicates | sort -r | awk '{print $2}' | grep -Eo "[0-9][0-9].[0-9][0-9].[0-9]{1,2}" >docker-ce-cli-version.txt
+        grep -wf docker-ce-version.txt docker-ce-cli-version.txt >docker-version.txt
+        rm -rf docker-ce-version.txt docker-ce-cli-version.txt
     fi
 }
 
@@ -302,10 +309,10 @@ function DockerEngine() {
         esac
         rm -rf docker-version.txt
     else
-        ## 安装 Docker Engine 软件包
-        DockerEngineInstall
         ## 卸载旧版本（防止遗漏）
         RemoveOldVersion
+        ## 安装 Docker Engine 软件包
+        DockerEngineInstall
     fi
     ## 配置 Docker Hub 源（镜像加速器）
     ConfigureImageAccelerator
@@ -331,7 +338,7 @@ function DockerEngineInstall() {
         echo -e '\n以上可选择的安装版本由官方提供，若系统过新则无法安装较旧的版本'
         while true; do
             CHOICE_F=$(echo -e '\n\033[32m└ 请输入你想要安装的具体版本号：\033[0m\n')
-            read -p "${CHOICE_F} " DOCKER_VERSION
+            read -p "${CHOICE_F}" DOCKER_VERSION
             echo ''
             ## 搜索匹配字符
             cat docker-version.txt | grep -Ew "${DOCKER_VERSION}" >/dev/null 2>&1
@@ -349,7 +356,20 @@ function DockerEngineInstall() {
             fi
         done
         if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
-            apt-get install -y docker-ce=5:${DOCKER_VERSION}* docker-ce-cli=5:${DOCKER_VERSION}* containerd.io
+            CheckVersion=$(echo ${DOCKER_VERSION} | cut -c1-2)
+            CheckSubversion=$(echo ${DOCKER_VERSION} | cut -c4-5)
+            if [[ ${CheckVersion} == "21" || ${CheckVersion} == "20" || ${CheckVersion} == "19" ]]; then
+                INSTALL_JUDGMENT="5:"
+            elif [ ${CheckVersion} == "18" ]; then
+                if [ ${CheckSubversion} == "09" ]; then
+                    INSTALL_JUDGMENT="5:"
+                else
+                    INSTALL_JUDGMENT=""
+                fi
+            else
+                INSTALL_JUDGMENT=""
+            fi
+            apt-get install -y docker-ce=${INSTALL_JUDGMENT}${DOCKER_VERSION}* docker-ce-cli=5:${DOCKER_VERSION}* containerd.io
         elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
             yum install -y docker-ce-${DOCKER_VERSION} docker-ce-cli-${DOCKER_VERSION} containerd.io
         fi
@@ -360,7 +380,7 @@ function DockerEngineInstall() {
 function ConfigureImageAccelerator() {
     if [ ${REGISTRY_SOURCE_OFFICIAL} = "False" ]; then
         ## 创建目录和文件
-        if [ -d ${DockerDirectory} ] && [ -e ${DockerConfig} ]; then
+        if [ -d ${DockerDir} ] && [ -e ${DockerConfig} ]; then
             if [ -e ${DockerConfigBackup} ]; then
                 CHOICE_BACKUP=$(echo -e "\n\033[32m└ 检测到已备份的 Docker 配置文件，是否覆盖备份 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP}" INPUT
@@ -380,7 +400,7 @@ function ConfigureImageAccelerator() {
             fi
             sleep 2s
         else
-            mkdir -p ${DockerDirectory} >/dev/null 2>&1
+            mkdir -p ${DockerDir} >/dev/null 2>&1
             touch ${DockerConfig}
         fi
         ## 配置镜像加速器
@@ -427,11 +447,11 @@ function DockerCompose() {
 
 ## 查看版本信息
 function ShowVersion() {
-    echo -e '\033[32m---------- 查看版本 ----------\033[0m\n'
+    echo -e '\033[32m---------- 验证安装版本 ----------\033[0m\n'
     docker -v
     VERIFICATION_DOCKER=$?
+    [ ${DOCKER_COMPOSE} = "True" ] && docker-compose -v
     if [ ${VERIFICATION_DOCKER} -eq 0 ]; then
-        [ ${DOCKER_COMPOSE} = "True" ] && docker-compose -v
         echo -e '\n\033[32m---------- 安装完成 ----------\033[0m'
     else
         echo -e '\n\033[31m---------- 安装失败 ----------\033[0m'
@@ -439,10 +459,9 @@ function ShowVersion() {
     fi
     systemctl status docker | grep running -q
     [ $? -ne 0 ] && echo -e '\n\033[31m [ERROR] 检测到 Docker 服务启动异常，可能由于重复安装相同版本导致\033[0m' && echo -e '\n\033[31m 请执行 systemctl start docker 或 service docker start 命令尝试启动\033[0m' && echo -e '\n\033[31m 官方安装文档：https://docs.docker.com/engine/install\033[0m'
-
 }
 
-## 选择 Docker CE & Docker Hub 源：
+## 选择 Docker CE & Docker Hub 源
 function ChooseMirrors() {
     echo -e '+---------------------------------------------------+'
     echo -e '|                                                   |'
@@ -524,7 +543,7 @@ function ChooseMirrors() {
         ;;
     *)
         SOURCE="mirrors.aliyun.com/docker-ce"
-        echo -e '\n\033[33m---------- 输入错误，将默认使用阿里云 ----------\033[0m'
+        echo -e '\n\033[33m---------- 输入错误，默认使用阿里云（杭州） ----------\033[0m'
         sleep 1s
         ;;
     esac
@@ -594,7 +613,7 @@ function ChooseMirrors() {
     *)
         REGISTRY_SOURCE="registry.cn-hangzhou.aliyuncs.com"
         REGISTRY_SOURCE_OFFICIAL="False"
-        echo -e '\n\033[33m---------- 输入错误，将默认使用阿里云（杭州） ----------\033[0m'
+        echo -e '\n\033[33m---------- 输入错误，默认使用阿里云（杭州） ----------\033[0m'
         sleep 1s
         ;;
     esac
