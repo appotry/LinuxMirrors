@@ -105,7 +105,8 @@
 ### 其它脚本
 - `Docker` 一键安装脚本
 
-      bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
+      wget https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.x -O install.x && chmod +x install.x && ./install.x
+
 > `Docker CE`：Docker Community Edition 镜像仓库，用于下载并安装 Docker 相关软件包。\
 > `Docker Hub`：Docker Hub 镜像仓库，默认为官方提供的公共库，用于切换下载镜像时的来源仓库，简称镜像加速器。
 
@@ -118,7 +119,11 @@
 
          sudo apt install -y curl  或  sudo yum install -y curl
 
-- 2. 如果提示 `bash: /proc/self/fd/11: No such file or directory`，请切换至 `Root` 用户执行。
+- 2. 如果提示 `Command 'wget' not found` 则说明当前未安装 `wget` 软件包，安装命令如下：
+
+         sudo apt install -y wget  或  sudo yum install -y wget
+
+- 3. 如果提示 `bash: /proc/self/fd/11: No such file or directory`，请切换至 `Root` 用户执行。
 
 ***
 
