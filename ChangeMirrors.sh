@@ -1,28 +1,38 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-06-26
+## Modified: 2021-08-16
 ## License: GPL-2.0
 ## Repository: https://github.com/SuperManito/LinuxMirrors
 ##             https://gitee.com/SuperManito/LinuxMirrors
 
 function AuthorAutograph() {
-    echo -e '\033[34m
- +--------------------------------------------------------------------+
- |                 __  ___          __        ____                    |
- |                /  |/  /___ _____/ /__     / __ )__  __             |
- |               / /|_/ / __ `/ __  / _ \   / __  / / / /             |
- |              / /  / / /_/ / /_/ /  __/  / /_/ / /_/ /              |
- |             /_/  /_/\__,_/\__,_/\___/  /_____/\__, /               |
- |                                              /____/                |
- |       _____                       __  ___            _ __          |
- |      / ___/__  ______  ___  _____/  |/  /___ _____  (_) /_____     |
- |      \__ \/ / / / __ \/ _ \/ ___/ /|_/ / __ `/ __ \/ / __/ __ \    |
- |     ___/ / /_/ / /_/ /  __/ /  / /  / / /_/ / / / / / /_/ /_/ /    |
- |    /____/\__,_/ .___/\___/_/  /_/  /_/\__,_/_/ /_/_/\__/\____/     |
- |              /_/                                                   |
- +--------------------------------------------------------------------+
-\033[0m'
+    if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
+        apt-get install -y figlet toilet >/dev/null 2>&1
+    elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
+        yum install -y figlet toilet >/dev/null 2>&1
+    fi
+    if [ $? -eq 0 ]; then
+        echo -e "\n$(toilet -f slant -F border --gay SuperManito)\n"
+    else
+        echo -e '\n\033[35m    _____                       __  ___            _ __       \033[0m'
+        echo -e '\033[31m   / ___/__  ______  ___  _____/  |/  /___ _____  (_) /_____  \033[0m'
+        echo -e '\033[33m   \__ \/ / / / __ \/ _ \/ ___/ /|_/ / __ `/ __ \/ / __/ __ \ \033[0m'
+        echo -e '\033[32m  ___/ / /_/ / /_/ /  __/ /  / /  / / /_/ / / / / / /_/ /_/ / \033[0m'
+        echo -e '\033[36m /____/\__,_/ .___/\___/_/  /_/  /_/\__,_/_/ /_/_/\__/\____/  \033[0m'
+        echo -e '\033[34m           /_/                                                \033[0m\n'
+    fi
 }
+
+## 定义系统判定变量
+DebianRelease=lsb_release
+Arch=$(uname -m)
+SYSTEM_DEBIAN="Debian"
+SYSTEM_UBUNTU="Ubuntu"
+SYSTEM_KALI="Kali"
+SYSTEM_REDHAT="RedHat"
+SYSTEM_RHEL="RedHat"
+SYSTEM_CENTOS="CentOS"
+SYSTEM_FEDORA="Fedora"
 
 ## 定义目录和文件
 RedHatRelease=/etc/redhat-release
@@ -33,17 +43,6 @@ DebianExtendListDirBackup=/etc/apt/sources.list.d.bak
 RedHatReposDir=/etc/yum.repos.d
 RedHatReposDirBackup=/etc/yum.repos.d.bak
 SelinuxConfig=/etc/selinux/config
-
-## 定义系统判定变量
-DebianRelease=lsb_release
-Architecture=$(uname -m)
-SYSTEM_DEBIAN="Debian"
-SYSTEM_UBUNTU="Ubuntu"
-SYSTEM_KALI="Kali"
-SYSTEM_REDHAT="RedHat"
-SYSTEM_RHEL="RedHat"
-SYSTEM_CENTOS="CentOS"
-SYSTEM_FEDORA="Fedora"
 
 ## 组合函数
 function CombinationFunction() {
@@ -61,18 +60,18 @@ function CombinationFunction() {
 function EnvJudgment() {
     ## 判定当前系统基于 Debian or RedHat
     if [ -f ${RedHatRelease} ]; then
-        SYSTEM_FACTION=${SYSTEM_REDHAT}
+        SYSTEM_FACTIONS=${SYSTEM_REDHAT}
     else
-        SYSTEM_FACTION=${SYSTEM_DEBIAN}
+        SYSTEM_FACTIONS=${SYSTEM_DEBIAN}
     fi
     ## 判定系统名称、版本、版本号
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
         SYSTEM_JUDGMENT=$(${DebianRelease} -is)
         SYSTEM_VERSION=$(${DebianRelease} -cs)
         SYSTEM_VERSION_NUMBER=$(${DebianRelease} -rs)
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
         SYSTEM_JUDGMENT=$(cat ${RedHatRelease} | sed 's/ //g' | cut -c1-6)
-        if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} -o ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]; then
+        if [[ ${SYSTEM_JUDGMENT} = ${SYSTEM_CENTOS} || ${SYSTEM_JUDGMENT} = ${SYSTEM_RHEL} ]]; then
             SYSTEM_VERSION_NUMBER=$(cat ${RedHatRelease} | grep -o "[0-9]\.[0-9]")
             CENTOS_VERSION=$(echo ${SYSTEM_VERSION_NUMBER} | cut -c1)
         elif [ ${SYSTEM_JUDGMENT} = ${SYSTEM_FEDORA} ]; then
@@ -90,22 +89,22 @@ function EnvJudgment() {
         SYSTEM_NAME=${SYSTEM_JUDGMENT}
     fi
     ## 判定系统处理器架构
-    if [ ${Architecture} = "x86_64" ]; then
+    if [ ${Arch} = "x86_64" ]; then
         SYSTEM_ARCH=x86_64
-    elif [ ${Architecture} = "aarch64" ]; then
+    elif [ ${Arch} = "aarch64" ]; then
         SYSTEM_ARCH=arm64
-    elif [ ${Architecture} = "armv7l" ]; then
+    elif [ ${Arch} = "armv7l" ]; then
         SYSTEM_ARCH=armv7
-    elif [ ${Architecture} = "arm*" ]; then
+    elif [ ${Arch} = "arm*" ]; then
         SYSTEM_ARCH=armhf
-    elif [ ${Architecture} = "i686" ]; then
+    elif [ ${Arch} = "i686" ]; then
         SYSTEM_ARCH=x86_32
     else
-        SYSTEM_ARCH=${Architecture}
+        SYSTEM_ARCH=${Arch}
     fi
     ## 定义软件源分支名称
     if [ ${SYSTEM_JUDGMENT} = ${SYSTEM_UBUNTU} ]; then
-        if [ ${Architecture} = "x86_64" ] || [ ${Architecture} = "*i?86*" ]; then
+        if [ ${Arch} = "x86_64" ] || [ ${Arch} = "*i?86*" ]; then
             SOURCE_BRANCH=${SYSTEM_JUDGMENT,,}
         else
             SOURCE_BRANCH=ubuntu-ports
@@ -116,9 +115,9 @@ function EnvJudgment() {
         SOURCE_BRANCH=${SYSTEM_JUDGMENT,,}
     fi
     ## 定义软件源同步/更新文字
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
         SYNC_TXT="更新"
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
         SYNC_TXT="同步"
     fi
 }
@@ -154,14 +153,14 @@ function TurnOffFirewall() {
 
 ## 备份原有源
 function BackupMirrors() {
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
         ## 判断 /etc/apt/sources.list.d 目录下是否存在文件
         [ -d ${DebianExtendListDir} ] && ls ${DebianExtendListDir} | grep *.list -q
         VERIFICATION_FILES=$?
         ## 判断 /etc/apt/sources.list.d.bak 目录下是否存在文件
         [ -d ${DebianExtendListDirBackup} ] && ls ${DebianExtendListDirBackup} | grep *.list -q
         VERIFICATION_BACKUPFILES=$?
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
         ## 判断 /etc/yum.repos.d 目录下是否存在文件
         [ -d ${RedHatReposDir} ] && ls ${RedHatReposDir} | grep repo -q
         VERIFICATION_FILES=$?
@@ -170,7 +169,7 @@ function BackupMirrors() {
         VERIFICATION_BACKUPFILES=$?
     fi
 
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
         ## /etc/apt/sources.list
         if [ -s ${DebianSourceList} ]; then
             if [ -s ${DebianSourceListBackup} ]; then
@@ -209,7 +208,7 @@ function BackupMirrors() {
                 [Yy]*)
                     cp -rf ${DebianExtendListDir}/* ${DebianExtendListDirBackup} >/dev/null 2>&1
                     ;;
-                [Nn]*) 
+                [Nn]*)
                     echo ''
                     ;;
                 *)
@@ -223,7 +222,7 @@ function BackupMirrors() {
                 sleep 1s
             fi
         fi
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
         ## /etc/yum.repos.d
         if [ ${VERIFICATION_FILES} -eq 0 ]; then
             if [ -d ${RedHatReposDirBackup} ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
@@ -254,28 +253,31 @@ function BackupMirrors() {
 
 ## 删除原有源
 function RemoveOldMirrorsFiles() {
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
         [ -f ${DebianSourceList} ] && sed -i '1,$d' ${DebianSourceList}
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
         if [ -d ${RedHatReposDir} ]; then
-            cd ${RedHatReposDir}
-            rm -rf *
+            if [ -f ${RedHatReposDir}/epel.repo ]; then
+                ls ${RedHatReposDir}/ | egrep -v epel | xargs rm -rf
+            else
+                rm -rf ${RedHatReposDir}/*
+            fi
         fi
     fi
 }
 
 ## 更换国内源
 function ChangeMirrors() {
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
         DebianMirrors
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
         RedHatMirrors
         yum clean all >/dev/null 2>&1
     fi
     echo -e "\033[32m------------ 开始${SYNC_TXT}软件源 ------------\033[0m\n"
-    if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+    if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
         apt-get update
-    elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+    elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
         yum makecache
     fi
     VERIFICATION_SOURCESYNC=$?
@@ -295,9 +297,9 @@ function UpgradeSoftware() {
     case $INPUT in
     [Yy]*)
         echo -e ''
-        if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+        if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
             apt-get upgrade -y
-        elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+        elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
             yum update -y
         fi
         CHOICE_C=$(echo -e '\n\033[32m└ 是否清理已下载的软件包缓存 [ Y/n ]：\033[0m')
@@ -305,14 +307,14 @@ function UpgradeSoftware() {
         [ -z ${INPUT} ] && INPUT=Y
         case $INPUT in
         [Yy]*)
-            if [ ${SYSTEM_FACTION} = ${SYSTEM_DEBIAN} ]; then
+            if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
                 apt-get autoremove -y >/dev/null 2>&1
                 apt-get clean >/dev/null 2>&1
-            elif [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ]; then
+            elif [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ]; then
                 yum autoremove -y >/dev/null 2>&1
                 yum clean packages -y >/dev/null 2>&1
             fi
-            
+
             echo -e '\n清理完毕 [OK]'
             ;;
         [Nn]*) ;;
@@ -400,7 +402,7 @@ function RedHatMirrors() {
 ## 安装/更换基于 RHEL/CentOS 的 EPEL (Extra Packages for Enterprise Linux) 扩展国内源
 function EPELMirrors() {
     ## 安装 EPEL 软件包
-    [ ${VERIFICATION_EPEL} -ne 0 ] && yum install -y https://mirrors.aliyun.com/epel/epel-release-latest-${CENTOS_VERSION}.noarch.rpm
+    [ ${VERIFICATION_EPEL} -ne 0 ] && echo -e '\033[32m[*] 正在安装 epel-release 软件包......\033[0m' && yum install -y https://mirrors.aliyun.com/epel/epel-release-latest-${CENTOS_VERSION}.noarch.rpm >/dev/null 2>&1
     ## 删除原有 EPEL 扩展 repo 源文件
     [ ${VERIFICATION_EPELFILES} -eq 0 ] && rm -rf ${RedHatReposDir}/epel*
     [ ${VERIFICATION_EPELBACKUPFILES} -eq 0 ] && rm -rf ${RedHatReposDirBackup}/epel*
@@ -548,7 +550,7 @@ function ChooseMirrors() {
     esac
 
     ## 关闭 防火墙 和 SELINUX
-    [ ${SYSTEM_FACTION} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
+    [ ${SYSTEM_FACTIONS} = ${SYSTEM_REDHAT} ] && TurnOffFirewall
 }
 
 ## 生成基于 RedHat 发行版和及其衍生发行版的官方 repo 源文件
