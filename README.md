@@ -29,7 +29,7 @@
 </tr>
 <tr>
     <td><a href="https://www.debian.org"><img src="./icon/debian.svg" width="16" height="16"/></a>&nbsp;Debian</td>
-    <td align="center">8.0 ~ 10.10</td>
+    <td align="center">8.0 ~ 11.0</td>
 </tr>
 <tr>
     <td><a href="https://cn.ubuntu.com"><img src="./icon/ubuntu.svg" width="16" height="16"/></a>&nbsp;Ubuntu</td>
@@ -129,14 +129,13 @@
 
 ### 捐助作者
 <img src="./icon/thanks.jpg" width="250" height="250" alt="微信赞赏码"/><br/>
+> 项目已设立开源许可协议，传播时需在显著位置标注来源和作者，请尊重本人的知识成果\
+> 建议通过命令直接调用脚本，如有意见与建议您可以提交至 __Issues__，谢谢
 
 ***
 
 ### License
-> [GPL-2.0](https://github.com/SuperManito/LinuxMirrors/blob/main/LICENSE)
-
-> 项目已设立开源许可协议，传播时需在显著位置标注来源和作者，请尊重本人的知识成果\
-> 建议通过命令直接调用脚本，如有意见与建议您可以提交至 __Issues__，谢谢
+Copyright © 2021, [SuperManito](https://github.com/SuperManito). Released under the [GPL-2.0](https://github.com/SuperManito/LinuxMirrors/blob/main/LICENSE).
 
 ***
 
