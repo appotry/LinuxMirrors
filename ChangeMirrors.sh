@@ -1,9 +1,9 @@
 #!/bin/env bash
 ## Author: SuperManito
-## Modified: 2021-09-09
+## Modified: 2021-09-21
 ## License: GPL-2.0
-## Repository: https://github.com/SuperManito/LinuxMirrors
-##             https://gitee.com/SuperManito/LinuxMirrors
+## https://github.com/SuperManito/LinuxMirrors
+## https://gitee.com/SuperManito/LinuxMirrors
 
 function AuthorSignature() {
     if [ ${SYSTEM_FACTIONS} = ${SYSTEM_DEBIAN} ]; then
@@ -141,7 +141,7 @@ function PermissionJudgment() {
 function TurnOffFirewall() {
     systemctl status firewalld | grep running -q
     if [ $? -eq 0 ]; then
-        CHOICE_C=$(echo -e '\n\033[34m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
+        CHOICE_C=$(echo -e '\n\033[37m└ 是否关闭防火墙和 SELINUX [ Y/n ]：\033[0m')
         read -p "${CHOICE_C}" INPUT
         [ -z ${INPUT} ] && INPUT=Y
         case $INPUT in
@@ -179,7 +179,7 @@ function BackupMirrors() {
         ## /etc/apt/sources.list
         if [ -s $DebianSourceList ]; then
             if [ -s $DebianSourceListBackup ]; then
-                CHOICE_BACKUP1=$(echo -e "\n\033[34m└ 检测到系统存在已备份的 list 源文件，是否覆盖备份 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP1=$(echo -e "\n\033[37m└ 检测到系统存在已备份的 list 源文件，是否覆盖备份 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP1}" INPUT
                 [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
@@ -196,7 +196,7 @@ function BackupMirrors() {
                 esac
             else
                 cp -rf $DebianSourceList $DebianSourceListBackup >/dev/null 2>&1
-                echo -e "\n\033[34m└ 已备份原有 list 源文件至 $DebianSourceListBackup ... \033[0m\n"
+                echo -e "\n\033[37m└ 已备份原有 list 源文件至 $DebianSourceListBackup ... \033[0m\n"
                 sleep 1s
             fi
         else
@@ -207,7 +207,7 @@ function BackupMirrors() {
         ## /etc/apt/sources.list.d
         if [ -d $DebianExtendListDir ] && [ ${VERIFICATION_FILES} -eq 0 ]; then
             if [ -d $DebianExtendListDirBackup ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
-                CHOICE_BACKUP2=$(echo -e "\n\033[34m└ 检测到系统存在已备份的 list 第三方源文件，是否覆盖备份 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP2=$(echo -e "\n\033[37m└ 检测到系统存在已备份的 list 第三方源文件，是否覆盖备份 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP2}" INPUT
                 [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
@@ -224,7 +224,7 @@ function BackupMirrors() {
             else
                 [ -d $DebianExtendListDirBackup ] || mkdir -p $DebianExtendListDirBackup
                 cp -rf $DebianExtendListDir/* $DebianExtendListDirBackup >/dev/null 2>&1
-                echo -e "\033[34m└ 已备份原有 list 第三方源文件至 $DebianExtendListDirBackup 目录... \033[0m\n"
+                echo -e "\033[37m└ 已备份原有 list 第三方源文件至 $DebianExtendListDirBackup 目录... \033[0m\n"
                 sleep 1s
             fi
         fi
@@ -232,7 +232,7 @@ function BackupMirrors() {
         ## /etc/yum.repos.d
         if [ ${VERIFICATION_FILES} -eq 0 ]; then
             if [ -d $RedHatReposDirBackup ] && [ ${VERIFICATION_BACKUPFILES} -eq 0 ]; then
-                CHOICE_BACKUP3=$(echo -e "\n\033[34m└ 检测到系统存在已备份的 repo 源文件，是否覆盖备份 [ Y/n ]：\033[0m")
+                CHOICE_BACKUP3=$(echo -e "\n\033[37m└ 检测到系统存在已备份的 repo 源文件，是否覆盖备份 [ Y/n ]：\033[0m")
                 read -p "${CHOICE_BACKUP3}" INPUT
                 [ -z ${INPUT} ] && INPUT=Y
                 case $INPUT in
@@ -248,7 +248,7 @@ function BackupMirrors() {
             else
                 [ -d $RedHatReposDirBackup ] || mkdir -p $RedHatReposDirBackup
                 cp -rf $RedHatReposDir/* $RedHatReposDirBackup >/dev/null 2>&1
-                echo -e "\n\033[34m└ 已备份原有 repo 源文件至 $RedHatReposDirBackup 目录... \033[0m\n"
+                echo -e "\n\033[37m└ 已备份原有 repo 源文件至 $RedHatReposDirBackup 目录... \033[0m\n"
                 sleep 1s
             fi
         else
@@ -300,7 +300,7 @@ function ChangeMirrors() {
 
 ## 更新软件包
 function UpgradeSoftware() {
-    CHOICE_B=$(echo -e '\n\033[34m└ 是否更新软件包 [ Y/n ]：\033[0m')
+    CHOICE_B=$(echo -e '\n\033[37m└ 是否更新软件包 [ Y/n ]：\033[0m')
     read -p "${CHOICE_B}" INPUT
     [ -z ${INPUT} ] && INPUT=Y
     case $INPUT in
@@ -314,7 +314,7 @@ function UpgradeSoftware() {
             yum update -y
             ;;
         esac
-        CHOICE_C=$(echo -e '\n\033[34m└ 是否清理已下载的软件包缓存 [ Y/n ]：\033[0m')
+        CHOICE_C=$(echo -e '\n\033[37m└ 是否清理已下载的软件包缓存 [ Y/n ]：\033[0m')
         read -p "${CHOICE_C}" INPUT
         [ -z ${INPUT} ] && INPUT=Y
         case $INPUT in
@@ -472,18 +472,20 @@ function ChooseMirrors() {
     echo -e ' ❖   搜狐                5)'
     echo -e ' ❖   清华大学            6)'
     echo -e ' ❖   浙江大学            7)'
-    echo -e ' ❖   重庆大学            8)'
-    echo -e ' ❖   兰州大学            9)'
-    echo -e ' ❖   上海交通大学       10)'
-    echo -e ' ❖   中国科学技术大学   11)'
+    echo -e ' ❖   南京大学            8)'
+    echo -e ' ❖   重庆大学            9)'
+    echo -e ' ❖   兰州大学           10)'
+    echo -e ' ❖   上海交通大学       11)'
+    echo -e ' ❖   哈尔滨工业大学     12)'
+    echo -e ' ❖   中国科学技术大学   13)'
     echo -e ''
     echo -e '#####################################################'
     echo -e ''
-    echo -e "            运行环境  ${SYSTEM_NAME} ${SYSTEM_VERSION_NUMBER} ${SYSTEM_ARCH}"
-    echo -e "            系统时间  $(date "+%Y-%m-%d %H:%M:%S")"
+    echo -e "            运行环境  \033[34m${SYSTEM_NAME} ${SYSTEM_VERSION_NUMBER} ${SYSTEM_ARCH}\033[0m"
+    echo -e "            系统时间  \033[34m$(date "+%Y-%m-%d %H:%M:%S")\033[0m"
     echo -e ''
     echo -e '#####################################################'
-    CHOICE_A=$(echo -e '\n\033[34m└ 请选择并输入你想使用的软件源 [ 1-11 ]：\033[0m')
+    CHOICE_A=$(echo -e '\n\033[37m└ 请选择并输入你想使用的软件源 [ 1-13 ]：\033[0m')
     read -p "${CHOICE_A}" INPUT
     case $INPUT in
     1)
@@ -508,15 +510,21 @@ function ChooseMirrors() {
         SOURCE="mirrors.zju.edu.cn"
         ;;
     8)
-        SOURCE="mirrors.cqu.edu.cn"
+        SOURCE="mirrors.nju.edu.cn"
         ;;
     9)
-        SOURCE="mirror.lzu.edu.cn"
+        SOURCE="mirrors.cqu.edu.cn"
         ;;
     10)
-        SOURCE="ftp.sjtu.edu.cn"
+        SOURCE="mirror.lzu.edu.cn"
         ;;
     11)
+        SOURCE="mirror.sjtu.edu.cn"
+        ;;
+    12)
+        SOURCE="mirrors.hit.edu.cn"
+        ;;
+    13)
         SOURCE="mirrors.ustc.edu.cn"
         ;;
     *)
@@ -539,9 +547,9 @@ function ChooseMirrors() {
         VERIFICATION_EPELBACKUPFILES=$?
 
         if [ ${VERIFICATION_EPEL} -eq 0 ]; then
-            CHOICE_D=$(echo -e '\n\033[34m└ 检测到系统已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
+            CHOICE_D=$(echo -e '\n\033[37m└ 检测到系统已安装 EPEL 扩展源，是否替换/覆盖为国内源 [ Y/n ]：\033[0m')
         else
-            CHOICE_D=$(echo -e '\n\033[34m└ 是否安装 EPEL 扩展源 [ Y/n ]：\033[0m')
+            CHOICE_D=$(echo -e '\n\033[37m└ 是否安装 EPEL 扩展源 [ Y/n ]：\033[0m')
         fi
         read -p "${CHOICE_D}" INPUT
         [ -z ${INPUT} ] && INPUT=Y
@@ -560,7 +568,7 @@ function ChooseMirrors() {
     fi
 
     ## 选择同步软件源所使用的 WEB 协议（ HTTP：80 端口，HTTPS：443 端口）
-    CHOICE_E=$(echo -e "\n\033[34m└ 软件源是否使用 HTTP 协议 [ Y/n ]：\033[0m")
+    CHOICE_E=$(echo -e "\n\033[37m└ 软件源是否使用 HTTP 协议 [ Y/n ]：\033[0m")
     read -p "${CHOICE_E}" INPUT
     [ -z ${INPUT} ] && INPUT=Y
     case $INPUT in
